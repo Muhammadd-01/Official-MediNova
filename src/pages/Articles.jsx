@@ -14,6 +14,7 @@ const articles = [
     date: "2023-05-15",
     image: "/images/exercise.jpg",
     slug: "importance-of-regular-exercise",
+    relatedTopics: ["Nutrition", "Stress Management"],
   },
   {
     id: 2,
@@ -24,6 +25,7 @@ const articles = [
     date: "2023-05-10",
     image: "/images/healthy-heart.jpg",
     slug: "nutrition-tips-for-healthy-heart",
+    relatedTopics: ["Exercise", "Cardiology"],
   },
   {
     id: 3,
@@ -33,6 +35,7 @@ const articles = [
     date: "2023-05-05",
     image: "/images/stress-management.jpg",
     slug: "understanding-and-managing-stress",
+    relatedTopics: ["Mental Health", "Exercise"],
   },
 ]
 
@@ -95,8 +98,40 @@ function Articles() {
                 Read More
               </Link>
               <SocialShare url={`https://www.medicare.com/articles/${article.slug}`} title={article.title} />
+              <div className="mt-4">
+                <h3 className="font-semibold mb-2">Related Topics:</h3>
+                <ul className="list-disc list-inside">
+                  {article.relatedTopics.map((topic, index) => (
+                    <li key={index}>
+                      <Link to={`/search?q=${encodeURIComponent(topic)}`} className="text-blue-600 hover:underline">
+                        {topic}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           ))}
+        </div>
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Explore More</h2>
+          <ul className="list-disc list-inside">
+            <li>
+              <Link to="/medicine-suggestion" className="text-blue-600 hover:underline">
+                Get personalized medicine suggestions
+              </Link>
+            </li>
+            <li>
+              <Link to="/consultation" className="text-blue-600 hover:underline">
+                Book a consultation with our experts
+              </Link>
+            </li>
+            <li>
+              <Link to="/news" className="text-blue-600 hover:underline">
+                Read the latest medical news
+              </Link>
+            </li>
+          </ul>
         </div>
         <NewsletterSignup />
       </div>

@@ -2,6 +2,7 @@ import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import compression from "vite-plugin-compression"
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer"
+import { ViteSitemapPlugin } from "vite-plugin-sitemap"
 
 export default defineConfig({
   plugins: [
@@ -27,6 +28,19 @@ export default defineConfig({
       avif: {
         quality: 80,
       },
+    }),
+    ViteSitemapPlugin({
+      hostname: "https://www.medicare.com",
+      routes: [
+        "/",
+        "/medicine-suggestion",
+        "/consultation",
+        "/feedback",
+        "/contact",
+        "/articles",
+        "/news",
+        // Add more routes as needed
+      ],
     }),
   ],
   build: {
