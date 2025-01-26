@@ -2,7 +2,7 @@ import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import compression from "vite-plugin-compression"
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer"
-import { ViteSitemapPlugin } from "vite-plugin-sitemap"
+import ViteSitemapPlugin  from "vite-plugin-sitemap"
 
 export default defineConfig({
   plugins: [
@@ -43,6 +43,9 @@ export default defineConfig({
       ],
     }),
   ],
+  css: {
+    postcss: "./postcss.config.js",
+  },
   build: {
     rollupOptions: {
       output: {
