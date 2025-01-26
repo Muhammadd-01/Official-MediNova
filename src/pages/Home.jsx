@@ -1,6 +1,8 @@
 import React from "react"
 import { Helmet } from "react-helmet-async"
 import { Link } from "react-router-dom"
+import NewsletterSignup from "../components/NewsletterSignup"
+import FAQ from "../components/FAQ"
 
 function Home() {
   return (
@@ -24,7 +26,7 @@ function Home() {
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-6">Welcome to MediCare</h1>
         <p className="text-xl mb-8">Your trusted source for medical information and expert consultations.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Link
             to="/medicine-suggestion"
             className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition duration-300"
@@ -44,6 +46,8 @@ function Home() {
             <p>Read the latest articles on various health topics.</p>
           </Link>
         </div>
+        <NewsletterSignup />
+        <FAQ />
       </div>
     </>
   )
