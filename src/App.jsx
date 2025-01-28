@@ -13,6 +13,7 @@ import Articles from "./pages/Articles"
 import News from "./pages/News"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
+import Emergency from "./pages/Emergency"
 import BackgroundAnimation from "./components/BackgroundAnimation"
 import Chatbot from "./components/Chatbot"
 
@@ -64,6 +65,7 @@ function App() {
                   <Route path="/news" element={<News />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
+                  <Route path="/emergency" element={<Emergency />} />
                 </Routes>
               </main>
               <Footer />

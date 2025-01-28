@@ -100,7 +100,7 @@ function MedicineSuggestion() {
         <meta property="og:type" content="website" />
       </Helmet>
 
-      <div className={`max-w-4xl mx-auto ${darkMode ? "text-white" : "text-gray-800"}`}>
+      <div className={`max-w-4xl mx-auto ${darkMode ? "text-blue-100" : "text-blue-900"}`}>
         <motion.h1
           className="text-3xl font-bold mb-6 text-center"
           initial={{ opacity: 0, y: -20 }}
@@ -127,7 +127,9 @@ function MedicineSuggestion() {
                 name="age"
                 value={formData.age}
                 onChange={handleInputChange}
-                className="w-full p-2 border rounded text-gray-800"
+                className={`w-full p-2 border rounded ${
+                  darkMode ? "bg-blue-800 text-blue-100" : "bg-blue-50 text-blue-900"
+                }`}
                 required
               />
             </div>
@@ -140,7 +142,9 @@ function MedicineSuggestion() {
                 name="gender"
                 value={formData.gender}
                 onChange={handleInputChange}
-                className="w-full p-2 border rounded text-gray-800"
+                className={`w-full p-2 border rounded ${
+                  darkMode ? "bg-blue-800 text-blue-100" : "bg-blue-50 text-blue-900"
+                }`}
                 required
               >
                 <option value="">Select gender</option>
@@ -159,7 +163,9 @@ function MedicineSuggestion() {
                 name="weight"
                 value={formData.weight}
                 onChange={handleInputChange}
-                className="w-full p-2 border rounded text-gray-800"
+                className={`w-full p-2 border rounded ${
+                  darkMode ? "bg-blue-800 text-blue-100" : "bg-blue-50 text-blue-900"
+                }`}
                 required
               />
             </div>
@@ -173,7 +179,9 @@ function MedicineSuggestion() {
                 name="height"
                 value={formData.height}
                 onChange={handleInputChange}
-                className="w-full p-2 border rounded text-gray-800"
+                className={`w-full p-2 border rounded ${
+                  darkMode ? "bg-blue-800 text-blue-100" : "bg-blue-50 text-blue-900"
+                }`}
                 required
               />
             </div>
@@ -225,7 +233,9 @@ function MedicineSuggestion() {
               name="medicalHistory"
               value={formData.medicalHistory}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded text-gray-800"
+              className={`w-full p-2 border rounded ${
+                darkMode ? "bg-blue-800 text-blue-100" : "bg-blue-50 text-blue-900"
+              }`}
               rows="4"
             ></textarea>
           </div>
@@ -238,7 +248,9 @@ function MedicineSuggestion() {
               name="currentMedications"
               value={formData.currentMedications}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded text-gray-800"
+              className={`w-full p-2 border rounded ${
+                darkMode ? "bg-blue-800 text-blue-100" : "bg-blue-50 text-blue-900"
+              }`}
               rows="4"
             ></textarea>
           </div>
@@ -252,7 +264,7 @@ function MedicineSuggestion() {
 
         {suggestions && (
           <motion.div
-            className={`bg-white p-6 rounded-lg shadow-md ${darkMode ? "text-gray-800" : ""}`}
+            className={`bg-white p-6 rounded-lg shadow-md ${darkMode ? "text-blue-900" : ""}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
