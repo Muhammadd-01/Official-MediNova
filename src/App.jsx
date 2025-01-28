@@ -14,6 +14,7 @@ import News from "./pages/News"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
 import BackgroundAnimation from "./components/BackgroundAnimation"
+import Chatbot from "./components/Chatbot"
 
 export const DarkModeContext = React.createContext()
 export const AuthContext = React.createContext()
@@ -66,6 +67,7 @@ function App() {
                 </Routes>
               </main>
               <Footer />
+              <Chatbot />
             </div>
           </Router>
         </HelmetProvider>

@@ -1,19 +1,23 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useContext } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { DarkModeContext } from "../App"
 
 const slides = [
   {
-    image: "/placeholder.svg?height=600&width=1200",
+    image:
+      "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&h=600&q=80",
     title: "Welcome to MediCare",
     description: "Your trusted source for medical information and expert consultations.",
   },
   {
-    image: "/placeholder.svg?height=600&width=1200",
+    image:
+      "https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&h=600&q=80",
     title: "Expert Consultations",
     description: "Book a consultation with our experienced medical professionals.",
   },
   {
-    image: "/placeholder.svg?height=600&width=1200",
+    image:
+      "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&h=600&q=80",
     title: "Latest Health Articles",
     description: "Stay informed with our regularly updated health articles.",
   },
@@ -21,6 +25,7 @@ const slides = [
 
 function Slider() {
   const [currentSlide, setCurrentSlide] = useState(0)
+  const { darkMode } = useContext(DarkModeContext)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -30,7 +35,7 @@ function Slider() {
   }, [])
 
   return (
-    <div className="relative w-full h-[600px] overflow-hidden">
+    <div className="relative w-full h-[600px] overflow-hidden rounded-lg shadow-lg">
       <AnimatePresence initial={false}>
         <motion.div
           key={currentSlide}
