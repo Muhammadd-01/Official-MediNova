@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom"
 import { HelmetProvider } from "react-helmet-async"
+import { motion } from "framer-motion"
 import Header from "./components/Header"
 import Footer from "./components/Footer"
 import Home from "./pages/Home"
@@ -30,23 +31,67 @@ function App() {
       <HelmetProvider>
         <Router>
           <div
-            className={`flex flex-col min-h-screen bg-gradient-to-br ${darkMode ? "from-gray-900 via-gray-800 to-gray-700" : "from-blue-900 via-blue-700 to-white"} text-gray-100 transition-colors duration-300`}
+            className={`flex flex-col min-h-screen ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"} transition-colors duration-300`}
           >
-            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-              <div
-                className={`absolute top-0 left-0 w-full h-full ${darkMode ? "bg-gray-900" : "bg-blue-900"} opacity-50`}
-              >
-                <div className="w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZmIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDVMNSAwWk02IDRMNCA2Wk0tMSAxTDEgLTFaIiBzdHJva2U9IiNjZmQ4ZGMiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8L3N2Zz4=')]"></div>
-              </div>
-              <div
-                className={`absolute top-0 left-0 w-96 h-96 ${darkMode ? "bg-blue-700" : "bg-blue-500"} rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob`}
-              ></div>
-              <div
-                className={`absolute top-0 right-0 w-96 h-96 ${darkMode ? "bg-yellow-700" : "bg-yellow-500"} rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000`}
-              ></div>
-              <div
-                className={`absolute bottom-0 left-0 w-96 h-96 ${darkMode ? "bg-pink-700" : "bg-pink-500"} rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000`}
-              ></div>
+            <div className="fixed inset-0 z-0 pointer-events-none">
+              <motion.div
+                className="absolute inset-0"
+                animate={{
+                  background: darkMode
+                    ? [
+                        "radial-gradient(circle, rgba(25,25,25,1) 0%, rgba(10,10,10,1) 100%)",
+                        "radial-gradient(circle, rgba(30,30,30,1) 0%, rgba(15,15,15,1) 100%)",
+                        "radial-gradient(circle, rgba(25,25,25,1) 0%, rgba(10,10,10,1) 100%)",
+                      ]
+                    : [
+                        "radial-gradient(circle, rgba(240,249,255,1) 0%, rgba(224,242,254,1) 100%)",
+                        "radial-gradient(circle, rgba(224,242,254,1) 0%, rgba(186,230,253,1) 100%)",
+                        "radial-gradient(circle, rgba(240,249,255,1) 0%, rgba(224,242,254,1) 100%)",
+                      ],
+                }}
+                transition={{ repeat: Number.POSITIVE_INFINITY, duration: 10, ease: "linear" }}
+              />
+              <svg className="absolute inset-0 w-full h-full">
+                <motion.circle
+                  cx="50%"
+                  cy="50%"
+                  r="100"
+                  fill="none"
+                  stroke={darkMode ? "rgba(59, 130, 246, 0.2)" : "rgba(59, 130, 246, 0.5)"}
+                  strokeWidth="2"
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    opacity: [0.3, 0.5, 0.3],
+                  }}
+                  transition={{ repeat: Number.POSITIVE_INFINITY, duration: 8, ease: "easeInOut" }}
+                />
+                <motion.circle
+                  cx="70%"
+                  cy="30%"
+                  r="50"
+                  fill="none"
+                  stroke={darkMode ? "rgba(236, 72, 153, 0.2)" : "rgba(236, 72, 153, 0.5)"}
+                  strokeWidth="2"
+                  animate={{
+                    scale: [1, 1.3, 1],
+                    opacity: [0.3, 0.6, 0.3],
+                  }}
+                  transition={{ repeat: Number.POSITIVE_INFINITY, duration: 6, ease: "easeInOut" }}
+                />
+                <motion.circle
+                  cx="30%"
+                  cy="70%"
+                  r="75"
+                  fill="none"
+                  stroke={darkMode ? "rgba(16, 185, 129, 0.2)" : "rgba(16, 185, 129, 0.5)"}
+                  strokeWidth="2"
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    opacity: [0.3, 0.4, 0.3],
+                  }}
+                  transition={{ repeat: Number.POSITIVE_INFINITY, duration: 7, ease: "easeInOut" }}
+                />
+              </svg>
             </div>
             <Header />
             <main className="flex-grow container mx-auto px-4 py-8 relative z-10">

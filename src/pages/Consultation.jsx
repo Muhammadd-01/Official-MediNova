@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react"
 import { Helmet } from "react-helmet-async"
 import { Link } from "react-router-dom"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import DoctorProfile from "../components/DoctorProfile"
 import { DarkModeContext } from "../App"
 
@@ -57,8 +57,12 @@ const doctors = [
 ]
 
 function Consultation() {
-  const [isPremium, setIsPremium] = useState(false)
+  const [showPremiumModal, setShowPremiumModal] = useState(false)
   const { darkMode } = useContext(DarkModeContext)
+
+  const handleBookAppointment = () => {
+    setShowPremiumModal(true)
+  }
 
   return (
     <>
@@ -87,34 +91,16 @@ function Consultation() {
         >
           Book a Consultation
         </motion.h1>
-        {!isPremium ? (
-          <motion.div
-            className={`${darkMode ? "bg-gray-800" : "bg-yellow-100"} border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <p className="font-bold">Premium Feature</p>
-            <p>Upgrade to a premium account to book consultations with our expert doctors.</p>
-            <button
-              onClick={() => setIsPremium(true)}
-              className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300"
-            >
-              Upgrade to Premium
-            </button>
-          </motion.div>
-        ) : (
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            {doctors.map((doctor) => (
-              <DoctorProfile key={doctor.id} doctor={doctor} />
-            ))}
-          </motion.div>
-        )}
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          {doctors.map((doctor) => (
+            <DoctorProfile key={doctor.id} doctor={doctor} onBookAppointment={handleBookAppointment} />
+          ))}
+        </motion.div>
         <motion.div
           className="mt-8"
           initial={{ opacity: 0, y: 20 }}
@@ -141,6 +127,44 @@ function Consultation() {
           </ul>
         </motion.div>
       </div>
+
+      <AnimatePresence>
+        {showPremiumModal && (
+          <motion.div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className={`${darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"} p-8 rounded-lg shadow-xl max-w-md w-full`}
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+            >
+              <h2 className="text-2xl font-bold mb-4">Upgrade to Premium</h2>
+              <p className="mb-6">Unlock premium features to book consultations with our expert doctors.</p>
+              <div className="flex justify-between">
+                <button
+                  onClick={() => setShowPremiumModal(false)}
+                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition duration-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    // Handle premium upgrade logic here
+                    setShowPremiumModal(false)
+                  }}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300"
+                >
+                  Upgrade Now
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }
