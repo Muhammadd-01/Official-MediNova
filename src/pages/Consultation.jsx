@@ -12,7 +12,8 @@ const doctors = [
     specialization: "Cardiologist",
     availability: "Mon, Wed, Fri",
     phone: "+1 (555) 123-4567",
-    image: "/placeholder.svg?height=150&width=150",
+    image:
+      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300&q=80",
   },
   {
     id: 2,
@@ -20,7 +21,8 @@ const doctors = [
     specialization: "Dermatologist",
     availability: "Tue, Thu, Sat",
     phone: "+1 (555) 234-5678",
-    image: "/placeholder.svg?height=150&width=150",
+    image:
+      "https://images.unsplash.com/photo-1594824476967-48c8b964273f?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300&q=80",
   },
   {
     id: 3,
@@ -28,7 +30,8 @@ const doctors = [
     specialization: "Pediatrician",
     availability: "Mon, Tue, Wed",
     phone: "+1 (555) 345-6789",
-    image: "/placeholder.svg?height=150&width=150",
+    image:
+      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300&q=80",
   },
   {
     id: 4,
@@ -36,7 +39,8 @@ const doctors = [
     specialization: "Neurologist",
     availability: "Wed, Thu, Fri",
     phone: "+1 (555) 456-7890",
-    image: "/placeholder.svg?height=150&width=150",
+    image:
+      "https://images.unsplash.com/photo-1594824476967-48c8b964273f?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300&q=80",
   },
   {
     id: 5,
@@ -44,7 +48,8 @@ const doctors = [
     specialization: "Orthopedic Surgeon",
     availability: "Mon, Wed, Fri",
     phone: "+1 (555) 567-8901",
-    image: "/placeholder.svg?height=150&width=150",
+    image:
+      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300&q=80",
   },
   {
     id: 6,
@@ -52,7 +57,8 @@ const doctors = [
     specialization: "Psychiatrist",
     availability: "Tue, Thu, Sat",
     phone: "+1 (555) 678-9012",
-    image: "/placeholder.svg?height=150&width=150",
+    image:
+      "https://images.unsplash.com/photo-1594824476967-48c8b964273f?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&h=300&q=80",
   },
 ]
 
@@ -82,7 +88,7 @@ function Consultation() {
         <meta property="og:type" content="website" />
       </Helmet>
 
-      <div className={`${darkMode ? "text-white" : "text-gray-800"}`}>
+      <div className={`${darkMode ? "text-blue-200" : "text-blue-900"}`}>
         <motion.h1
           className="text-4xl font-bold mb-8 text-center"
           initial={{ opacity: 0, y: -20 }}
@@ -144,7 +150,7 @@ function Consultation() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className={`${darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"} p-8 rounded-lg shadow-xl max-w-md w-full`}
+              className={`${darkMode ? "bg-blue-800 text-blue-200" : "bg-white text-blue-900"} p-8 rounded-lg shadow-xl max-w-md w-full`}
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
