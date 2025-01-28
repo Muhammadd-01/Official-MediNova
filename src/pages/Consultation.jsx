@@ -1,7 +1,9 @@
-import React, { useState } from "react"
+import React, { useState, useContext } from "react"
 import { Helmet } from "react-helmet-async"
 import { Link } from "react-router-dom"
+import { motion } from "framer-motion"
 import DoctorProfile from "../components/DoctorProfile"
+import { DarkModeContext } from "../App"
 
 const doctors = [
   {
@@ -10,6 +12,7 @@ const doctors = [
     specialization: "Cardiologist",
     availability: "Mon, Wed, Fri",
     phone: "+1 (555) 123-4567",
+    image: "/placeholder.svg?height=150&width=150",
   },
   {
     id: 2,
@@ -17,6 +20,7 @@ const doctors = [
     specialization: "Dermatologist",
     availability: "Tue, Thu, Sat",
     phone: "+1 (555) 234-5678",
+    image: "/placeholder.svg?height=150&width=150",
   },
   {
     id: 3,
@@ -24,11 +28,37 @@ const doctors = [
     specialization: "Pediatrician",
     availability: "Mon, Tue, Wed",
     phone: "+1 (555) 345-6789",
+    image: "/placeholder.svg?height=150&width=150",
+  },
+  {
+    id: 4,
+    name: "Dr. Sarah Lee",
+    specialization: "Neurologist",
+    availability: "Wed, Thu, Fri",
+    phone: "+1 (555) 456-7890",
+    image: "/placeholder.svg?height=150&width=150",
+  },
+  {
+    id: 5,
+    name: "Dr. Robert Chen",
+    specialization: "Orthopedic Surgeon",
+    availability: "Mon, Wed, Fri",
+    phone: "+1 (555) 567-8901",
+    image: "/placeholder.svg?height=150&width=150",
+  },
+  {
+    id: 6,
+    name: "Dr. Emily Davis",
+    specialization: "Psychiatrist",
+    availability: "Tue, Thu, Sat",
+    phone: "+1 (555) 678-9012",
+    image: "/placeholder.svg?height=150&width=150",
   },
 ]
 
 function Consultation() {
   const [isPremium, setIsPremium] = useState(false)
+  const { darkMode } = useContext(DarkModeContext)
 
   return (
     <>
@@ -48,27 +78,49 @@ function Consultation() {
         <meta property="og:type" content="website" />
       </Helmet>
 
-      <div>
-        <h1 className="text-3xl font-bold mb-6">Book a Consultation</h1>
+      <div className={`${darkMode ? "text-white" : "text-gray-800"}`}>
+        <motion.h1
+          className="text-4xl font-bold mb-8 text-center"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          Book a Consultation
+        </motion.h1>
         {!isPremium ? (
-          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
+          <motion.div
+            className={`${darkMode ? "bg-gray-800" : "bg-yellow-100"} border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
             <p className="font-bold">Premium Feature</p>
             <p>Upgrade to a premium account to book consultations with our expert doctors.</p>
             <button
               onClick={() => setIsPremium(true)}
-              className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300"
             >
               Upgrade to Premium
             </button>
-          </div>
+          </motion.div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
             {doctors.map((doctor) => (
               <DoctorProfile key={doctor.id} doctor={doctor} />
             ))}
-          </div>
+          </motion.div>
         )}
-        <div className="mt-8">
+        <motion.div
+          className="mt-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
           <h2 className="text-2xl font-semibold mb-4">Related Services</h2>
           <ul className="list-disc list-inside">
             <li>
@@ -87,7 +139,7 @@ function Consultation() {
               </Link>
             </li>
           </ul>
-        </div>
+        </motion.div>
       </div>
     </>
   )
