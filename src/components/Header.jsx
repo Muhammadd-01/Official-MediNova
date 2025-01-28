@@ -10,9 +10,7 @@ function Header() {
   const { isAuthenticated, logout } = useContext(AuthContext)
 
   return (
-    <header
-      className={`${darkMode ? "bg-gray-900" : "bg-blue-900"} text-white shadow-lg transition-colors duration-300`}
-    >
+    <header className="bg-gradient-to-r from-blue-900 to-blue-700 text-white shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold">
@@ -24,7 +22,7 @@ function Header() {
                 <motion.div key={item} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
-                    className="hover:text-blue-300 transition duration-300"
+                    className="hover:text-blue-200 transition duration-300"
                   >
                     {item}
                   </Link>
@@ -62,7 +60,7 @@ function Header() {
             )}
             <motion.button
               onClick={() => setDarkMode(!darkMode)}
-              className="p-2 rounded-full hover:bg-gray-700 transition duration-300"
+              className="p-2 rounded-full hover:bg-blue-800 transition duration-300"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -72,7 +70,7 @@ function Header() {
           <div className="md:hidden flex items-center">
             <motion.button
               onClick={() => setDarkMode(!darkMode)}
-              className="p-2 rounded-full hover:bg-gray-700 transition duration-300 mr-2"
+              className="p-2 rounded-full hover:bg-blue-800 transition duration-300 mr-2"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -89,14 +87,14 @@ function Header() {
         </div>
       </div>
       {isMenuOpen && (
-        <div className="md:hidden">
+        <div className="md:hidden bg-blue-800">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {["Home", "About", "Medicine Suggestion", "Consultation", "Articles", "News", "Feedback", "Contact"].map(
               (item) => (
                 <Link
                   key={item}
                   to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
-                  className="block px-3 py-2 rounded-md text-base font-medium hover:text-blue-300 hover:bg-gray-800 transition duration-300"
+                  className="block px-3 py-2 rounded-md text-base font-medium hover:text-blue-200 hover:bg-blue-700 transition duration-300"
                 >
                   {item}
                 </Link>

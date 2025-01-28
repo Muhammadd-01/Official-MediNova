@@ -47,9 +47,9 @@ function App() {
         <HelmetProvider>
           <Router>
             <div
-              className={`flex flex-col min-h-screen ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"} transition-colors duration-300`}
+              className={`flex flex-col min-h-screen ${darkMode ? "bg-gradient-to-br from-blue-900 via-blue-700 to-blue-500" : "bg-gradient-to-br from-blue-100 via-blue-200 to-white"} text-gray-900 dark:text-white transition-colors duration-300`}
             >
-              <BackgroundAnimation darkMode={darkMode} />
+              <BackgroundAnimation />
               <Header />
               <main className="flex-grow container mx-auto px-4 py-8 relative z-10">
                 <Routes>
