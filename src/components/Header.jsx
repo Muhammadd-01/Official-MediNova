@@ -2,6 +2,7 @@ import React, { useState, useContext } from "react"
 import { Link } from "react-router-dom"
 import { Menu, X, Moon, Sun } from "lucide-react"
 import { DarkModeContext } from "../App"
+import { motion } from "framer-motion"
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -16,48 +17,44 @@ function Header() {
           <Link to="/" className="text-2xl font-bold">
             MediCare
           </Link>
-          <div className="hidden md:flex space-x-4 items-center">
-            <Link to="/" className="hover:text-blue-300 transition duration-300">
-              Home
-            </Link>
-            <Link to="/about" className="hover:text-blue-300 transition duration-300">
-              About
-            </Link>
-            <Link to="/medicine-suggestion" className="hover:text-blue-300 transition duration-300">
-              Medicine Suggestion
-            </Link>
-            <Link to="/consultation" className="hover:text-blue-300 transition duration-300">
-              Consultation
-            </Link>
-            <Link to="/articles" className="hover:text-blue-300 transition duration-300">
-              Articles
-            </Link>
-            <Link to="/news" className="hover:text-blue-300 transition duration-300">
-              News
-            </Link>
-            <Link to="/feedback" className="hover:text-blue-300 transition duration-300">
-              Feedback
-            </Link>
-            <Link to="/contact" className="hover:text-blue-300 transition duration-300">
-              Contact
-            </Link>
-            <button
+          <motion.div className="hidden md:flex space-x-4 items-center">
+            {["Home", "About", "Medicine Suggestion", "Consultation", "Articles", "News", "Feedback", "Contact"].map(
+              (item) => (
+                <motion.div key={item} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                  <Link
+                    to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
+                    className="hover:text-blue-300 transition duration-300"
+                  >
+                    {item}
+                  </Link>
+                </motion.div>
+              ),
+            )}
+            <motion.button
               onClick={() => setDarkMode(!darkMode)}
               className="p-2 rounded-full hover:bg-gray-700 transition duration-300"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
             >
               {darkMode ? <Sun size={24} /> : <Moon size={24} />}
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
           <div className="md:hidden flex items-center">
-            <button
+            <motion.button
               onClick={() => setDarkMode(!darkMode)}
               className="p-2 rounded-full hover:bg-gray-700 transition duration-300 mr-2"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
             >
               {darkMode ? <Sun size={24} /> : <Moon size={24} />}
-            </button>
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            </motion.button>
+            <motion.button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>

@@ -26,7 +26,7 @@ function DoctorProfile({ doctor, onBookAppointment }) {
   return (
     <motion.div
       className={`${darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"} p-6 rounded-lg shadow-md`}
-      whileHover={{ scale: 1.05 }}
+      whileHover={{ scale: 1.05, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}
       whileTap={{ scale: 0.95 }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -39,8 +39,8 @@ function DoctorProfile({ doctor, onBookAppointment }) {
         src={doctor.image || "/placeholder.svg"}
         alt={doctor.name}
         className="w-32 h-32 rounded-full mx-auto mb-4"
-        whileHover={{ scale: 1.1 }}
-        transition={{ duration: 0.2 }}
+        whileHover={{ scale: 1.1, rotate: 360 }}
+        transition={{ duration: 0.5 }}
       />
       <motion.h2
         className="text-2xl font-semibold mb-2 text-center"
@@ -62,7 +62,7 @@ function DoctorProfile({ doctor, onBookAppointment }) {
         className="mb-2 text-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
+        transition={{ delay: 0.4 }}
       >
         <strong>Availability:</strong> {doctor.availability}
       </motion.p>
@@ -70,13 +70,13 @@ function DoctorProfile({ doctor, onBookAppointment }) {
         className="mb-4 text-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
+        transition={{ delay: 0.5 }}
       >
         <strong>Phone:</strong> {doctor.phone}
       </motion.p>
       <motion.button
         className={`w-full ${darkMode ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-600 hover:bg-blue-700"} text-white px-4 py-2 rounded transition duration-300`}
-        whileHover={{ scale: 1.05 }}
+        whileHover={{ scale: 1.05, boxShadow: "0 5px 10px rgba(0,0,0,0.2)" }}
         whileTap={{ scale: 0.95 }}
         onClick={onBookAppointment}
       >

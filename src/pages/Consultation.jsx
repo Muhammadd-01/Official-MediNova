@@ -97,8 +97,15 @@ function Consultation() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          {doctors.map((doctor) => (
-            <DoctorProfile key={doctor.id} doctor={doctor} onBookAppointment={handleBookAppointment} />
+          {doctors.map((doctor, index) => (
+            <motion.div
+              key={doctor.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 * (index + 1) }}
+            >
+              <DoctorProfile doctor={doctor} onBookAppointment={handleBookAppointment} />
+            </motion.div>
           ))}
         </motion.div>
         <motion.div
