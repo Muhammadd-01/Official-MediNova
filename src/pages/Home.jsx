@@ -1,12 +1,15 @@
-import React from "react"
+import React, { useContext } from "react"
 import { Helmet } from "react-helmet-async"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
 import Slider from "../components/Slider"
 import NewsletterSignup from "../components/NewsletterSignup"
 import FAQ from "../components/FAQ"
+import { DarkModeContext } from "../App"
 
 function Home() {
+  const { darkMode } = useContext(DarkModeContext)
+
   return (
     <>
       <Helmet>
@@ -34,7 +37,7 @@ function Home() {
           transition={{ duration: 0.5 }}
         >
           <motion.h1
-            className="text-5xl font-bold mb-8 text-center text-blue-900 dark:text-white"
+            className={`text-5xl font-bold mb-8 text-center ${darkMode ? "text-white" : "text-blue-900"}`}
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -42,7 +45,7 @@ function Home() {
             Welcome to MediCare
           </motion.h1>
           <motion.p
-            className="text-xl mb-12 text-center text-blue-800 dark:text-blue-200"
+            className={`text-xl mb-12 text-center ${darkMode ? "text-blue-200" : "text-blue-800"}`}
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
@@ -59,25 +62,25 @@ function Home() {
               {
                 title: "Medicine Suggestions",
                 image:
-                  "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                  "https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
                 description: "Get personalized medicine recommendations based on your symptoms.",
               },
               {
                 title: "Expert Consultations",
                 image:
-                  "https://images.unsplash.com/photo-1551884170-09fb70a3a2ed?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                  "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
                 description: "Book a consultation with our experienced medical professionals.",
               },
               {
                 title: "Health Articles",
                 image:
-                  "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                  "https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
                 description: "Read the latest articles on various health topics.",
               },
             ].map((service, index) => (
               <motion.div
                 key={service.title}
-                className="bg-white dark:bg-blue-800 rounded-lg shadow-lg overflow-hidden"
+                className={`${darkMode ? "bg-gray-800" : "bg-white"} rounded-lg shadow-lg overflow-hidden`}
                 whileHover={{ scale: 1.05, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}
                 whileTap={{ scale: 0.95 }}
                 initial={{ opacity: 0, y: 20 }}
@@ -90,8 +93,10 @@ function Home() {
                   className="w-full h-48 object-cover"
                 />
                 <div className="p-6">
-                  <h2 className="text-2xl font-semibold mb-4 text-blue-900 dark:text-white">{service.title}</h2>
-                  <p className="text-blue-800 dark:text-blue-200 mb-4">{service.description}</p>
+                  <h2 className={`text-2xl font-semibold mb-4 ${darkMode ? "text-white" : "text-blue-900"}`}>
+                    {service.title}
+                  </h2>
+                  <p className={`${darkMode ? "text-blue-200" : "text-blue-800"} mb-4`}>{service.description}</p>
                   <Link
                     to={`/${service.title.toLowerCase().replace(" ", "-")}`}
                     className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300"
@@ -103,32 +108,40 @@ function Home() {
             ))}
           </motion.div>
         </motion.div>
-        <div className="bg-white dark:bg-blue-800 rounded-lg shadow-lg p-8 mb-16">
-          <h2 className="text-3xl font-bold mb-6 text-blue-900 dark:text-white">Why Choose MediCare?</h2>
+        <div className={`${darkMode ? "bg-gray-800" : "bg-white"} rounded-lg shadow-lg p-8 mb-16`}>
+          <h2 className={`text-3xl font-bold mb-6 ${darkMode ? "text-white" : "text-blue-900"}`}>
+            Why Choose MediCare?
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-xl font-semibold mb-4 text-blue-700 dark:text-blue-300">Expert Medical Advice</h3>
-              <p className="text-blue-800 dark:text-blue-200">
+              <h3 className={`text-xl font-semibold mb-4 ${darkMode ? "text-blue-300" : "text-blue-700"}`}>
+                Expert Medical Advice
+              </h3>
+              <p className={`${darkMode ? "text-blue-200" : "text-blue-800"}`}>
                 Our team of experienced healthcare professionals provides accurate and up-to-date medical information.
               </p>
             </div>
             <div>
-              <h3 className="text-xl font-semibold mb-4 text-blue-700 dark:text-blue-300">Personalized Care</h3>
-              <p className="text-blue-800 dark:text-blue-200">
+              <h3 className={`text-xl font-semibold mb-4 ${darkMode ? "text-blue-300" : "text-blue-700"}`}>
+                Personalized Care
+              </h3>
+              <p className={`${darkMode ? "text-blue-200" : "text-blue-800"}`}>
                 We offer tailored medicine suggestions and consultations based on your unique health needs.
               </p>
             </div>
             <div>
-              <h3 className="text-xl font-semibold mb-4 text-blue-700 dark:text-blue-300">24/7 Accessibility</h3>
-              <p className="text-blue-800 dark:text-blue-200">
+              <h3 className={`text-xl font-semibold mb-4 ${darkMode ? "text-blue-300" : "text-blue-700"}`}>
+                24/7 Accessibility
+              </h3>
+              <p className={`${darkMode ? "text-blue-200" : "text-blue-800"}`}>
                 Access our services anytime, anywhere, ensuring you always have the support you need.
               </p>
             </div>
             <div>
-              <h3 className="text-xl font-semibold mb-4 text-blue-700 dark:text-blue-300">
+              <h3 className={`text-xl font-semibold mb-4 ${darkMode ? "text-blue-300" : "text-blue-700"}`}>
                 Comprehensive Health Resources
               </h3>
-              <p className="text-blue-800 dark:text-blue-200">
+              <p className={`${darkMode ? "text-blue-200" : "text-blue-800"}`}>
                 From articles to news updates, we provide a wide range of health-related information to keep you
                 informed.
               </p>
