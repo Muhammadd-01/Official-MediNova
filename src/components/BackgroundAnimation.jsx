@@ -1,45 +1,55 @@
-import * as React from "react"
+import React from "react"
 import { motion } from "framer-motion"
 
-export function BackgroundAnimation() {
+const BackgroundAnimation = ({ darkMode }) => {
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden">
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
       <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-blue-100 to-white"
+        className="absolute inset-0"
         animate={{
-          background: [
-            "linear-gradient(to bottom right, #E6F3FF, #FFFFFF)",
-            "linear-gradient(to bottom right, #F0F8FF, #FFFFFF)",
-            "linear-gradient(to bottom right, #E6F3FF, #FFFFFF)",
-          ],
+          background: darkMode
+            ? [
+                "radial-gradient(circle at 20% 20%, rgba(54, 54, 54, 1) 0%, rgba(24, 24, 24, 1) 100%)",
+                "radial-gradient(circle at 80% 80%, rgba(54, 54, 54, 1) 0%, rgba(24, 24, 24, 1) 100%)",
+                "radial-gradient(circle at 20% 20%, rgba(54, 54, 54, 1) 0%, rgba(24, 24, 24, 1) 100%)",
+              ]
+            : [
+                "radial-gradient(circle at 20% 20%, rgba(240, 249, 255, 1) 0%, rgba(224, 242, 254, 1) 100%)",
+                "radial-gradient(circle at 80% 80%, rgba(224, 242, 254, 1) 0%, rgba(186, 230, 253, 1) 100%)",
+                "radial-gradient(circle at 20% 20%, rgba(240, 249, 255, 1) 0%, rgba(224, 242, 254, 1) 100%)",
+              ],
         }}
-        transition={{ duration: 10, repeat: Number.POSITIVE_INFINITY, repeatType: "reverse" }}
+        transition={{ repeat: Number.POSITIVE_INFINITY, duration: 20, ease: "linear" }}
       />
-      <svg className="absolute inset-0 w-full h-full">
-        <motion.circle
-          cx="10%"
-          cy="10%"
-          r="5"
-          fill="#4A90E2"
-          animate={{
-            cx: ["10%", "90%", "10%"],
-            cy: ["10%", "90%", "10%"],
+      {[...Array(20)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            width: Math.random() * 100 + 50,
+            height: Math.random() * 100 + 50,
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+            background: darkMode
+              ? `rgba(${Math.random() * 50 + 100}, ${Math.random() * 50 + 100}, ${Math.random() * 50 + 200}, 0.1)`
+              : `rgba(${Math.random() * 50 + 200}, ${Math.random() * 50 + 200}, ${Math.random() * 50 + 200}, 0.1)`,
           }}
-          transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, repeatType: "reverse" }}
-        />
-        <motion.circle
-          cx="90%"
-          cy="90%"
-          r="5"
-          fill="#4A90E2"
           animate={{
-            cx: ["90%", "10%", "90%"],
-            cy: ["90%", "10%", "90%"],
+            scale: [1, 1.5, 1],
+            opacity: [0.1, 0.3, 0.1],
+            x: [0, Math.random() * 100 - 50, 0],
+            y: [0, Math.random() * 100 - 50, 0],
           }}
-          transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, repeatType: "reverse" }}
+          transition={{
+            duration: Math.random() * 10 + 10,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "easeInOut",
+          }}
         />
-      </svg>
+      ))}
     </div>
   )
 }
+
+export default BackgroundAnimation
 
