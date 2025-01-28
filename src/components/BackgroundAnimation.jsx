@@ -1,5 +1,5 @@
-import React from "react"
-import { motion } from "framer-motion"
+import React from 'react'
+import { motion } from 'framer-motion'
 
 const BackgroundAnimation = ({ darkMode }) => {
   return (
@@ -14,12 +14,12 @@ const BackgroundAnimation = ({ darkMode }) => {
                 "radial-gradient(circle at 20% 20%, rgba(54, 54, 54, 1) 0%, rgba(24, 24, 24, 1) 100%)",
               ]
             : [
-                "radial-gradient(circle at 20% 20%, rgba(240, 249, 255, 1) 0%, rgba(224, 242, 254, 1) 100%)",
-                "radial-gradient(circle at 80% 80%, rgba(224, 242, 254, 1) 0%, rgba(186, 230, 253, 1) 100%)",
-                "radial-gradient(circle at 20% 20%, rgba(240, 249, 255, 1) 0%, rgba(224, 242, 254, 1) 100%)",
+                "radial-gradient(circle at 20% 20%, rgba(173, 216, 230, 1) 0%, rgba(135, 206, 235, 1) 100%)",
+                "radial-gradient(circle at 80% 80%, rgba(135, 206, 235, 1) 0%, rgba(70, 130, 180, 1) 100%)",
+                "radial-gradient(circle at 20% 20%, rgba(173, 216, 230, 1) 0%, rgba(135, 206, 235, 1) 100%)",
               ],
         }}
-        transition={{ repeat: Number.POSITIVE_INFINITY, duration: 20, ease: "linear" }}
+        transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
       />
       {[...Array(20)].map((_, i) => (
         <motion.div
@@ -32,7 +32,7 @@ const BackgroundAnimation = ({ darkMode }) => {
             left: `${Math.random() * 100}%`,
             background: darkMode
               ? `rgba(${Math.random() * 50 + 100}, ${Math.random() * 50 + 100}, ${Math.random() * 50 + 200}, 0.1)`
-              : `rgba(${Math.random() * 50 + 200}, ${Math.random() * 50 + 200}, ${Math.random() * 50 + 200}, 0.1)`,
+              : `rgba(${Math.random() * 50 + 150}, ${Math.random() * 50 + 200}, ${Math.random() * 50 + 230}, 0.1)`,
           }}
           animate={{
             scale: [1, 1.5, 1],
@@ -42,7 +42,7 @@ const BackgroundAnimation = ({ darkMode }) => {
           }}
           transition={{
             duration: Math.random() * 10 + 10,
-            repeat: Number.POSITIVE_INFINITY,
+            repeat: Infinity,
             ease: "easeInOut",
           }}
         />
@@ -52,4 +52,3 @@ const BackgroundAnimation = ({ darkMode }) => {
 }
 
 export default BackgroundAnimation
-

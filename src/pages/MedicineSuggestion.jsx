@@ -18,6 +18,27 @@ const symptoms = [
 
 const allergies = ["Penicillin", "Aspirin", "Ibuprofen", "Sulfa drugs", "Latex"]
 
+const medicineData = {
+  Acetaminophen: {
+    image: "https://www.drugs.com/images/pills/nlm/004780001.jpg",
+    description: "Pain reliever and fever reducer",
+    dosage: "325-650 mg every 4-6 hours as needed",
+    sideEffects: ["Nausea", "Stomach pain", "Loss of appetite", "Headache"],
+  },
+  Ibuprofen: {
+    image: "https://www.drugs.com/images/pills/nlm/006720160.jpg",
+    description: "Nonsteroidal anti-inflammatory drug (NSAID)",
+    dosage: "200-400 mg every 4-6 hours as needed",
+    sideEffects: ["Stomach upset", "Dizziness", "Mild heartburn", "Rash"],
+  },
+  Loratadine: {
+    image: "https://www.drugs.com/images/pills/nlm/005190858.jpg",
+    description: "Antihistamine for allergy relief",
+    dosage: "10 mg once daily",
+    sideEffects: ["Headache", "Dry mouth", "Fatigue", "Stomach pain"],
+  },
+}
+
 function MedicineSuggestion() {
   const [formData, setFormData] = useState({
     age: "",
@@ -49,11 +70,15 @@ function MedicineSuggestion() {
     e.preventDefault()
     // In a real application, you would call an API here
     // For this example, we'll use mock data
+    const suggestedMedicines = Object.keys(medicineData)
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 2)
+
     setSuggestions({
-      primarySuggestion: "Acetaminophen 500mg",
-      alternativeSuggestions: ["Ibuprofen 400mg", "Naproxen 220mg"],
+      primarySuggestion: suggestedMedicines[0],
+      alternativeSuggestions: [suggestedMedicines[1]],
       precautions: "Take with food. Avoid alcohol consumption.",
-      possibleSideEffects: ["Nausea", "Dizziness", "Stomach upset"],
+      possibleSideEffects: medicineData[suggestedMedicines[0]].sideEffects,
     })
   }
 
@@ -233,18 +258,35 @@ function MedicineSuggestion() {
             transition={{ duration: 0.5 }}
           >
             <h2 className="text-2xl font-semibold mb-4">Suggested Medicines</h2>
-            <p className="mb-2">
-              <strong>Primary Suggestion:</strong> {suggestions.primarySuggestion}
-            </p>
-            <p className="mb-2">
-              <strong>Alternative Suggestions:</strong> {suggestions.alternativeSuggestions.join(", ")}
-            </p>
-            <p className="mb-2">
-              <strong>Precautions:</strong> {suggestions.precautions}
-            </p>
-            <p className="mb-4">
-              <strong>Possible Side Effects:</strong> {suggestions.possibleSideEffects.join(", ")}
-            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <p className="mb-2">
+                  <strong>Primary Suggestion:</strong> {suggestions.primarySuggestion}
+                </p>
+                <img
+                  src={medicineData[suggestions.primarySuggestion].image || "/placeholder.svg"}
+                  alt={suggestions.primarySuggestion}
+                  className="w-32 h-32 object-cover rounded-lg mb-2"
+                />
+                <p className="mb-2">
+                  <strong>Description:</strong> {medicineData[suggestions.primarySuggestion].description}
+                </p>
+                <p className="mb-2">
+                  <strong>Dosage:</strong> {medicineData[suggestions.primarySuggestion].dosage}
+                </p>
+              </div>
+              <div>
+                <p className="mb-2">
+                  <strong>Alternative Suggestions:</strong> {suggestions.alternativeSuggestions.join(", ")}
+                </p>
+                <p className="mb-2">
+                  <strong>Precautions:</strong> {suggestions.precautions}
+                </p>
+                <p className="mb-2">
+                  <strong>Possible Side Effects:</strong> {suggestions.possibleSideEffects.join(", ")}
+                </p>
+              </div>
+            </div>
             <p className="mt-4 text-sm text-gray-600">
               Please consult with a healthcare professional before taking any medication.
             </p>
