@@ -48,25 +48,27 @@ function App() {
       <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
         <HelmetProvider>
           <Router>
-            <div className="flex flex-col min-h-screen">
+            <div className="flex flex-col min-h-screen relative">
               <BloodStreamBackground />
-              <Header />
-              <main className="flex-grow container mx-auto px-4 py-8 relative z-10">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/medicine-suggestion" element={<MedicineSuggestion />} />
-                  <Route path="/consultation" element={<Consultation />} />
-                  <Route path="/feedback" element={<Feedback />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/articles" element={<Articles />} />
-                  <Route path="/news" element={<News />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/emergency" element={<Emergency />} />
-                </Routes>
-              </main>
-              <Footer />
+              <div className="relative z-10 flex flex-col min-h-screen">
+                <Header />
+                <main className="flex-grow container mx-auto px-4 py-8">
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/medicine-suggestion" element={<MedicineSuggestion />} />
+                    <Route path="/consultation" element={<Consultation />} />
+                    <Route path="/feedback" element={<Feedback />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/articles" element={<Articles />} />
+                    <Route path="/news" element={<News />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/emergency" element={<Emergency />} />
+                  </Routes>
+                </main>
+                <Footer />
+              </div>
               <Chatbot />
             </div>
           </Router>

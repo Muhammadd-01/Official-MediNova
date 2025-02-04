@@ -25,11 +25,11 @@
 }
 
 body {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: #f0f9ff;
 }
 
 .dark body {
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: #1e3a8a;
 }
 
 main {
@@ -38,6 +38,6 @@ main {
 }
 
 .dark main {
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(30, 58, 138, 0.9);
 }
 

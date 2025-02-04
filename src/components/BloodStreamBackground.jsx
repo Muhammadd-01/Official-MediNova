@@ -1,17 +1,14 @@
-import { useState } from "react"
 import { motion } from "framer-motion"
 
 const particleTypes = [
-  { name: "Red Blood Cell", color: "#ff5555", size: 20 },
-  { name: "White Blood Cell", color: "#ffffff", size: 25 },
-  { name: "Platelet", color: "#ffff00", size: 15 },
-  { name: "DNA", color: "#00ff00", size: 30 },
+  { name: "Red Blood Cell", color: "#3b82f6", size: 8 },
+  { name: "White Blood Cell", color: "#93c5fd", size: 10 },
+  { name: "Platelet", color: "#60a5fa", size: 6 },
+  { name: "Plasma", color: "#dbeafe", size: 4 },
 ]
 
 const BloodStreamBackground = () => {
-  const [hoveredParticle, setHoveredParticle] = useState(null)
-
-  const particles = Array.from({ length: 50 }, (_, i) => {
+  const particles = Array.from({ length: 100 }, (_, i) => {
     const type = particleTypes[Math.floor(Math.random() * particleTypes.length)]
     return {
       ...type,
@@ -26,13 +23,14 @@ const BloodStreamBackground = () => {
       {particles.map((particle) => (
         <motion.div
           key={particle.id}
-          className="absolute rounded-full flex items-center justify-center cursor-pointer pointer-events-auto"
+          className="absolute rounded-full"
           style={{
             width: particle.size,
             height: particle.size,
             backgroundColor: particle.color,
             left: `${particle.x}%`,
             top: `${particle.y}%`,
+            opacity: 0.7,
           }}
           animate={{
             x: ["-100%", "100%"],
@@ -42,32 +40,22 @@ const BloodStreamBackground = () => {
             x: {
               repeat: Number.POSITIVE_INFINITY,
               repeatType: "loop",
-              duration: Math.random() * 20 + 10,
+              duration: Math.random() * 60 + 30,
               ease: "linear",
             },
             y: {
               repeat: Number.POSITIVE_INFINITY,
               repeatType: "loop",
-              duration: Math.random() * 20 + 10,
+              duration: Math.random() * 60 + 30,
               ease: "linear",
             },
           }}
-          onHoverStart={() => setHoveredParticle(particle)}
-          onHoverEnd={() => setHoveredParticle(null)}
         >
-          {particle.name === "DNA" && (
-            <div className="w-4 h-8 border-l-2 border-r-2 border-black transform rotate-45"></div>
+          {particle.name === "Red Blood Cell" && (
+            <div className="w-full h-full rounded-full border-2 border-blue-400"></div>
           )}
         </motion.div>
       ))}
-      {hoveredParticle && (
-        <div
-          className="fixed bg-black text-white px-2 py-1 rounded text-sm pointer-events-none"
-          style={{ left: `${hoveredParticle.x}%`, top: `${hoveredParticle.y}%`, transform: "translate(-50%, -100%)" }}
-        >
-          {hoveredParticle.name}
-        </div>
-      )}
     </div>
   )
 }
