@@ -1,11 +1,12 @@
-import React, { useContext } from "react"
+import { useState, useContext } from "react"
 import { Helmet } from "react-helmet-async"
-import { motion } from "framer-motion"
-import { Phone, Ambulance, Hospital } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Phone, Ambulance, Hospital, Heart, Wind, AmbulanceIcon as FirstAid } from "lucide-react"
 import { DarkModeContext } from "../App"
 
 function Emergency() {
   const { darkMode } = useContext(DarkModeContext)
+  const [selectedGuide, setSelectedGuide] = useState(null)
 
   const emergencyServices = [
     { name: "Ambulance", phone: "911", icon: Ambulance },
@@ -13,19 +14,83 @@ function Emergency() {
     { name: "Poison Control", phone: "(800) 222-1222", icon: Phone },
   ]
 
+  const emergencyGuides = {
+    cpr: {
+      title: "How to Perform CPR",
+      icon: Heart,
+      steps: [
+        "Check the scene for safety",
+        "Check for responsiveness by tapping the person and shouting 'Are you okay?'",
+        "If unresponsive, call 911 or ask someone else to do it",
+        "Check for breathing: look for chest movement, listen for breath sounds, and feel for air from the nose or mouth",
+        "If not breathing normally, begin chest compressions:",
+        "- Place the heel of one hand on the center of the chest",
+        "- Place the other hand on top and interlock fingers",
+        "- Keep arms straight and position shoulders directly above hands",
+        "- Push hard and fast at a rate of 100-120 compressions per minute",
+        "- Allow the chest to fully recoil between compressions",
+        "After 30 compressions, give 2 rescue breaths:",
+        "- Tilt the head back and lift the chin",
+        "- Pinch the nose shut and create a seal over the mouth",
+        "- Give 2 breaths, each lasting about 1 second",
+        "Continue cycles of 30 compressions and 2 breaths until help arrives or the person starts breathing normally",
+      ],
+    },
+    choking: {
+      title: "How to Help a Choking Person",
+      icon: Wind,
+      steps: [
+        "Recognize signs of choking: inability to speak, cough, or breathe",
+        "Ask the person 'Are you choking?' If they nod yes, take action",
+        "Stand behind the person and slightly to one side",
+        "Support their chest with one hand and lean them forward",
+        "Give up to 5 sharp back blows between the shoulder blades with the heel of your hand",
+        "If back blows don't work, perform abdominal thrusts (Heimlich maneuver):",
+        "- Stand behind the person and wrap your arms around their waist",
+        "- Make a fist with one hand and place it just above the navel",
+        "- Grasp your fist with the other hand",
+        "- Press hard into the abdomen with quick, upward thrusts",
+        "Alternate between 5 back blows and 5 abdominal thrusts",
+        "If the person becomes unconscious, lower them to the ground and begin CPR",
+        "Continue until the object is expelled or emergency help arrives",
+      ],
+    },
+    bleeding: {
+      title: "How to Stop Severe Bleeding",
+      icon: FirstAid,
+      steps: [
+        "Ensure your own safety and wear protective gloves if available",
+        "Expose the wound by removing or cutting away clothing",
+        "Apply direct pressure to the wound using a clean cloth or sterile gauze",
+        "If blood soaks through, add more layers without removing the original dressing",
+        "Elevate the injured area above the heart if possible",
+        "For limb injuries, locate the pressure point above the wound (e.g., inside of the upper arm for arm wounds)",
+        "Apply firm pressure to the pressure point while maintaining direct pressure on the wound",
+        "If bleeding is life-threatening, consider applying a tourniquet as a last resort:",
+        "- Place the tourniquet 2-3 inches above the wound, not on a joint",
+        "- Tighten until bleeding stops",
+        "- Note the time of application",
+        "Secure the dressing with a bandage",
+        "Keep the person calm and lying down",
+        "Monitor for signs of shock (pale, cool, clammy skin; rapid breathing; weakness)",
+        "Seek immediate medical attention or call emergency services",
+      ],
+    },
+  }
+
   return (
     <>
       <Helmet>
         <title>Emergency Services - MediCare</title>
         <meta
           name="description"
-          content="Access emergency medical services and important contact information. Available 24/7 for your safety."
+          content="Access emergency medical services, important contact information, and step-by-step guides for common emergencies. Available 24/7 for your safety."
         />
         <link rel="canonical" href="https://www.medicare.com/emergency" />
         <meta property="og:title" content="Emergency Medical Services - MediCare" />
         <meta
           property="og:description"
-          content="Quick access to emergency services and contact information for immediate medical assistance."
+          content="Quick access to emergency services, contact information, and guides for immediate medical assistance."
         />
         <meta property="og:url" content="https://www.medicare.com/emergency" />
         <meta property="og:type" content="website" />
@@ -49,7 +114,7 @@ function Emergency() {
           If you are experiencing a medical emergency, please call 911 immediately.
         </motion.p>
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
@@ -72,11 +137,64 @@ function Emergency() {
             </motion.div>
           ))}
         </motion.div>
+
+        <motion.h2
+          className="text-2xl font-semibold mb-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
+          Emergency Guides
+        </motion.h2>
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.7 }}
+        >
+          {Object.entries(emergencyGuides).map(([key, guide]) => (
+            <motion.button
+              key={key}
+              onClick={() => setSelectedGuide(key)}
+              className={`p-4 rounded-lg shadow-md flex flex-col items-center justify-center ${
+                darkMode ? "bg-blue-700 text-white hover:bg-blue-600" : "bg-blue-100 text-blue-800 hover:bg-blue-200"
+              } transition-colors duration-300`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <guide.icon className="w-8 h-8 mb-2" />
+              <span className="text-lg font-medium">{guide.title}</span>
+            </motion.button>
+          ))}
+        </motion.div>
+
+        <AnimatePresence>
+          {selectedGuide && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className={`bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-8 ${
+                darkMode ? "text-blue-100" : "text-blue-900"
+              }`}
+            >
+              <h3 className="text-2xl font-semibold mb-4">{emergencyGuides[selectedGuide].title}</h3>
+              <ol className="list-decimal list-inside space-y-2">
+                {emergencyGuides[selectedGuide].steps.map((step, index) => (
+                  <li key={index} className="mb-2">
+                    {step.startsWith("-") ? <span className="ml-4">{step.substring(1).trim()}</span> : step}
+                  </li>
+                ))}
+              </ol>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <motion.div
           className="mt-12"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.7 }}
+          transition={{ duration: 0.5, delay: 0.8 }}
         >
           <h2 className="text-2xl font-semibold mb-4">When to Seek Emergency Care</h2>
           <ul className="list-disc list-inside space-y-2">
@@ -86,6 +204,10 @@ function Emergency() {
             <li>Severe burns or poisoning</li>
             <li>Broken bones or dislocated joints</li>
             <li>Severe allergic reactions</li>
+            <li>Sudden severe headache or vision problems</li>
+            <li>Sudden weakness or numbness, especially on one side of the body</li>
+            <li>Seizures</li>
+            <li>Severe abdominal pain</li>
           </ul>
         </motion.div>
       </div>
