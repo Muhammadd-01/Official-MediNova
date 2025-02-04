@@ -41,3 +41,8 @@ main {
   background-color: rgba(30, 58, 138, 0.9);
 }
 
+/* Ensure background particles are clickable */
+.fixed.inset-0.pointer-events-none {
+  pointer-events: auto;
+}
+

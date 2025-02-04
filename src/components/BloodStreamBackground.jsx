@@ -2,11 +2,11 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 
 const particleTypes = [
-  { name: "Red Blood Cell", color: "#ef4444", size: 6, shape: "circle" },
-  { name: "White Blood Cell", color: "#f9fafb", size: 8, shape: "circle" },
-  { name: "Platelet", color: "#fbbf24", size: 4, shape: "diamond" },
-  { name: "DNA", color: "#10b981", size: 6, shape: "helix" },
-  { name: "Plasma", color: "#93c5fd", size: 3, shape: "circle" },
+  { name: "Red Blood Cell", color: "#ef4444", size: 8, shape: "circle" },
+  { name: "White Blood Cell", color: "#f9fafb", size: 10, shape: "circle" },
+  { name: "Platelet", color: "#fbbf24", size: 6, shape: "diamond" },
+  { name: "DNA", color: "#10b981", size: 8, shape: "helix" },
+  { name: "Plasma", color: "#93c5fd", size: 4, shape: "circle" },
 ]
 
 const BloodStreamBackground = () => {
@@ -17,12 +17,12 @@ const BloodStreamBackground = () => {
     return {
       ...type,
       id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
+      initialX: Math.random() * 100,
+      initialY: Math.random() * 100,
     }
   })
 
-  const renderParticleShape = (shape, size) => {
+  const renderParticleShape = (shape, size, color) => {
     switch (shape) {
       case "diamond":
         return (
@@ -31,7 +31,7 @@ const BloodStreamBackground = () => {
             style={{
               width: size,
               height: size,
-              backgroundColor: "currentColor",
+              backgroundColor: color,
             }}
           />
         )
@@ -40,14 +40,25 @@ const BloodStreamBackground = () => {
           <div className="relative" style={{ width: size, height: size * 2 }}>
             <div
               className="absolute left-0 w-1/2 h-full rounded-full"
-              style={{ backgroundColor: "currentColor", transform: "skew(0deg, 30deg)" }}
+              style={{ backgroundColor: color, transform: "skew(0deg, 30deg)" }}
             />
             <div
               className="absolute right-0 w-1/2 h-full rounded-full"
-              style={{ backgroundColor: "currentColor", transform: "skew(0deg, -30deg)" }}
+              style={{ backgroundColor: color, transform: "skew(0deg, -30deg)" }}
             />
           </div>
         )
+      case "circle":
+        if (color === "#ef4444") {
+          // Red Blood Cell
+          return (
+            <div className="relative" style={{ width: size, height: size }}>
+              <div className="absolute inset-0 rounded-full" style={{ backgroundColor: color, opacity: 0.7 }} />
+              <div className="absolute inset-2 rounded-full" style={{ backgroundColor: "#fecaca", opacity: 0.5 }} />
+            </div>
+          )
+        }
+        return null
       default:
         return null
     }
@@ -58,14 +69,13 @@ const BloodStreamBackground = () => {
       {particles.map((particle) => (
         <motion.div
           key={particle.id}
-          className={`absolute rounded-full ${particle.shape === "circle" ? "" : "flex items-center justify-center"}`}
+          className="absolute rounded-full flex items-center justify-center"
           style={{
             width: particle.size,
             height: particle.size,
             backgroundColor: particle.shape === "circle" ? particle.color : "transparent",
-            color: particle.color,
-            left: `${particle.x}%`,
-            top: `${particle.y}%`,
+            left: `${particle.initialX}%`,
+            top: `${particle.initialY}%`,
             opacity: 0.7,
           }}
           animate={{
@@ -75,34 +85,37 @@ const BloodStreamBackground = () => {
           transition={{
             x: {
               repeat: Number.POSITIVE_INFINITY,
-              repeatType: "loop",
+              repeatType: "reverse",
               duration: Math.random() * 60 + 30,
               ease: "linear",
             },
             y: {
               repeat: Number.POSITIVE_INFINITY,
-              repeatType: "loop",
+              repeatType: "reverse",
               duration: Math.random() * 60 + 30,
               ease: "linear",
             },
           }}
-          onHoverStart={() => setHoveredParticle(particle)}
-          onHoverEnd={() => setHoveredParticle(null)}
+          onMouseEnter={() => setHoveredParticle(particle)}
+          onMouseLeave={() => setHoveredParticle(null)}
         >
-          {renderParticleShape(particle.shape, particle.size)}
+          {renderParticleShape(particle.shape, particle.size, particle.color)}
         </motion.div>
       ))}
       {hoveredParticle && (
-        <div
-          className="fixed bg-blue-600 text-white px-2 py-1 rounded text-xs pointer-events-none"
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="fixed bg-blue-600 text-white px-2 py-1 rounded text-xs pointer-events-none z-50"
           style={{
-            left: `${hoveredParticle.x}%`,
-            top: `${hoveredParticle.y}%`,
+            left: `${hoveredParticle.initialX}%`,
+            top: `${hoveredParticle.initialY}%`,
             transform: "translate(-50%, -100%)",
           }}
         >
           {hoveredParticle.name}
-        </div>
+        </motion.div>
       )}
     </div>
   )

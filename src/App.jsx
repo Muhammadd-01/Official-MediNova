@@ -50,7 +50,7 @@ function App() {
           <Router>
             <div className="flex flex-col min-h-screen relative">
               <BloodStreamBackground />
-              <div className="relative z-10 flex flex-col min-h-screen">
+              <div className="relative z-10 flex flex-col min-h-screen pointer-events-auto">
                 <Header />
                 <main className="flex-grow container mx-auto px-4 py-8">
                   <Routes>
