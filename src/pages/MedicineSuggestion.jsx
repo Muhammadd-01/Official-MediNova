@@ -3,8 +3,6 @@ import { Helmet } from "react-helmet-async"
 import { motion } from "framer-motion"
 import { Search, AlertCircle } from "lucide-react"
 import { DarkModeContext } from "../App"
-import FormInput from "../components/FormInput"
-import EmergencyGuide from "../components/EmergencyGuide"
 
 const symptoms = [
   "Fever",
@@ -158,10 +156,8 @@ function MedicineSuggestion() {
           Medicine Suggestion
         </motion.h1>
 
-        <EmergencyGuide />
-
         <motion.div
-          className={`mt-8 mb-8 p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-700" : "bg-white"}`}
+          className={`mb-8 p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-700" : "bg-white"}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -249,25 +245,34 @@ function MedicineSuggestion() {
           transition={{ duration: 0.5, delay: 0.4 }}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormInput
-              label="Age"
-              type="number"
-              id="age"
-              name="age"
-              value={formData.age}
-              onChange={handleInputChange}
-              required
-            />
-            <div className="mb-4">
-              <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Gender
+            <div>
+              <label htmlFor="age" className="block mb-2">
+                Age:
+              </label>
+              <input
+                type="number"
+                id="age"
+                name="age"
+                value={formData.age}
+                onChange={handleInputChange}
+                className={`w-full p-2 border rounded ${
+                  darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
+                }`}
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="gender" className="block mb-2">
+                Gender:
               </label>
               <select
                 id="gender"
                 name="gender"
                 value={formData.gender}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
+                className={`w-full p-2 border rounded ${
+                  darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
+                }`}
                 required
               >
                 <option value="">Select gender</option>
@@ -276,30 +281,44 @@ function MedicineSuggestion() {
                 <option value="other">Other</option>
               </select>
             </div>
-            <FormInput
-              label="Weight (kg)"
-              type="number"
-              id="weight"
-              name="weight"
-              value={formData.weight}
-              onChange={handleInputChange}
-              required
-            />
-            <FormInput
-              label="Height (cm)"
-              type="number"
-              id="height"
-              name="height"
-              value={formData.height}
-              onChange={handleInputChange}
-              required
-            />
+            <div>
+              <label htmlFor="weight" className="block mb-2">
+                Weight (kg):
+              </label>
+              <input
+                type="number"
+                id="weight"
+                name="weight"
+                value={formData.weight}
+                onChange={handleInputChange}
+                className={`w-full p-2 border rounded ${
+                  darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
+                }`}
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="height" className="block mb-2">
+                Height (cm):
+              </label>
+              <input
+                type="number"
+                id="height"
+                name="height"
+                value={formData.height}
+                onChange={handleInputChange}
+                className={`w-full p-2 border rounded ${
+                  darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
+                }`}
+                required
+              />
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Symptoms:</label>
+            <label className="block mb-2">Symptoms:</label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {symptoms.map((symptom) => (
-                <div key={symptom} className="flex items-center">
+                <div key={symptom}>
                   <input
                     type="checkbox"
                     id={`symptom-${symptom}`}
@@ -309,18 +328,16 @@ function MedicineSuggestion() {
                     onChange={(e) => handleCheckboxChange(e, "symptoms")}
                     className="mr-2"
                   />
-                  <label htmlFor={`symptom-${symptom}`} className="text-sm">
-                    {symptom}
-                  </label>
+                  <label htmlFor={`symptom-${symptom}`}>{symptom}</label>
                 </div>
               ))}
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Allergies:</label>
+            <label className="block mb-2">Allergies:</label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {allergies.map((allergy) => (
-                <div key={allergy} className="flex items-center">
+                <div key={allergy}>
                   <input
                     type="checkbox"
                     id={`allergy-${allergy}`}
@@ -330,34 +347,44 @@ function MedicineSuggestion() {
                     onChange={(e) => handleCheckboxChange(e, "allergies")}
                     className="mr-2"
                   />
-                  <label htmlFor={`allergy-${allergy}`} className="text-sm">
-                    {allergy}
-                  </label>
+                  <label htmlFor={`allergy-${allergy}`}>{allergy}</label>
                 </div>
               ))}
             </div>
           </div>
-          <FormInput
-            label="Medical History"
-            type="textarea"
-            id="medicalHistory"
-            name="medicalHistory"
-            value={formData.medicalHistory}
-            onChange={handleInputChange}
-            className="h-24"
-          />
-          <FormInput
-            label="Current Medications"
-            type="textarea"
-            id="currentMedications"
-            name="currentMedications"
-            value={formData.currentMedications}
-            onChange={handleInputChange}
-            className="h-24"
-          />
+          <div>
+            <label htmlFor="medicalHistory" className="block mb-2">
+              Medical History:
+            </label>
+            <textarea
+              id="medicalHistory"
+              name="medicalHistory"
+              value={formData.medicalHistory}
+              onChange={handleInputChange}
+              className={`w-full p-2 border rounded ${
+                darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
+              }`}
+              rows="4"
+            ></textarea>
+          </div>
+          <div>
+            <label htmlFor="currentMedications" className="block mb-2">
+              Current Medications:
+            </label>
+            <textarea
+              id="currentMedications"
+              name="currentMedications"
+              value={formData.currentMedications}
+              onChange={handleInputChange}
+              className={`w-full p-2 border rounded ${
+                darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
+              }`}
+              rows="4"
+            ></textarea>
+          </div>
           <motion.button
             type="submit"
-            className="w-full mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors duration-300"
+            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors duration-300"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -402,7 +429,7 @@ function MedicineSuggestion() {
                 </p>
               </div>
             </div>
-            <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-4 text-sm text-gray-600">
               Please consult with a healthcare professional before taking any medication.
             </p>
           </motion.div>
