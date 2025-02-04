@@ -14,7 +14,7 @@ import News from "./pages/News"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
 import Emergency from "./pages/Emergency"
-import BackgroundAnimation from "./components/BackgroundAnimation"
+import BloodStreamBackground from "./components/BloodStreamBackground"
 import Chatbot from "./components/Chatbot"
 
 export const DarkModeContext = React.createContext()
@@ -49,7 +49,7 @@ function App() {
         <HelmetProvider>
           <Router>
             <div className="flex flex-col min-h-screen">
-              <BackgroundAnimation />
+              <BloodStreamBackground />
               <Header />
               <main className="flex-grow container mx-auto px-4 py-8 relative z-10">
                 <Routes>
