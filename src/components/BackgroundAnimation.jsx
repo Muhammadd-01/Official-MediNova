@@ -1,4 +1,4 @@
-import React, { useContext } from "react"
+import { useContext } from "react"
 import { motion } from "framer-motion"
 import { DarkModeContext } from "../App"
 
@@ -12,31 +12,31 @@ const BackgroundAnimation = () => {
         animate={{
           background: darkMode
             ? [
-                "linear-gradient(to bottom right, #000033, #000066, #000099)",
-                "linear-gradient(to bottom right, #000066, #000099, #0000CC)",
-                "linear-gradient(to bottom right, #000033, #000066, #000099)",
+                "linear-gradient(to bottom right, #1a202c, #2d3748, #4a5568)",
+                "linear-gradient(to bottom right, #2d3748, #4a5568, #718096)",
+                "linear-gradient(to bottom right, #1a202c, #2d3748, #4a5568)",
               ]
             : [
-                "linear-gradient(to bottom right, #E6F3FF, #FFFFFF, #CCE6FF)",
-                "linear-gradient(to bottom right, #FFFFFF, #CCE6FF, #99CCFF)",
-                "linear-gradient(to bottom right, #E6F3FF, #FFFFFF, #CCE6FF)",
+                "linear-gradient(to bottom right, #e6f2ff, #ffffff, #cce4ff)",
+                "linear-gradient(to bottom right, #ffffff, #cce4ff, #99c9ff)",
+                "linear-gradient(to bottom right, #e6f2ff, #ffffff, #cce4ff)",
               ],
         }}
         transition={{ repeat: Number.POSITIVE_INFINITY, duration: 20, ease: "linear" }}
       />
-      {[...Array(50)].map((_, i) => (
+      {[...Array(100)].map((_, i) => (
         <motion.div
           key={i}
-          className={`absolute rounded-full ${darkMode ? "bg-blue-300" : "bg-blue-600"}`}
+          className={`absolute rounded-full ${darkMode ? "bg-blue-400" : "bg-blue-600"}`}
           style={{
-            width: Math.random() * 4 + 2,
-            height: Math.random() * 4 + 2,
+            width: Math.random() * 6 + 2,
+            height: Math.random() * 6 + 2,
             top: `${Math.random() * 100}%`,
             left: `${Math.random() * 100}%`,
           }}
           animate={{
             scale: [1, 1.5, 1],
-            opacity: [0.1, 0.5, 0.1],
+            opacity: [0.3, 0.7, 0.3],
             x: [0, Math.random() * 100 - 50, 0],
             y: [0, Math.random() * 100 - 50, 0],
           }}

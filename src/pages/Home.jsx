@@ -1,4 +1,4 @@
-import React, { useContext } from "react"
+import { useContext } from "react"
 import { Helmet } from "react-helmet-async"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
@@ -9,6 +9,12 @@ import { DarkModeContext } from "../App"
 
 function Home() {
   const { darkMode } = useContext(DarkModeContext)
+
+  const fadeInUp = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.6 },
+  }
 
   return (
     <>
@@ -32,23 +38,19 @@ function Home() {
         <Slider />
         <motion.div
           className="container mx-auto px-4 py-16"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
           <motion.h1
-            className={`text-5xl font-bold mb-8 text-center ${darkMode ? "text-white" : "text-blue-900"}`}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            className={`text-5xl font-bold mb-8 text-center ${darkMode ? "text-gray-200" : "text-gray-800"}`}
+            {...fadeInUp}
           >
             Welcome to MediCare
           </motion.h1>
           <motion.p
-            className={`text-xl mb-12 text-center ${darkMode ? "text-blue-200" : "text-blue-800"}`}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+            className={`text-xl mb-12 text-center ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+            {...fadeInUp}
           >
             Your trusted source for medical information and expert consultations.
           </motion.p>
@@ -56,7 +58,7 @@ function Home() {
             className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
           >
             {[
               {
@@ -80,12 +82,13 @@ function Home() {
             ].map((service, index) => (
               <motion.div
                 key={service.title}
-                className={`${darkMode ? "bg-gray-800" : "bg-white"} rounded-lg shadow-lg overflow-hidden`}
-                whileHover={{ scale: 1.05, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}
+                className={`${
+                  darkMode ? "bg-gray-800" : "bg-white"
+                } rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl`}
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 * (index + 1) }}
+                {...fadeInUp}
+                transition={{ delay: 0.1 * (index + 1) }}
               >
                 <img
                   src={service.image || "/placeholder.svg"}
@@ -93,13 +96,13 @@ function Home() {
                   className="w-full h-48 object-cover"
                 />
                 <div className="p-6">
-                  <h2 className={`text-2xl font-semibold mb-4 ${darkMode ? "text-white" : "text-blue-900"}`}>
+                  <h2 className={`text-2xl font-semibold mb-4 ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
                     {service.title}
                   </h2>
-                  <p className={`${darkMode ? "text-blue-200" : "text-blue-800"} mb-4`}>{service.description}</p>
+                  <p className={`${darkMode ? "text-gray-300" : "text-gray-700"} mb-4`}>{service.description}</p>
                   <Link
                     to={`/${service.title.toLowerCase().replace(" ", "-")}`}
-                    className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300"
+                    className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors duration-300"
                   >
                     Learn More
                   </Link>
@@ -108,46 +111,46 @@ function Home() {
             ))}
           </motion.div>
         </motion.div>
-        <div className={`${darkMode ? "bg-gray-800" : "bg-white"} rounded-lg shadow-lg p-8 mb-16`}>
-          <h2 className={`text-3xl font-bold mb-6 ${darkMode ? "text-white" : "text-blue-900"}`}>
+        <motion.div
+          className={`${
+            darkMode ? "bg-gray-800" : "bg-white"
+          } rounded-lg shadow-lg p-8 mb-16 transition-all duration-300 hover:shadow-xl`}
+          {...fadeInUp}
+        >
+          <h2 className={`text-3xl font-bold mb-6 ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
             Why Choose MediCare?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h3 className={`text-xl font-semibold mb-4 ${darkMode ? "text-blue-300" : "text-blue-700"}`}>
-                Expert Medical Advice
-              </h3>
-              <p className={`${darkMode ? "text-blue-200" : "text-blue-800"}`}>
-                Our team of experienced healthcare professionals provides accurate and up-to-date medical information.
-              </p>
-            </div>
-            <div>
-              <h3 className={`text-xl font-semibold mb-4 ${darkMode ? "text-blue-300" : "text-blue-700"}`}>
-                Personalized Care
-              </h3>
-              <p className={`${darkMode ? "text-blue-200" : "text-blue-800"}`}>
-                We offer tailored medicine suggestions and consultations based on your unique health needs.
-              </p>
-            </div>
-            <div>
-              <h3 className={`text-xl font-semibold mb-4 ${darkMode ? "text-blue-300" : "text-blue-700"}`}>
-                24/7 Accessibility
-              </h3>
-              <p className={`${darkMode ? "text-blue-200" : "text-blue-800"}`}>
-                Access our services anytime, anywhere, ensuring you always have the support you need.
-              </p>
-            </div>
-            <div>
-              <h3 className={`text-xl font-semibold mb-4 ${darkMode ? "text-blue-300" : "text-blue-700"}`}>
-                Comprehensive Health Resources
-              </h3>
-              <p className={`${darkMode ? "text-blue-200" : "text-blue-800"}`}>
-                From articles to news updates, we provide a wide range of health-related information to keep you
-                informed.
-              </p>
-            </div>
+            {[
+              {
+                title: "Expert Medical Advice",
+                description:
+                  "Our team of experienced healthcare professionals provides accurate and up-to-date medical information.",
+              },
+              {
+                title: "Personalized Care",
+                description:
+                  "We offer tailored medicine suggestions and consultations based on your unique health needs.",
+              },
+              {
+                title: "24/7 Accessibility",
+                description: "Access our services anytime, anywhere, ensuring you always have the support you need.",
+              },
+              {
+                title: "Comprehensive Health Resources",
+                description:
+                  "From articles to news updates, we provide a wide range of health-related information to keep you informed.",
+              },
+            ].map((item, index) => (
+              <motion.div key={item.title} {...fadeInUp} transition={{ delay: 0.1 * (index + 1) }}>
+                <h3 className={`text-xl font-semibold mb-4 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
+                  {item.title}
+                </h3>
+                <p className={`${darkMode ? "text-gray-400" : "text-gray-600"}`}>{item.description}</p>
+              </motion.div>
+            ))}
           </div>
-        </div>
+        </motion.div>
         <NewsletterSignup />
         <FAQ />
       </div>

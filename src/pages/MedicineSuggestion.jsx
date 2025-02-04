@@ -1,6 +1,7 @@
-import React, { useState, useContext } from "react"
+import { useState, useContext, useEffect } from "react"
 import { Helmet } from "react-helmet-async"
 import { motion } from "framer-motion"
+import { Search } from "lucide-react"
 import { DarkModeContext } from "../App"
 
 const symptoms = [
@@ -51,7 +52,16 @@ function MedicineSuggestion() {
     currentMedications: "",
   })
   const [suggestions, setSuggestions] = useState(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [recentSearches, setRecentSearches] = useState([])
   const { darkMode } = useContext(DarkModeContext)
+
+  useEffect(() => {
+    const savedSearches = localStorage.getItem("recentSearches")
+    if (savedSearches) {
+      setRecentSearches(JSON.parse(savedSearches))
+    }
+  }, [])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -64,6 +74,17 @@ function MedicineSuggestion() {
       ...prevData,
       [category]: checked ? [...prevData[category], value] : prevData[category].filter((item) => item !== value),
     }))
+  }
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    if (searchTerm.trim() !== "") {
+      const updatedSearches = [searchTerm, ...recentSearches.filter((s) => s !== searchTerm)].slice(0, 5)
+      setRecentSearches(updatedSearches)
+      localStorage.setItem("recentSearches", JSON.stringify(updatedSearches))
+      // Here you would typically call an API to search for the disease
+      console.log("Searching for:", searchTerm)
+    }
   }
 
   const handleSubmit = (e) => {
@@ -100,7 +121,7 @@ function MedicineSuggestion() {
         <meta property="og:type" content="website" />
       </Helmet>
 
-      <div className={`max-w-4xl mx-auto ${darkMode ? "text-blue-100" : "text-blue-900"}`}>
+      <div className={`max-w-4xl mx-auto ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
         <motion.h1
           className="text-3xl font-bold mb-6 text-center"
           initial={{ opacity: 0, y: -20 }}
@@ -109,12 +130,58 @@ function MedicineSuggestion() {
         >
           Medicine Suggestion
         </motion.h1>
+
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <form onSubmit={handleSearch} className="flex items-center mb-4">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search for a disease..."
+              className={`flex-grow p-2 border rounded-l-md ${
+                darkMode ? "bg-gray-700 text-gray-200" : "bg-white text-gray-800"
+              }`}
+            />
+            <button
+              type="submit"
+              className="bg-blue-600 text-white p-2 rounded-r-md hover:bg-blue-700 transition-colors duration-300"
+            >
+              <Search size={24} />
+            </button>
+          </form>
+          {recentSearches.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold mb-2">Recent Searches:</h3>
+              <div className="flex flex-wrap gap-2">
+                {recentSearches.map((search, index) => (
+                  <motion.button
+                    key={index}
+                    onClick={() => setSearchTerm(search)}
+                    className={`px-3 py-1 rounded-full text-sm ${
+                      darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-800"
+                    } hover:bg-blue-600 hover:text-white transition-colors duration-300`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {search}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          )}
+        </motion.div>
+
         <motion.form
           onSubmit={handleSubmit}
           className="mb-8 space-y-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -128,7 +195,7 @@ function MedicineSuggestion() {
                 value={formData.age}
                 onChange={handleInputChange}
                 className={`w-full p-2 border rounded ${
-                  darkMode ? "bg-blue-800 text-blue-100" : "bg-blue-50 text-blue-900"
+                  darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
                 }`}
                 required
               />
@@ -143,7 +210,7 @@ function MedicineSuggestion() {
                 value={formData.gender}
                 onChange={handleInputChange}
                 className={`w-full p-2 border rounded ${
-                  darkMode ? "bg-blue-800 text-blue-100" : "bg-blue-50 text-blue-900"
+                  darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
                 }`}
                 required
               >
@@ -164,7 +231,7 @@ function MedicineSuggestion() {
                 value={formData.weight}
                 onChange={handleInputChange}
                 className={`w-full p-2 border rounded ${
-                  darkMode ? "bg-blue-800 text-blue-100" : "bg-blue-50 text-blue-900"
+                  darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
                 }`}
                 required
               />
@@ -180,7 +247,7 @@ function MedicineSuggestion() {
                 value={formData.height}
                 onChange={handleInputChange}
                 className={`w-full p-2 border rounded ${
-                  darkMode ? "bg-blue-800 text-blue-100" : "bg-blue-50 text-blue-900"
+                  darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
                 }`}
                 required
               />
@@ -234,7 +301,7 @@ function MedicineSuggestion() {
               value={formData.medicalHistory}
               onChange={handleInputChange}
               className={`w-full p-2 border rounded ${
-                darkMode ? "bg-blue-800 text-blue-100" : "bg-blue-50 text-blue-900"
+                darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
               }`}
               rows="4"
             ></textarea>
@@ -249,22 +316,24 @@ function MedicineSuggestion() {
               value={formData.currentMedications}
               onChange={handleInputChange}
               className={`w-full p-2 border rounded ${
-                darkMode ? "bg-blue-800 text-blue-100" : "bg-blue-50 text-blue-900"
+                darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
               }`}
               rows="4"
             ></textarea>
           </div>
-          <button
+          <motion.button
             type="submit"
-            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300"
+            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors duration-300"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             Get Suggestions
-          </button>
+          </motion.button>
         </motion.form>
 
         {suggestions && (
           <motion.div
-            className={`bg-white p-6 rounded-lg shadow-md ${darkMode ? "text-blue-900" : ""}`}
+            className={`bg-white p-6 rounded-lg shadow-md ${darkMode ? "text-gray-800" : ""}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
