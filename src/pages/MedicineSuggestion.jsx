@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { Search, AlertCircle } from "lucide-react"
 import { DarkModeContext } from "../App"
 
+
 const symptoms = [
   "Fever",
   "Cough",
@@ -38,6 +39,7 @@ const medicineData = {
     dosage: "10 mg once daily",
     sideEffects: ["Headache", "Dry mouth", "Fatigue", "Stomach pain"],
   },
+  
 }
 
 const commonDiseases = {
