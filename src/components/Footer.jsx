@@ -7,9 +7,11 @@ function Footer() {
 
   return (
     <footer
-      className={`${darkMode ? "bg-gray-800 text-gray-200" : "bg-gray-100 text-gray-800"} py-8 transition-colors duration-300`}
+      className={`${
+        darkMode ? "bg-gray-800 text-gray-200" : "bg-gray-100 text-gray-800"
+      } py-8 transition-colors duration-300 mt-auto`}
     >
-      <div className="container mx-auto px-4 bg-white dark:bg-gray-700 rounded-lg shadow-md p-6">
+      <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <h3 className="text-lg font-semibold mb-4">About MediCare</h3>
@@ -73,12 +75,12 @@ function Footer() {
             <p className="text-sm mb-2">123 Medical Street, Health City, HC 12345</p>
             <p className="text-sm mb-2">Phone: (123) 456-7890</p>
             <p className="text-sm mb-2">Email: info@medicare.com</p>
-            <div className="mt-4">
+            <div className="mt-4 flex space-x-4">
               <a
                 href="https://www.facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mr-4 hover:text-blue-500"
+                className="text-blue-600 hover:text-blue-800"
               >
                 Facebook
               </a>
@@ -86,7 +88,7 @@ function Footer() {
                 href="https://www.twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mr-4 hover:text-blue-400"
+                className="text-blue-400 hover:text-blue-600"
               >
                 Twitter
               </a>
@@ -94,14 +96,14 @@ function Footer() {
                 href="https://www.linkedin.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-blue-700"
+                className="text-blue-700 hover:text-blue-900"
               >
                 LinkedIn
               </a>
             </div>
           </div>
         </div>
-        <div className="mt-8 pt-8 border-t border-blue-200 dark:border-blue-700 text-center">
+        <div className="mt-8 pt-8 border-t border-gray-300 dark:border-gray-700 text-center">
           <p>&copy; 2023 MediCare. All rights reserved.</p>
         </div>
       </div>

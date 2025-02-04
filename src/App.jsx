@@ -48,9 +48,7 @@ function App() {
       <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
         <HelmetProvider>
           <Router>
-            <div
-              className={`flex flex-col min-h-screen ${darkMode ? "bg-blue-900" : "bg-blue-50"} text-gray-900 dark:text-white transition-colors duration-300`}
-            >
+            <div className="flex flex-col min-h-screen">
               <BackgroundAnimation />
               <Header />
               <main className="flex-grow container mx-auto px-4 py-8 relative z-10">
