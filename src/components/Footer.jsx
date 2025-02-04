@@ -9,7 +9,7 @@ function Footer() {
     <footer
       className={`${darkMode ? "bg-gray-800 text-gray-200" : "bg-gray-100 text-gray-800"} py-8 transition-colors duration-300`}
     >
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 bg-white dark:bg-gray-700 rounded-lg shadow-md p-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <h3 className="text-lg font-semibold mb-4">About MediCare</h3>

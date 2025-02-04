@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from "react"
 import { Helmet } from "react-helmet-async"
 import { motion } from "framer-motion"
-import { Search } from "lucide-react"
+import { Search, AlertCircle } from "lucide-react"
 import { DarkModeContext } from "../App"
 
 const symptoms = [
@@ -40,6 +40,22 @@ const medicineData = {
   },
 }
 
+const commonDiseases = {
+  "Common Cold": {
+    description: "A viral infection of the upper respiratory tract.",
+    medicines: ["Acetaminophen", "Ibuprofen", "Loratadine"],
+  },
+  Influenza: {
+    description: "A contagious respiratory illness caused by influenza viruses.",
+    medicines: ["Oseltamivir", "Zanamivir", "Acetaminophen"],
+  },
+  Allergies: {
+    description: "An overreaction of the immune system to harmless substances.",
+    medicines: ["Loratadine", "Cetirizine", "Fexofenadine"],
+  },
+  // Add more common diseases as needed
+}
+
 function MedicineSuggestion() {
   const [formData, setFormData] = useState({
     age: "",
@@ -54,6 +70,8 @@ function MedicineSuggestion() {
   const [suggestions, setSuggestions] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [recentSearches, setRecentSearches] = useState([])
+  const [searchResult, setSearchResult] = useState(null)
+  const [isRareDisease, setIsRareDisease] = useState(false)
   const { darkMode } = useContext(DarkModeContext)
 
   useEffect(() => {
@@ -82,8 +100,15 @@ function MedicineSuggestion() {
       const updatedSearches = [searchTerm, ...recentSearches.filter((s) => s !== searchTerm)].slice(0, 5)
       setRecentSearches(updatedSearches)
       localStorage.setItem("recentSearches", JSON.stringify(updatedSearches))
-      // Here you would typically call an API to search for the disease
-      console.log("Searching for:", searchTerm)
+
+      const disease = commonDiseases[searchTerm]
+      if (disease) {
+        setSearchResult(disease)
+        setIsRareDisease(false)
+      } else {
+        setSearchResult(null)
+        setIsRareDisease(true)
+      }
     }
   }
 
@@ -109,13 +134,13 @@ function MedicineSuggestion() {
         <title>Medicine Suggestions - MediCare</title>
         <meta
           name="description"
-          content="Get personalized medicine suggestions based on your symptoms. Safe dosage recommendations for various conditions."
+          content="Get personalized medicine suggestions based on your symptoms or search for common diseases. Safe dosage recommendations for various conditions."
         />
         <link rel="canonical" href="https://www.medicare.com/medicine-suggestion" />
         <meta property="og:title" content="Personalized Medicine Suggestions - MediCare" />
         <meta
           property="og:description"
-          content="Get safe and effective medicine recommendations based on your symptoms."
+          content="Get safe and effective medicine recommendations based on your symptoms or search for common diseases."
         />
         <meta property="og:url" content="https://www.medicare.com/medicine-suggestion" />
         <meta property="og:type" content="website" />
@@ -132,7 +157,7 @@ function MedicineSuggestion() {
         </motion.h1>
 
         <motion.div
-          className="mb-8"
+          className={`mb-8 p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-700" : "bg-white"}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -144,7 +169,7 @@ function MedicineSuggestion() {
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search for a disease..."
               className={`flex-grow p-2 border rounded-l-md ${
-                darkMode ? "bg-gray-700 text-gray-200" : "bg-white text-gray-800"
+                darkMode ? "bg-gray-600 text-gray-200" : "bg-gray-100 text-gray-800"
               }`}
             />
             <button
@@ -163,7 +188,7 @@ function MedicineSuggestion() {
                     key={index}
                     onClick={() => setSearchTerm(search)}
                     className={`px-3 py-1 rounded-full text-sm ${
-                      darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-800"
+                      darkMode ? "bg-gray-600 text-gray-200" : "bg-gray-200 text-gray-800"
                     } hover:bg-blue-600 hover:text-white transition-colors duration-300`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -174,11 +199,47 @@ function MedicineSuggestion() {
               </div>
             </div>
           )}
+
+          {searchResult && (
+            <motion.div
+              className="mt-4 p-4 rounded-lg bg-blue-100 dark:bg-blue-900"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h2 className="text-xl font-semibold mb-2">{searchTerm}</h2>
+              <p className="mb-2">{searchResult.description}</p>
+              <h3 className="font-semibold mb-1">Suggested Medicines:</h3>
+              <ul className="list-disc list-inside">
+                {searchResult.medicines.map((medicine, index) => (
+                  <li key={index}>{medicine}</li>
+                ))}
+              </ul>
+            </motion.div>
+          )}
+
+          {isRareDisease && (
+            <motion.div
+              className="mt-4 p-4 rounded-lg bg-yellow-100 dark:bg-yellow-900"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="flex items-center mb-2">
+                <AlertCircle className="mr-2 text-yellow-600 dark:text-yellow-400" />
+                <h2 className="text-xl font-semibold">Rare or Uncommon Disease</h2>
+              </div>
+              <p>
+                This disease is not commonly searched. Please fill out the detailed form below for a personalized
+                suggestion.
+              </p>
+            </motion.div>
+          )}
         </motion.div>
 
         <motion.form
           onSubmit={handleSubmit}
-          className="mb-8 space-y-6"
+          className={`mb-8 space-y-6 p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-700" : "bg-white"}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
@@ -327,13 +388,13 @@ function MedicineSuggestion() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            Get Suggestions
+            Get Personalized Suggestions
           </motion.button>
         </motion.form>
 
         {suggestions && (
           <motion.div
-            className={`bg-white p-6 rounded-lg shadow-md ${darkMode ? "text-gray-800" : ""}`}
+            className={`p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-700 text-gray-200" : "bg-white text-gray-800"}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
