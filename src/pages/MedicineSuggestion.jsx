@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet-async"
 import { motion, AnimatePresence } from "framer-motion"
 import { Search, AlertCircle, ChevronDown, ChevronUp } from "lucide-react"
 import { DarkModeContext } from "../App"
+import SponsorSlider from "../components/SponsorSlider"
 
 const symptoms = [
   "Fever",
@@ -185,7 +186,7 @@ function MedicineSuggestion() {
 
       <div className={`max-w-4xl mx-auto ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
         <motion.h1
-          className="text-3xl font-bold mb-6 text-center"
+          className="text-3xl font-bold mb-6 text-center text-professionalBlue-800 dark:text-professionalBlue-200"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -206,12 +207,12 @@ function MedicineSuggestion() {
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search for a disease..."
               className={`flex-grow p-2 border rounded-l-md ${
-                darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
+                darkMode ? "bg-gray-700 text-gray-200" : "bg-professionalBlue-50 text-gray-800"
               }`}
             />
             <button
               type="submit"
-              className="bg-blue-600 text-white p-2 rounded-r-md hover:bg-blue-700 transition-colors duration-300"
+              className="bg-professionalBlue-600 text-white p-2 rounded-r-md hover:bg-professionalBlue-700 transition-colors duration-300"
             >
               <Search size={24} />
             </button>
@@ -226,7 +227,7 @@ function MedicineSuggestion() {
                     onClick={() => setSearchTerm(search)}
                     className={`px-3 py-1 rounded-full text-sm ${
                       darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-800"
-                    } hover:bg-blue-600 hover:text-white transition-colors duration-300`}
+                    } hover:bg-professionalBlue-600 hover:text-white transition-colors duration-300`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -240,7 +241,7 @@ function MedicineSuggestion() {
           <AnimatePresence>
             {searchResult && (
               <motion.div
-                className={`mt-4 p-4 rounded-lg ${darkMode ? "bg-blue-900" : "bg-blue-100"}`}
+                className={`mt-4 p-4 rounded-lg ${darkMode ? "bg-professionalBlue-900" : "bg-professionalBlue-100"}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -427,7 +428,7 @@ function MedicineSuggestion() {
           </div>
           <motion.button
             type="submit"
-            className="w-full mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors duration-300"
+            className="w-full mt-4 bg-professionalBlue-600 text-white px-4 py-2 rounded hover:bg-professionalBlue-700 transition-colors duration-300"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -465,6 +466,9 @@ function MedicineSuggestion() {
             </motion.div>
           )}
         </AnimatePresence>
+        <div className="mt-8">
+          <SponsorSlider />
+        </div>
       </div>
     </>
   )
@@ -476,16 +480,19 @@ function MedicineCard({ medicine }) {
 
   return (
     <motion.div
-      className={`p-4 rounded-lg shadow-md ${darkMode ? "bg-gray-700" : "bg-gray-100"}`}
+      className={`p-4 rounded-lg shadow-md ${
+        darkMode ? "bg-gray-700" : "bg-professionalBlue-50"
+      } overflow-hidden relative`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
+      <div className="absolute top-0 right-0 w-16 h-16 bg-professionalBlue-500 transform rotate-45 translate-x-8 -translate-y-8"></div>
       <div className="flex items-center mb-4">
         <img
           src={medicine.image || "/placeholder.svg"}
           alt={medicine.name}
-          className="w-16 h-16 object-cover rounded-full mr-4"
+          className="w-16 h-16 object-cover rounded-full mr-4 border-2 border-professionalBlue-300"
         />
         <h4 className="text-lg font-semibold">{medicine.name}</h4>
       </div>
@@ -513,7 +520,7 @@ function MedicineCard({ medicine }) {
         <p>{medicine.brandNames.join(", ")}</p>
       </motion.div>
       <button
-        className="mt-2 text-blue-600 hover:text-blue-800 transition-colors duration-300 flex items-center"
+        className="mt-2 text-professionalBlue-600 hover:text-professionalBlue-800 transition-colors duration-300 flex items-center"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         {isExpanded ? "Show Less" : "Show More"}
