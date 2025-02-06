@@ -1,3 +1,5 @@
+"use client"
+
 import { useContext } from "react"
 import { Helmet } from "react-helmet-async"
 import { Link } from "react-router-dom"
@@ -7,7 +9,16 @@ import NewsletterSignup from "../components/NewsletterSignup"
 import FAQ from "../components/FAQ"
 import BMICalculator from "../components/BMICalculator"
 import HealthTips from "../components/HealthTips"
+import CircularSponsorSlider from "../components/CircularSponsorSlider"
 import { DarkModeContext } from "../App"
+
+const sponsors = [
+  { name: "PharmaCorp", logo: "/sponsor-logos/pharmacorp.png" },
+  { name: "MediTech", logo: "/sponsor-logos/meditech.png" },
+  { name: "HealthPlus", logo: "/sponsor-logos/healthplus.png" },
+  { name: "BioLife", logo: "/sponsor-logos/biolife.png" },
+  { name: "CureAll", logo: "/sponsor-logos/cureall.png" },
+]
 
 function Home() {
   const { darkMode } = useContext(DarkModeContext)
@@ -166,6 +177,19 @@ function Home() {
               ))}
             </div>
           </motion.div>
+
+          <motion.div
+            className="mb-16"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            <h2 className={`text-3xl font-bold mb-6 text-center ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
+              Our Sponsors
+            </h2>
+            <CircularSponsorSlider sponsors={sponsors} />
+          </motion.div>
+
           <NewsletterSignup />
           <FAQ />
         </motion.div>

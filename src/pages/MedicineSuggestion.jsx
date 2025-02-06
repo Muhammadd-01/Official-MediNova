@@ -5,7 +5,7 @@ import { Helmet } from "react-helmet-async"
 import { motion, AnimatePresence } from "framer-motion"
 import { Search, AlertCircle, ChevronDown, ChevronUp } from "lucide-react"
 import { DarkModeContext } from "../App"
-import SponsorSlider from "../components/SponsorSlider"
+import axios from "axios"
 
 const symptoms = [
   "Fever",
@@ -41,44 +41,6 @@ const allergies = [
   "Wheat",
   "Fish",
 ]
-
-const medicineData = {
-  Acetaminophen: {
-    image: "https://www.drugs.com/images/pills/nlm/004780001.jpg",
-    description: "Pain reliever and fever reducer",
-    dosage: "325-650 mg every 4-6 hours as needed",
-    sideEffects: ["Nausea", "Stomach pain", "Loss of appetite", "Headache"],
-    brandNames: ["Tylenol", "Panadol", "Mapap"],
-  },
-  Ibuprofen: {
-    image: "https://www.drugs.com/images/pills/nlm/006720160.jpg",
-    description: "Nonsteroidal anti-inflammatory drug (NSAID)",
-    dosage: "200-400 mg every 4-6 hours as needed",
-    sideEffects: ["Stomach upset", "Dizziness", "Mild heartburn", "Rash"],
-    brandNames: ["Advil", "Motrin", "Nurofen"],
-  },
-  Loratadine: {
-    image: "https://www.drugs.com/images/pills/nlm/005190858.jpg",
-    description: "Antihistamine for allergy relief",
-    dosage: "10 mg once daily",
-    sideEffects: ["Headache", "Dry mouth", "Fatigue", "Stomach pain"],
-    brandNames: ["Claritin", "Alavert", "Clear-Atadine"],
-  },
-  Omeprazole: {
-    image: "https://www.drugs.com/images/pills/nlm/005910730.jpg",
-    description: "Proton pump inhibitor for acid reflux and ulcers",
-    dosage: "20 mg once daily before a meal",
-    sideEffects: ["Headache", "Abdominal pain", "Nausea", "Diarrhea"],
-    brandNames: ["Prilosec", "Losec", "Zegerid"],
-  },
-  Amoxicillin: {
-    image: "https://www.drugs.com/images/pills/nlm/006780001.jpg",
-    description: "Antibiotic for bacterial infections",
-    dosage: "250-500 mg every 8 hours or 500-875 mg every 12 hours",
-    sideEffects: ["Diarrhea", "Nausea", "Vomiting", "Rash"],
-    brandNames: ["Amoxil", "Trimox", "Moxatag"],
-  },
-}
 
 const commonDiseases = {
   "Common Cold": {
@@ -119,6 +81,7 @@ function MedicineSuggestion() {
   const [recentSearches, setRecentSearches] = useState([])
   const [searchResult, setSearchResult] = useState(null)
   const [isRareDisease, setIsRareDisease] = useState(false)
+  const [medicineData, setMedicineData] = useState({})
   const { darkMode } = useContext(DarkModeContext)
 
   useEffect(() => {
@@ -126,6 +89,20 @@ function MedicineSuggestion() {
     if (savedSearches) {
       setRecentSearches(JSON.parse(savedSearches))
     }
+    const fetchMedicines = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/medicines")
+        const medicinesObj = {}
+        response.data.forEach((medicine) => {
+          medicinesObj[medicine.name] = medicine
+        })
+        setMedicineData(medicinesObj)
+      } catch (error) {
+        console.error("Error fetching medicines:", error)
+      }
+    }
+
+    fetchMedicines()
   }, [])
 
   const handleInputChange = (e) => {
@@ -169,7 +146,7 @@ function MedicineSuggestion() {
       primarySuggestion: suggestedMedicines[0],
       alternativeSuggestions: [suggestedMedicines[1]],
       precautions: "Take with food. Avoid alcohol consumption.",
-      possibleSideEffects: medicineData[suggestedMedicines[0]].sideEffects,
+      possibleSideEffects: medicineData[suggestedMedicines[0]]?.sideEffects,
     })
   }
 
@@ -466,9 +443,6 @@ function MedicineSuggestion() {
             </motion.div>
           )}
         </AnimatePresence>
-        <div className="mt-8">
-          <SponsorSlider />
-        </div>
       </div>
     </>
   )
@@ -490,15 +464,15 @@ function MedicineCard({ medicine }) {
       <div className="absolute top-0 right-0 w-16 h-16 bg-professionalBlue-500 transform rotate-45 translate-x-8 -translate-y-8"></div>
       <div className="flex items-center mb-4">
         <img
-          src={medicine.image || "/placeholder.svg"}
-          alt={medicine.name}
+          src={medicine?.image || "/placeholder.svg"}
+          alt={medicine?.name}
           className="w-16 h-16 object-cover rounded-full mr-4 border-2 border-professionalBlue-300"
         />
-        <h4 className="text-lg font-semibold">{medicine.name}</h4>
+        <h4 className="text-lg font-semibold">{medicine?.name}</h4>
       </div>
-      <p className="mb-2">{medicine.description}</p>
+      <p className="mb-2">{medicine?.description}</p>
       <p className="mb-2">
-        <strong>Dosage:</strong> {medicine.dosage}
+        <strong>Dosage:</strong> {medicine?.dosage}
       </p>
       <motion.div
         initial="collapsed"
@@ -512,12 +486,12 @@ function MedicineCard({ medicine }) {
       >
         <h5 className="font-semibold mt-2">Side Effects:</h5>
         <ul className="list-disc list-inside">
-          {medicine.sideEffects.map((effect, index) => (
+          {medicine?.sideEffects?.map((effect, index) => (
             <li key={index}>{effect}</li>
           ))}
         </ul>
         <h5 className="font-semibold mt-2">Brand Names:</h5>
-        <p>{medicine.brandNames.join(", ")}</p>
+        <p>{medicine?.brandNames?.join(", ") || "N/A"}</p>
       </motion.div>
       <button
         className="mt-2 text-professionalBlue-600 hover:text-professionalBlue-800 transition-colors duration-300 flex items-center"
