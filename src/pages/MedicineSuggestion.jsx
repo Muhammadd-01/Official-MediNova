@@ -1,9 +1,10 @@
+"use client"
+
 import { useState, useContext, useEffect } from "react"
 import { Helmet } from "react-helmet-async"
-import { motion } from "framer-motion"
-import { Search, AlertCircle } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Search, AlertCircle, ChevronDown, ChevronUp } from "lucide-react"
 import { DarkModeContext } from "../App"
-
 
 const symptoms = [
   "Fever",
@@ -16,9 +17,29 @@ const symptoms = [
   "Shortness of breath",
   "Muscle pain",
   "Loss of taste or smell",
+  "Runny nose",
+  "Body aches",
+  "Chills",
+  "Diarrhea",
+  "Vomiting",
+  "Chest pain",
 ]
 
-const allergies = ["Penicillin", "Aspirin", "Ibuprofen", "Sulfa drugs", "Latex"]
+const allergies = [
+  "Penicillin",
+  "Aspirin",
+  "Ibuprofen",
+  "Sulfa drugs",
+  "Latex",
+  "Peanuts",
+  "Tree nuts",
+  "Shellfish",
+  "Eggs",
+  "Milk",
+  "Soy",
+  "Wheat",
+  "Fish",
+]
 
 const medicineData = {
   Acetaminophen: {
@@ -26,20 +47,36 @@ const medicineData = {
     description: "Pain reliever and fever reducer",
     dosage: "325-650 mg every 4-6 hours as needed",
     sideEffects: ["Nausea", "Stomach pain", "Loss of appetite", "Headache"],
+    brandNames: ["Tylenol", "Panadol", "Mapap"],
   },
   Ibuprofen: {
     image: "https://www.drugs.com/images/pills/nlm/006720160.jpg",
     description: "Nonsteroidal anti-inflammatory drug (NSAID)",
     dosage: "200-400 mg every 4-6 hours as needed",
     sideEffects: ["Stomach upset", "Dizziness", "Mild heartburn", "Rash"],
+    brandNames: ["Advil", "Motrin", "Nurofen"],
   },
   Loratadine: {
     image: "https://www.drugs.com/images/pills/nlm/005190858.jpg",
     description: "Antihistamine for allergy relief",
     dosage: "10 mg once daily",
     sideEffects: ["Headache", "Dry mouth", "Fatigue", "Stomach pain"],
+    brandNames: ["Claritin", "Alavert", "Clear-Atadine"],
   },
-  
+  Omeprazole: {
+    image: "https://www.drugs.com/images/pills/nlm/005910730.jpg",
+    description: "Proton pump inhibitor for acid reflux and ulcers",
+    dosage: "20 mg once daily before a meal",
+    sideEffects: ["Headache", "Abdominal pain", "Nausea", "Diarrhea"],
+    brandNames: ["Prilosec", "Losec", "Zegerid"],
+  },
+  Amoxicillin: {
+    image: "https://www.drugs.com/images/pills/nlm/006780001.jpg",
+    description: "Antibiotic for bacterial infections",
+    dosage: "250-500 mg every 8 hours or 500-875 mg every 12 hours",
+    sideEffects: ["Diarrhea", "Nausea", "Vomiting", "Rash"],
+    brandNames: ["Amoxil", "Trimox", "Moxatag"],
+  },
 }
 
 const commonDiseases = {
@@ -49,13 +86,20 @@ const commonDiseases = {
   },
   Influenza: {
     description: "A contagious respiratory illness caused by influenza viruses.",
-    medicines: ["Oseltamivir", "Zanamivir", "Acetaminophen"],
+    medicines: ["Acetaminophen", "Ibuprofen"],
   },
   Allergies: {
     description: "An overreaction of the immune system to harmless substances.",
-    medicines: ["Loratadine", "Cetirizine", "Fexofenadine"],
+    medicines: ["Loratadine"],
   },
-  // Add more common diseases as needed
+  "Acid Reflux": {
+    description: "A condition where stomach acid flows back into the esophagus.",
+    medicines: ["Omeprazole"],
+  },
+  "Strep Throat": {
+    description: "A bacterial infection causing inflammation and pain in the throat.",
+    medicines: ["Amoxicillin", "Acetaminophen"],
+  },
 }
 
 function MedicineSuggestion() {
@@ -116,8 +160,6 @@ function MedicineSuggestion() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    // In a real application, you would call an API here
-    // For this example, we'll use mock data
     const suggestedMedicines = Object.keys(medicineData)
       .sort(() => 0.5 - Math.random())
       .slice(0, 2)
@@ -139,13 +181,6 @@ function MedicineSuggestion() {
           content="Get personalized medicine suggestions based on your symptoms or search for common diseases. Safe dosage recommendations for various conditions."
         />
         <link rel="canonical" href="https://www.medicare.com/medicine-suggestion" />
-        <meta property="og:title" content="Personalized Medicine Suggestions - MediCare" />
-        <meta
-          property="og:description"
-          content="Get safe and effective medicine recommendations based on your symptoms or search for common diseases."
-        />
-        <meta property="og:url" content="https://www.medicare.com/medicine-suggestion" />
-        <meta property="og:type" content="website" />
       </Helmet>
 
       <div className={`max-w-4xl mx-auto ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
@@ -159,7 +194,7 @@ function MedicineSuggestion() {
         </motion.h1>
 
         <motion.div
-          className={`mb-8 p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-700" : "bg-white"}`}
+          className={`mb-8 p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-800" : "bg-white"}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -171,7 +206,7 @@ function MedicineSuggestion() {
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search for a disease..."
               className={`flex-grow p-2 border rounded-l-md ${
-                darkMode ? "bg-gray-600 text-gray-200" : "bg-gray-100 text-gray-800"
+                darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
               }`}
             />
             <button
@@ -190,7 +225,7 @@ function MedicineSuggestion() {
                     key={index}
                     onClick={() => setSearchTerm(search)}
                     className={`px-3 py-1 rounded-full text-sm ${
-                      darkMode ? "bg-gray-600 text-gray-200" : "bg-gray-200 text-gray-800"
+                      darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-800"
                     } hover:bg-blue-600 hover:text-white transition-colors duration-300`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -202,53 +237,59 @@ function MedicineSuggestion() {
             </div>
           )}
 
-          {searchResult && (
-            <motion.div
-              className="mt-4 p-4 rounded-lg bg-blue-100 dark:bg-blue-900"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <h2 className="text-xl font-semibold mb-2">{searchTerm}</h2>
-              <p className="mb-2">{searchResult.description}</p>
-              <h3 className="font-semibold mb-1">Suggested Medicines:</h3>
-              <ul className="list-disc list-inside">
-                {searchResult.medicines.map((medicine, index) => (
-                  <li key={index}>{medicine}</li>
-                ))}
-              </ul>
-            </motion.div>
-          )}
+          <AnimatePresence>
+            {searchResult && (
+              <motion.div
+                className={`mt-4 p-4 rounded-lg ${darkMode ? "bg-blue-900" : "bg-blue-100"}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+              >
+                <h2 className="text-xl font-semibold mb-2">{searchTerm}</h2>
+                <p className="mb-2">{searchResult.description}</p>
+                <h3 className="font-semibold mb-1">Suggested Medicines:</h3>
+                <ul className="list-disc list-inside">
+                  {searchResult.medicines.map((medicine, index) => (
+                    <li key={index}>{medicine}</li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {isRareDisease && (
-            <motion.div
-              className="mt-4 p-4 rounded-lg bg-yellow-100 dark:bg-yellow-900"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="flex items-center mb-2">
-                <AlertCircle className="mr-2 text-yellow-600 dark:text-yellow-400" />
-                <h2 className="text-xl font-semibold">Rare or Uncommon Disease</h2>
-              </div>
-              <p>
-                This disease is not commonly searched. Please fill out the detailed form below for a personalized
-                suggestion.
-              </p>
-            </motion.div>
-          )}
+          <AnimatePresence>
+            {isRareDisease && (
+              <motion.div
+                className={`mt-4 p-4 rounded-lg ${darkMode ? "bg-yellow-900" : "bg-yellow-100"}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="flex items-center mb-2">
+                  <AlertCircle className="mr-2 text-yellow-600 dark:text-yellow-400" />
+                  <h2 className="text-xl font-semibold">Rare or Uncommon Disease</h2>
+                </div>
+                <p>
+                  This disease is not commonly searched. Please fill out the detailed form below for a personalized
+                  suggestion.
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         <motion.form
           onSubmit={handleSubmit}
-          className={`mb-8 space-y-6 p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-700" : "bg-white"}`}
+          className={`mb-8 space-y-6 p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-800" : "bg-white"}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="age" className="block mb-2">
+              <label htmlFor="age" className="block mb-2 font-medium">
                 Age:
               </label>
               <input
@@ -264,7 +305,7 @@ function MedicineSuggestion() {
               />
             </div>
             <div>
-              <label htmlFor="gender" className="block mb-2">
+              <label htmlFor="gender" className="block mb-2 font-medium">
                 Gender:
               </label>
               <select
@@ -284,7 +325,7 @@ function MedicineSuggestion() {
               </select>
             </div>
             <div>
-              <label htmlFor="weight" className="block mb-2">
+              <label htmlFor="weight" className="block mb-2 font-medium">
                 Weight (kg):
               </label>
               <input
@@ -300,7 +341,7 @@ function MedicineSuggestion() {
               />
             </div>
             <div>
-              <label htmlFor="height" className="block mb-2">
+              <label htmlFor="height" className="block mb-2 font-medium">
                 Height (cm):
               </label>
               <input
@@ -317,10 +358,10 @@ function MedicineSuggestion() {
             </div>
           </div>
           <div>
-            <label className="block mb-2">Symptoms:</label>
+            <label className="block mb-2 font-medium">Symptoms:</label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {symptoms.map((symptom) => (
-                <div key={symptom}>
+                <div key={symptom} className="flex items-center">
                   <input
                     type="checkbox"
                     id={`symptom-${symptom}`}
@@ -336,10 +377,10 @@ function MedicineSuggestion() {
             </div>
           </div>
           <div>
-            <label className="block mb-2">Allergies:</label>
+            <label className="block mb-2 font-medium">Allergies:</label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {allergies.map((allergy) => (
-                <div key={allergy}>
+                <div key={allergy} className="flex items-center">
                   <input
                     type="checkbox"
                     id={`allergy-${allergy}`}
@@ -355,7 +396,7 @@ function MedicineSuggestion() {
             </div>
           </div>
           <div>
-            <label htmlFor="medicalHistory" className="block mb-2">
+            <label htmlFor="medicalHistory" className="block mb-2 font-medium">
               Medical History:
             </label>
             <textarea
@@ -370,7 +411,7 @@ function MedicineSuggestion() {
             ></textarea>
           </div>
           <div>
-            <label htmlFor="currentMedications" className="block mb-2">
+            <label htmlFor="currentMedications" className="block mb-2 font-medium">
               Current Medications:
             </label>
             <textarea
@@ -386,7 +427,7 @@ function MedicineSuggestion() {
           </div>
           <motion.button
             type="submit"
-            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors duration-300"
+            className="w-full mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors duration-300"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -394,50 +435,91 @@ function MedicineSuggestion() {
           </motion.button>
         </motion.form>
 
-        {suggestions && (
-          <motion.div
-            className={`p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-700 text-gray-200" : "bg-white text-gray-800"}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2 className="text-2xl font-semibold mb-4">Suggested Medicines</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <p className="mb-2">
-                  <strong>Primary Suggestion:</strong> {suggestions.primarySuggestion}
-                </p>
-                <img
-                  src={medicineData[suggestions.primarySuggestion].image || "/placeholder.svg"}
-                  alt={suggestions.primarySuggestion}
-                  className="w-32 h-32 object-cover rounded-lg mb-2"
-                />
-                <p className="mb-2">
-                  <strong>Description:</strong> {medicineData[suggestions.primarySuggestion].description}
-                </p>
-                <p className="mb-2">
-                  <strong>Dosage:</strong> {medicineData[suggestions.primarySuggestion].dosage}
-                </p>
+        <AnimatePresence>
+          {suggestions && (
+            <motion.div
+              className={`p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-800 text-gray-200" : "bg-white text-gray-800"}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h2 className="text-2xl font-semibold mb-4">Suggested Medicines</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">Primary Suggestion</h3>
+                  <MedicineCard medicine={medicineData[suggestions.primarySuggestion]} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">Alternative Suggestion</h3>
+                  <MedicineCard medicine={medicineData[suggestions.alternativeSuggestions[0]]} />
+                </div>
               </div>
-              <div>
-                <p className="mb-2">
-                  <strong>Alternative Suggestions:</strong> {suggestions.alternativeSuggestions.join(", ")}
-                </p>
-                <p className="mb-2">
-                  <strong>Precautions:</strong> {suggestions.precautions}
-                </p>
-                <p className="mb-2">
-                  <strong>Possible Side Effects:</strong> {suggestions.possibleSideEffects.join(", ")}
-                </p>
+              <div className="mt-6">
+                <h3 className="text-xl font-semibold mb-2">Precautions</h3>
+                <p>{suggestions.precautions}</p>
               </div>
-            </div>
-            <p className="mt-4 text-sm text-gray-600">
-              Please consult with a healthcare professional before taking any medication.
-            </p>
-          </motion.div>
-        )}
+              <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+                Please consult with a healthcare professional before taking any medication.
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </>
+  )
+}
+
+function MedicineCard({ medicine }) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const { darkMode } = useContext(DarkModeContext)
+
+  return (
+    <motion.div
+      className={`p-4 rounded-lg shadow-md ${darkMode ? "bg-gray-700" : "bg-gray-100"}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="flex items-center mb-4">
+        <img
+          src={medicine.image || "/placeholder.svg"}
+          alt={medicine.name}
+          className="w-16 h-16 object-cover rounded-full mr-4"
+        />
+        <h4 className="text-lg font-semibold">{medicine.name}</h4>
+      </div>
+      <p className="mb-2">{medicine.description}</p>
+      <p className="mb-2">
+        <strong>Dosage:</strong> {medicine.dosage}
+      </p>
+      <motion.div
+        initial="collapsed"
+        animate={isExpanded ? "expanded" : "collapsed"}
+        variants={{
+          expanded: { height: "auto" },
+          collapsed: { height: 0 },
+        }}
+        transition={{ duration: 0.3 }}
+        className="overflow-hidden"
+      >
+        <h5 className="font-semibold mt-2">Side Effects:</h5>
+        <ul className="list-disc list-inside">
+          {medicine.sideEffects.map((effect, index) => (
+            <li key={index}>{effect}</li>
+          ))}
+        </ul>
+        <h5 className="font-semibold mt-2">Brand Names:</h5>
+        <p>{medicine.brandNames.join(", ")}</p>
+      </motion.div>
+      <button
+        className="mt-2 text-blue-600 hover:text-blue-800 transition-colors duration-300 flex items-center"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        {isExpanded ? "Show Less" : "Show More"}
+        {isExpanded ? <ChevronUp className="ml-1" /> : <ChevronDown className="ml-1" />}
+      </button>
+    </motion.div>
   )
 }
 

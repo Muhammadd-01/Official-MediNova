@@ -14,7 +14,7 @@ import News from "./pages/News"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
 import Emergency from "./pages/Emergency"
-import BloodStreamBackground from "./components/BloodStreamBackground"
+import BloodStreamBackground from "./components/BackgroundAnimation"
 import Chatbot from "./components/Chatbot"
 
 export const DarkModeContext = React.createContext()

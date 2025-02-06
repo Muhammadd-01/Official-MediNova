@@ -1,3 +1,5 @@
+"use client"
+
 import { useContext } from "react"
 import { motion } from "framer-motion"
 import { DarkModeContext } from "../App"
@@ -24,13 +26,13 @@ const BackgroundAnimation = () => {
         }}
         transition={{ repeat: Number.POSITIVE_INFINITY, duration: 20, ease: "linear" }}
       />
-      {[...Array(100)].map((_, i) => (
+      {[...Array(50)].map((_, i) => (
         <motion.div
           key={i}
           className={`absolute rounded-full ${darkMode ? "bg-blue-400" : "bg-blue-600"}`}
           style={{
-            width: Math.random() * 6 + 2,
-            height: Math.random() * 6 + 2,
+            width: Math.random() * 4 + 2,
+            height: Math.random() * 4 + 2,
             top: `${Math.random() * 100}%`,
             left: `${Math.random() * 100}%`,
           }}
