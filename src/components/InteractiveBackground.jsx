@@ -9,6 +9,20 @@ const InteractiveBackground = () => {
   const { darkMode } = useContext(DarkModeContext)
 
   useEffect(() => {
+    const createInitialDots = () => {
+      const initialDots = []
+      for (let i = 0; i < 50; i++) {
+        initialDots.push({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          id: Date.now() + i,
+        })
+      }
+      setDots(initialDots)
+    }
+
+    createInitialDots()
+
     const handleClick = (e) => {
       const newDot = {
         x: e.clientX,
@@ -32,8 +46,8 @@ const InteractiveBackground = () => {
           key={dot.id}
           className={`absolute rounded-full ${darkMode ? "bg-blue-400" : "bg-blue-600"}`}
           style={{
-            width: 4,
-            height: 4,
+            width: Math.random() * 6 + 2,
+            height: Math.random() * 6 + 2,
             left: dot.x,
             top: dot.y,
           }}
@@ -43,9 +57,11 @@ const InteractiveBackground = () => {
             opacity: [1, 1, 1, 1, 0],
           }}
           transition={{
-            duration: 2,
+            duration: Math.random() * 2 + 1,
             ease: "easeInOut",
             times: [0, 0.2, 0.5, 0.8, 1],
+            repeat: Number.POSITIVE_INFINITY,
+            repeatDelay: Math.random() * 2,
           }}
         />
       ))}

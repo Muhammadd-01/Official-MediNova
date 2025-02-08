@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useRef, useContext } from "react"
+"use client"
+
+import { useState, useEffect, useRef, useContext } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { MessageSquare, X, Send } from "lucide-react"
 import { DarkModeContext } from "../App"
+import { GoogleGenerativeAI } from "@google/generative-ai"
 
 function Chatbot() {
   const [isOpen, setIsOpen] = useState(false)
@@ -9,27 +12,40 @@ function Chatbot() {
   const [input, setInput] = useState("")
   const messagesEndRef = useRef(null)
   const { darkMode } = useContext(DarkModeContext)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  useEffect(scrollToBottom, [isOpen]) // Updated dependency
+  useEffect(scrollToBottom, [messages]) // Updated useEffect dependency
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (input.trim() === "") return
 
     setMessages([...messages, { text: input, sender: "user" }])
     setInput("")
+    setIsLoading(true)
 
-    // Simulate bot response (replace with actual API call in a real application)
-    setTimeout(() => {
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" })
+      const result = await model.generateContent(input)
+      const response = await result.response
+      const text = response.text()
+
+      setMessages((prevMessages) => [...prevMessages, { text: text, sender: "bot" }])
+    } catch (error) {
+      console.error("Error generating response:", error)
       setMessages((prevMessages) => [
         ...prevMessages,
-        { text: "Thank you for your message. How can I assist you today?", sender: "bot" },
+        { text: "Sorry, I encountered an error. Please try again.", sender: "bot" },
       ])
-    }, 1000)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -52,11 +68,11 @@ function Chatbot() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
             className={`fixed bottom-20 right-4 w-80 h-96 ${
-              darkMode ? "bg-blue-800 text-white" : "bg-white text-gray-800"
+              darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"
             } rounded-lg shadow-xl overflow-hidden z-50`}
           >
             <div className="flex flex-col h-full">
-              <div className={`p-4 ${darkMode ? "bg-blue-700" : "bg-blue-500"} text-white`}>
+              <div className={`p-4 ${darkMode ? "bg-gray-700" : "bg-blue-500"} text-white`}>
                 <h3 className="text-lg font-semibold">MediCare Chatbot</h3>
               </div>
               <div className="flex-grow overflow-y-auto p-4">
@@ -77,6 +93,11 @@ function Chatbot() {
                     </span>
                   </div>
                 ))}
+                {isLoading && (
+                  <div className="text-left">
+                    <span className="inline-block p-2 rounded-lg bg-gray-200 text-gray-800">Thinking...</span>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
               <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200">
@@ -95,6 +116,7 @@ function Chatbot() {
                     className={`px-4 py-2 rounded-r-md ${
                       darkMode ? "bg-blue-600 text-white" : "bg-blue-500 text-white"
                     }`}
+                    disabled={isLoading}
                   >
                     <Send size={20} />
                   </button>
