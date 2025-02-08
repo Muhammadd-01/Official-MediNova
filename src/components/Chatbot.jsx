@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useContext } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { MessageSquare, X, Send } from "lucide-react"
 import { DarkModeContext } from "../App"
-import { GoogleGenerativeAI } from "@google/generative-ai"
 
 function Chatbot() {
   const [isOpen, setIsOpen] = useState(false)
@@ -14,13 +13,11 @@ function Chatbot() {
   const { darkMode } = useContext(DarkModeContext)
   const [isLoading, setIsLoading] = useState(false)
 
-  const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  useEffect(scrollToBottom, [messages]) // Updated useEffect dependency
+  useEffect(scrollToBottom, [messages])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -30,22 +27,14 @@ function Chatbot() {
     setInput("")
     setIsLoading(true)
 
-    try {
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" })
-      const result = await model.generateContent(input)
-      const response = await result.response
-      const text = response.text()
-
-      setMessages((prevMessages) => [...prevMessages, { text: text, sender: "bot" }])
-    } catch (error) {
-      console.error("Error generating response:", error)
+    // Simulate a bot response
+    setTimeout(() => {
       setMessages((prevMessages) => [
         ...prevMessages,
-        { text: "Sorry, I encountered an error. Please try again.", sender: "bot" },
+        { text: "Thank you for your message. This is a placeholder response.", sender: "bot" },
       ])
-    } finally {
       setIsLoading(false)
-    }
+    }, 1000)
   }
 
   return (
