@@ -1,4 +1,6 @@
-import React, { useState, useContext } from "react"
+"use client"
+
+import { useState, useContext } from "react"
 import { Helmet } from "react-helmet-async"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
@@ -25,55 +27,92 @@ function Login() {
         <meta name="description" content="Log in to your MediCare account" />
       </Helmet>
 
-      <div className={`max-w-md mx-auto ${darkMode ? "text-white" : "text-gray-800"}`}>
-        <motion.h1
-          className="text-3xl font-bold mb-6 text-center"
-          initial={{ opacity: 0, y: -20 }}
+      <div className={`min-h-screen flex items-center justify-center ${darkMode ? "bg-gray-900" : "bg-gray-100"}`}>
+        <motion.div
+          className={`max-w-md w-full space-y-8 p-10 ${darkMode ? "bg-gray-800" : "bg-white"} rounded-xl shadow-lg`}
+          initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          Login
-        </motion.h1>
-        <motion.form
-          onSubmit={handleSubmit}
-          className="space-y-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
           <div>
-            <label htmlFor="email" className="block mb-2">
-              Email:
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 border rounded text-gray-800"
-              required
-            />
+            <h2 className={`mt-6 text-center text-3xl font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>
+              Sign in to your account
+            </h2>
           </div>
-          <div>
-            <label htmlFor="password" className="block mb-2">
-              Password:
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded text-gray-800"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300"
-          >
-            Log In
-          </button>
-        </motion.form>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            <input type="hidden" name="remember" defaultValue="true" />
+            <div className="rounded-md shadow-sm -space-y-px">
+              <div>
+                <label htmlFor="email-address" className="sr-only">
+                  Email address
+                </label>
+                <input
+                  id="email-address"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
+                    darkMode ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300 text-gray-900"
+                  } placeholder-gray-500 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                  placeholder="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="sr-only">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
+                    darkMode ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300 text-gray-900"
+                  } placeholder-gray-500 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                />
+                <label
+                  htmlFor="remember-me"
+                  className={`ml-2 block text-sm ${darkMode ? "text-gray-300" : "text-gray-900"}`}
+                >
+                  Remember me
+                </label>
+              </div>
+
+              <div className="text-sm">
+                <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+                  Forgot your password?
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Sign in
+              </button>
+            </div>
+          </form>
+        </motion.div>
       </div>
     </>
   )

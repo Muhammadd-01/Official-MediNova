@@ -83,6 +83,9 @@ function MedicineSuggestion() {
   const [isRareDisease, setIsRareDisease] = useState(false)
   const [medicineData, setMedicineData] = useState({})
   const { darkMode } = useContext(DarkModeContext)
+  const [showPregnancyOptions, setShowPregnancyOptions] = useState(false)
+  const [isPregnant, setIsPregnant] = useState(false)
+  const [isBreastfeeding, setIsBreastfeeding] = useState(false)
 
   useEffect(() => {
     const savedSearches = localStorage.getItem("recentSearches")
@@ -108,6 +111,9 @@ function MedicineSuggestion() {
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData({ ...formData, [name]: value })
+    if (name === "gender") {
+      setShowPregnancyOptions(value === "female")
+    }
   }
 
   const handleCheckboxChange = (e, category) => {
@@ -138,14 +144,27 @@ function MedicineSuggestion() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    const suggestedMedicines = Object.keys(medicineData)
+    let suggestedMedicines = Object.keys(medicineData)
       .sort(() => 0.5 - Math.random())
       .slice(0, 2)
+
+    if (formData.gender === "female" && (isPregnant || isBreastfeeding)) {
+      // Filter out medicines that are not safe for pregnant or breastfeeding women
+      // This is a simplified example. In a real application, you would need to have this information in your medicineData
+      suggestedMedicines = suggestedMedicines.filter(
+        (medicine) =>
+          !medicineData[medicine].name.toLowerCase().includes("ibuprofen") &&
+          !medicineData[medicine].name.toLowerCase().includes("aspirin"),
+      )
+    }
 
     setSuggestions({
       primarySuggestion: suggestedMedicines[0],
       alternativeSuggestions: [suggestedMedicines[1]],
-      precautions: "Take with food. Avoid alcohol consumption.",
+      precautions:
+        isPregnant || isBreastfeeding
+          ? "Please consult with your doctor before taking any medication."
+          : "Take with food. Avoid alcohol consumption.",
       possibleSideEffects: medicineData[suggestedMedicines[0]]?.sideEffects,
     })
   }
@@ -302,6 +321,30 @@ function MedicineSuggestion() {
                 <option value="other">Other</option>
               </select>
             </div>
+            {showPregnancyOptions && (
+              <div className="mt-4">
+                <div className="flex items-center mb-2">
+                  <input
+                    type="checkbox"
+                    id="pregnant"
+                    checked={isPregnant}
+                    onChange={(e) => setIsPregnant(e.target.checked)}
+                    className="mr-2"
+                  />
+                  <label htmlFor="pregnant">Are you pregnant?</label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="breastfeeding"
+                    checked={isBreastfeeding}
+                    onChange={(e) => setIsBreastfeeding(e.target.checked)}
+                    className="mr-2"
+                  />
+                  <label htmlFor="breastfeeding">Are you breastfeeding?</label>
+                </div>
+              </div>
+            )}
             <div>
               <label htmlFor="weight" className="block mb-2 font-medium">
                 Weight (kg):

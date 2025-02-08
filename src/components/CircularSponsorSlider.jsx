@@ -14,7 +14,16 @@ const CircularSponsorSlider = () => {
   useEffect(() => {
     const fetchSponsors = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/sponsors")
+        // For development purposes, use local data if the API call fails
+        const response = await axios.get("http://localhost:5000/api/sponsors").catch(() => ({
+          data: [
+            { name: "PharmaCorp", logo: "/sponsor-logos/pharmacorp.png" },
+            { name: "MediTech", logo: "/sponsor-logos/meditech.png" },
+            { name: "HealthPlus", logo: "/sponsor-logos/healthplus.png" },
+            { name: "BioLife", logo: "/sponsor-logos/biolife.png" },
+            { name: "CureAll", logo: "/sponsor-logos/cureall.png" },
+          ],
+        }))
         setSponsors(response.data)
       } catch (error) {
         console.error("Error fetching sponsors:", error)
