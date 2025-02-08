@@ -421,7 +421,7 @@ function MedicineSuggestion() {
                 min="1"
                 max="300"
               />
-              {formData.height > 300 && (
+              {Number(formData.height) > 300 && (
                 <p className="text-red-500 text-sm mt-1">Height exceeds our database limit. Please consult a doctor.</p>
               )}
             </div>

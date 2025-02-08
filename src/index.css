@@ -26,10 +26,12 @@
 
 body {
   background-color: #f0f9ff;
+  color: #00008b; /* Dark blue text for light mode */
 }
 
 .dark body {
   background-color: #1e3a8a;
+  color: #ffffff; /* Bright white text for dark mode */
 }
 
 main {

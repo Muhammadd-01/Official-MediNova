@@ -15,6 +15,7 @@ import Login from "./pages/Login"
 import Register from "./pages/Register"
 import Emergency from "./pages/Emergency"
 import BloodStreamBackground from "./components/BackgroundAnimation"
+import InteractiveBackground from "./components/InteractiveBackground"
 import Chatbot from "./components/Chatbot"
 import GoToTop from "./components/GoToTop"
 
@@ -57,6 +58,7 @@ function App() {
           <Router>
             <div className="flex flex-col min-h-screen relative">
               <BloodStreamBackground />
+              <InteractiveBackground />
               <div className="relative z-10 flex flex-col min-h-screen pointer-events-auto">
                 <Header />
                 <main className="flex-grow container mx-auto px-4 py-8">
