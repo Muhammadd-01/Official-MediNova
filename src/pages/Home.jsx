@@ -9,7 +9,7 @@ import NewsletterSignup from "../components/NewsletterSignup"
 import FAQ from "../components/FAQ"
 import BMICalculator from "../components/BMICalculator"
 import HealthTips from "../components/HealthTips"
-import CircularSponsorSlider from "../components/CircularSponsorSlider"
+import HorizontalSponsorSlider from "../components/HorizontalSponsorSlider" // Import the new component
 import { DarkModeContext } from "../App"
 
 const sponsors = [
@@ -77,21 +77,21 @@ function Home() {
               {
                 title: "Medicine Suggestions",
                 image:
-                  "https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                  "https://images.unsplash.com/photo-1585435557343-3b092031a831?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
                 description: "Get personalized medicine recommendations based on your symptoms.",
                 link: "/medicine-suggestion",
               },
               {
                 title: "Expert Consultations",
                 image:
-                  "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                  "https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
                 description: "Book a consultation with our experienced medical professionals.",
                 link: "/consultation",
               },
               {
                 title: "Health Articles",
                 image:
-                  "https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                  "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
                 description: "Read the latest articles on various health topics.",
                 link: "/articles",
               },
@@ -187,7 +187,7 @@ function Home() {
             <h2 className={`text-3xl font-bold mb-6 text-center ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
               Our Sponsors
             </h2>
-            <CircularSponsorSlider />
+            <HorizontalSponsorSlider /> {/* Replaced CircularSponsorSlider with HorizontalSponsorSlider */}
           </motion.div>
 
           <NewsletterSignup />

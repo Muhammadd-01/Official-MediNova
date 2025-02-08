@@ -1,8 +1,42 @@
 import { useState, useContext } from "react"
 import { Helmet } from "react-helmet-async"
 import { motion, AnimatePresence } from "framer-motion"
-import { Phone, Ambulance, Hospital, Heart, Wind, AmbulanceIcon as FirstAid } from "lucide-react"
+import {
+  Phone,
+  Ambulance,
+  Hospital,
+  Heart,
+  Wind,
+  AmbulanceIcon as FirstAid,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react"
 import { DarkModeContext } from "../App"
+
+const EmergencyGuide = ({ title, steps }) => {
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  return (
+    <div className="mb-4">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex justify-between items-center w-full p-4 bg-red-100 rounded-lg focus:outline-none"
+      >
+        <h3 className="text-lg font-semibold">{title}</h3>
+        {isExpanded ? <ChevronUp /> : <ChevronDown />}
+      </button>
+      {isExpanded && (
+        <ol className="list-decimal list-inside mt-2 p-4 bg-white rounded-lg">
+          {steps.map((step, index) => (
+            <li key={index} className="mb-2">
+              {step}
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  )
+}
 
 function Emergency() {
   const { darkMode } = useContext(DarkModeContext)
@@ -146,25 +180,9 @@ function Emergency() {
         >
           Emergency Guides
         </motion.h2>
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.7 }}
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.7 }}>
           {Object.entries(emergencyGuides).map(([key, guide]) => (
-            <motion.button
-              key={key}
-              onClick={() => setSelectedGuide(key)}
-              className={`p-4 rounded-lg shadow-md flex flex-col items-center justify-center ${
-                darkMode ? "bg-blue-700 text-white hover:bg-blue-600" : "bg-blue-100 text-blue-800 hover:bg-blue-200"
-              } transition-colors duration-300`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <guide.icon className="w-8 h-8 mb-2" />
-              <span className="text-lg font-medium">{guide.title}</span>
-            </motion.button>
+            <EmergencyGuide key={key} title={guide.title} steps={guide.steps} />
           ))}
         </motion.div>
 

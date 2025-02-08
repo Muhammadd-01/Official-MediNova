@@ -16,6 +16,7 @@ import Register from "./pages/Register"
 import Emergency from "./pages/Emergency"
 import BloodStreamBackground from "./components/BackgroundAnimation"
 import Chatbot from "./components/Chatbot"
+import GoToTop from "./components/GoToTop"
 
 export const DarkModeContext = React.createContext()
 export const AuthContext = React.createContext()
@@ -24,6 +25,13 @@ function App() {
   const [darkMode, setDarkMode] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
+
+  const location = useLocation()
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
 
   useEffect(() => {
     if (darkMode) {
@@ -70,6 +78,8 @@ function App() {
                 <Footer />
               </div>
               <Chatbot />
+              <GoToTop />
+
             </div>
           </Router>
         </HelmetProvider>
