@@ -41,7 +41,7 @@ function Login() {
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <input type="hidden" name="remember" defaultValue="true" />
-            <div className="rounded-md shadow-sm -space-y-px">
+            <div className="rounded-md shadow-sm space-y-4">
               <div>
                 <label htmlFor="email-address" className="sr-only">
                   Email address
@@ -52,9 +52,9 @@ function Login() {
                   type="email"
                   autoComplete="email"
                   required
-                  className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
+                  className={`appearance-none relative block w-full px-3 py-2 border ${
                     darkMode ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300 text-gray-900"
-                  } placeholder-gray-500 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                  } placeholder-gray-500 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                   placeholder="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -70,9 +70,9 @@ function Login() {
                   type="password"
                   autoComplete="current-password"
                   required
-                  className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
+                  className={`appearance-none relative block w-full px-3 py-2 border ${
                     darkMode ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300 text-gray-900"
-                  } placeholder-gray-500 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                  } placeholder-gray-500 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

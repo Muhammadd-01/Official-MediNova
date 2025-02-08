@@ -109,7 +109,15 @@ function MedicineSuggestion() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    setFormData({ ...formData, [name]: value })
+    let updatedValue = value
+
+    if (name === "weight" && Number(value) > 500) {
+      updatedValue = "500"
+    } else if (name === "height" && Number(value) > 300) {
+      updatedValue = "300"
+    }
+
+    setFormData({ ...formData, [name]: updatedValue })
   }
 
   const handleCheckboxChange = (e, category) => {
@@ -389,7 +397,12 @@ function MedicineSuggestion() {
                   darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
                 }`}
                 required
+                min="1"
+                max="500"
               />
+              {formData.weight > 500 && (
+                <p className="text-red-500 text-sm mt-1">Weight exceeds our database limit. Please consult a doctor.</p>
+              )}
             </div>
             <div>
               <label htmlFor="height" className="block mb-2 font-medium">
@@ -405,7 +418,12 @@ function MedicineSuggestion() {
                   darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
                 }`}
                 required
+                min="1"
+                max="300"
               />
+              {formData.height > 300 && (
+                <p className="text-red-500 text-sm mt-1">Height exceeds our database limit. Please consult a doctor.</p>
+              )}
             </div>
           </div>
           <div>

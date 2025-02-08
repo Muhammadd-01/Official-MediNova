@@ -9,6 +9,7 @@ const sponsors = [
   { name: "Novartis", logo: "https://logowik.com/content/uploads/images/novartis1561.jpg" },
   { name: "Roche", logo: "https://logowik.com/content/uploads/images/roche6906.jpg" },
   { name: "Merck", logo: "https://logowik.com/content/uploads/images/merck-and-co1726.jpg" },
+  { name: "GlaxoSmithKline", logo: "https://logowik.com/content/uploads/images/gsk-glaxosmithkline6016.jpg" },
 ]
 
 const HorizontalSponsorSlider = () => {
@@ -27,13 +28,23 @@ const HorizontalSponsorSlider = () => {
       <motion.div
         className="flex"
         animate={{
-          x: `-${currentIndex * 100}%`,
+          x: `-${currentIndex * (100 / 5)}%`,
         }}
         transition={{ duration: 0.5 }}
       >
-        {sponsors.map((sponsor, index) => (
-          <div key={index} className="flex-shrink-0 w-full flex items-center justify-center">
-            <img src={sponsor.logo || "/placeholder.svg"} alt={sponsor.name} className="h-24 object-contain mx-4" />
+        {sponsors.concat(sponsors.slice(0, 5)).map((sponsor, index) => (
+          <div key={index} className="flex-shrink-0 w-1/5 flex items-center justify-center">
+            <motion.div
+              className="bg-white rounded-full p-2 shadow-lg"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <img
+                src={sponsor.logo || "/placeholder.svg"}
+                alt={sponsor.name}
+                className="h-20 w-20 object-contain rounded-full"
+              />
+            </motion.div>
           </div>
         ))}
       </motion.div>

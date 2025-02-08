@@ -22,17 +22,16 @@ const GoToTop = () => {
   }
 
   useEffect(() => {
-    const handleScroll = () => toggleVisibility() //Added handleScroll function to pass to event listener
-    window.addEventListener("scroll", handleScroll) //Changed event listener to use handleScroll function
-    return () => window.removeEventListener("scroll", handleScroll) //Changed event listener to use handleScroll function
-  }, []) //Added [] to specify dependencies
+    window.addEventListener("scroll", toggleVisibility)
+    return () => window.removeEventListener("scroll", toggleVisibility)
+  }, [toggleVisibility]) // Added toggleVisibility to dependencies
 
   return (
     <>
       {isVisible && (
         <div
           onClick={scrollToTop}
-          className="fixed bottom-24 right-4 cursor-pointer bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300"
+          className="fixed bottom-24 right-4 cursor-pointer bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300 z-50"
         >
           <ArrowUp size={24} />
         </div>
