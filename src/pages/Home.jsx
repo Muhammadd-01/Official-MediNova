@@ -187,7 +187,7 @@ function Home() {
             <h2 className={`text-3xl font-bold mb-6 text-center ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
               Our Sponsors
             </h2>
-            <CircularSponsorSlider sponsors={sponsors} />
+            <CircularSponsorSlider />
           </motion.div>
 
           <NewsletterSignup />

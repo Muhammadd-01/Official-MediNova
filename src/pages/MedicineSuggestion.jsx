@@ -83,7 +83,6 @@ function MedicineSuggestion() {
   const [isRareDisease, setIsRareDisease] = useState(false)
   const [medicineData, setMedicineData] = useState({})
   const { darkMode } = useContext(DarkModeContext)
-  const [showPregnancyOptions, setShowPregnancyOptions] = useState(false)
   const [isPregnant, setIsPregnant] = useState(false)
   const [isBreastfeeding, setIsBreastfeeding] = useState(false)
 
@@ -111,9 +110,6 @@ function MedicineSuggestion() {
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData({ ...formData, [name]: value })
-    if (name === "gender") {
-      setShowPregnancyOptions(value === "female")
-    }
   }
 
   const handleCheckboxChange = (e, category) => {
@@ -321,27 +317,61 @@ function MedicineSuggestion() {
                 <option value="other">Other</option>
               </select>
             </div>
-            {showPregnancyOptions && (
+            {formData.gender === "female" && (
               <div className="mt-4">
+                <label className="block mb-2 font-medium">Pregnancy Status:</label>
                 <div className="flex items-center mb-2">
                   <input
-                    type="checkbox"
-                    id="pregnant"
-                    checked={isPregnant}
-                    onChange={(e) => setIsPregnant(e.target.checked)}
+                    type="radio"
+                    id="not-pregnant"
+                    name="pregnancyStatus"
+                    value="not-pregnant"
+                    checked={!isPregnant}
+                    onChange={() => setIsPregnant(false)}
                     className="mr-2"
                   />
-                  <label htmlFor="pregnant">Are you pregnant?</label>
+                  <label htmlFor="not-pregnant">Not Pregnant</label>
                 </div>
                 <div className="flex items-center">
                   <input
-                    type="checkbox"
-                    id="breastfeeding"
-                    checked={isBreastfeeding}
-                    onChange={(e) => setIsBreastfeeding(e.target.checked)}
+                    type="radio"
+                    id="pregnant"
+                    name="pregnancyStatus"
+                    value="pregnant"
+                    checked={isPregnant}
+                    onChange={() => setIsPregnant(true)}
                     className="mr-2"
                   />
-                  <label htmlFor="breastfeeding">Are you breastfeeding?</label>
+                  <label htmlFor="pregnant">Pregnant</label>
+                </div>
+              </div>
+            )}
+            {isPregnant && (
+              <div className="mt-4">
+                <label className="block mb-2 font-medium">Breastfeeding Status:</label>
+                <div className="flex items-center mb-2">
+                  <input
+                    type="radio"
+                    id="not-breastfeeding"
+                    name="breastfeedingStatus"
+                    value="not-breastfeeding"
+                    checked={!isBreastfeeding}
+                    onChange={() => setIsBreastfeeding(false)}
+                    className="mr-2"
+                  />
+                  <label htmlFor="not-breastfeeding">Not Breastfeeding</label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="breastfeeding"
+                    name="breastfeedingStatus"
+                    value="breastfeeding"
+                    checked={isBreastfeeding}
+                    onChange={() => setIsBreastfeeding(true)}
+                    className="mr-2"
+                  />
+                  <label htmlFor="breastfeeding">Breastfeeding</label>
                 </div>
               </div>
             )}
