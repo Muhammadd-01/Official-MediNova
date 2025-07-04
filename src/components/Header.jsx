@@ -43,22 +43,22 @@ function Header() {
             ))}
           </nav>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             <motion.button
               onClick={() => setDarkMode(!darkMode)}
-              className={`p-2 rounded-full shadow-md transition-colors duration-300 ${
+              className={`h-10 w-10 flex items-center justify-center rounded-full shadow-md transition-colors duration-300 ${
                 darkMode ? "bg-gray-700 text-yellow-400" : "bg-gray-100 text-gray-800"
               }`}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
-              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </motion.button>
 
             {isAuthenticated ? (
               <motion.button
                 onClick={logout}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors duration-300"
+                className="h-10 px-5 font-semibold rounded-full shadow-md bg-red-600 text-white hover:bg-red-700 transition-all duration-300"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -69,7 +69,7 @@ function Header() {
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     to="/login"
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-300"
+                    className="h-10 px-5 font-semibold rounded-full shadow-md bg-green-600 text-white hover:bg-green-700 transition-all duration-300 flex items-center"
                   >
                     Login
                   </Link>
@@ -77,7 +77,7 @@ function Header() {
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     to="/register"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-300"
+                    className="h-10 px-5 font-semibold rounded-full shadow-md bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 flex items-center"
                   >
                     Register
                   </Link>
