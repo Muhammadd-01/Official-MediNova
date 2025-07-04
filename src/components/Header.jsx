@@ -31,7 +31,7 @@ function Header() {
               <motion.div key={item} whileHover={{ scale: 1.07 }} whileTap={{ scale: 0.95 }}>
                 <Link
                   to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                  className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                     darkMode
                       ? "text-gray-300 hover:bg-gray-700 hover:text-white"
                       : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
@@ -106,7 +106,7 @@ function Header() {
               <Link
                 key={item}
                 to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
-                className={`block px-4 py-2 rounded-lg font-medium text-sm ${
+                className={`block px-5 py-2 rounded-full font-medium text-sm ${
                   darkMode
                     ? "text-gray-300 hover:bg-gray-700 hover:text-white"
                     : "text-gray-800 hover:bg-gray-100 hover:text-blue-600"
