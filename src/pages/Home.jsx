@@ -9,7 +9,7 @@ import NewsletterSignup from "../components/NewsletterSignup"
 import FAQ from "../components/FAQ"
 import BMICalculator from "../components/BMICalculator"
 import HealthTips from "../components/HealthTips"
-import HorizontalSponsorSlider from "../components/HorizontalSponsorSlider" // Import the new component
+import HorizontalSponsorSlider from "../components/HorizontalSponsorSlider"
 import { DarkModeContext } from "../App"
 
 const sponsors = [
@@ -32,16 +32,16 @@ function Home() {
   return (
     <>
       <Helmet>
-        <title>MediCare - Your Trusted Medical Resource</title>
+        <title>MediCare - Your Trusted Medical Platform</title>
         <meta
           name="description"
-          content="MediCare provides professional medical advice, medicine suggestions, and expert consultations. Your one-stop for all health-related information."
+          content="MediCare offers expert-backed medical consultations, personalized drug recommendations, and secure digital healthcare services 24/7."
         />
         <link rel="canonical" href="https://www.medicare.com" />
-        <meta property="og:title" content="MediCare - Your Trusted Medical Resource" />
+        <meta property="og:title" content="MediCare - Your Trusted Medical Platform" />
         <meta
           property="og:description"
-          content="Professional medical advice, medicine suggestions, and expert consultations."
+          content="Expert-backed consultations, AI-powered medicine suggestions, and health tools. Secure, reliable, and always available."
         />
         <meta property="og:url" content="https://www.medicare.com" />
         <meta property="og:type" content="website" />
@@ -65,8 +65,9 @@ function Home() {
             className={`text-xl mb-12 text-center ${darkMode ? "text-gray-300" : "text-gray-700"}`}
             {...fadeInUp}
           >
-            Your trusted source for medical information and expert consultations.
+            Your digital bridge to licensed doctors, evidence-based medicine recommendations, and real-time health guidance — all under one secure platform.
           </motion.p>
+
           <motion.div
             className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16"
             initial={{ opacity: 0 }}
@@ -78,21 +79,24 @@ function Home() {
                 title: "Medicine Suggestions",
                 image:
                   "https://images.unsplash.com/photo-1585435557343-3b092031a831?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-                description: "Get personalized medicine recommendations based on your symptoms.",
+                description:
+                  "Receive AI-assisted, guideline-based medicine suggestions — reviewed by certified pharmacists.",
                 link: "/medicine-suggestion",
               },
               {
                 title: "Expert Consultations",
                 image:
                   "https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-                description: "Book a consultation with our experienced medical professionals.",
+                description:
+                  "Book secure consultations with specialists in cardiology, dermatology, mental health, and more.",
                 link: "/consultation",
               },
               {
                 title: "Health Articles",
                 image:
                   "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-                description: "Read the latest articles on various health topics.",
+                description:
+                  "Explore doctor-reviewed articles on prevention, nutrition, and chronic conditions.",
                 link: "/articles",
               },
             ].map((service, index) => (
@@ -151,21 +155,22 @@ function Home() {
                 {
                   title: "Expert Medical Advice",
                   description:
-                    "Our team of experienced healthcare professionals provides accurate and up-to-date medical information.",
+                    "All content is reviewed by qualified healthcare providers following WHO and CDC guidelines.",
                 },
                 {
                   title: "Personalized Care",
                   description:
-                    "We offer tailored medicine suggestions and consultations based on your unique health needs.",
+                    "Get treatment paths based on AI + doctor-reviewed diagnostics tailored to your symptoms and history.",
                 },
                 {
                   title: "24/7 Accessibility",
-                  description: "Access our services anytime, anywhere, ensuring you always have the support you need.",
+                  description:
+                    "Use MediCare anytime from home or travel — all services are mobile-optimized and secure.",
                 },
                 {
-                  title: "Comprehensive Health Resources",
+                  title: "E-Prescription Support",
                   description:
-                    "From articles to news updates, we provide a wide range of health-related information to keep you informed.",
+                    "Doctors can issue digital prescriptions that can be filled from our verified pharmacy partners.",
                 },
               ].map((item, index) => (
                 <motion.div key={item.title} {...fadeInUp} transition={{ delay: 0.1 * (index + 1) }}>
@@ -178,6 +183,18 @@ function Home() {
             </div>
           </motion.div>
 
+          <motion.div className="mb-16" {...fadeInUp}>
+            <h2 className={`text-3xl font-bold mb-6 text-center ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
+              Trusted by Healthcare Professionals
+            </h2>
+            <p className={`text-lg text-center mb-4 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
+              Used by 1,200+ licensed practitioners and recommended by 40+ clinics nationwide.
+            </p>
+            <p className={`text-md text-center ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
+              MediCare complies with HIPAA, HIMS-Pakistan, and ICD-11 medical data standards.
+            </p>
+          </motion.div>
+
           <motion.div
             className="mb-16"
             initial={{ opacity: 0 }}
@@ -187,7 +204,7 @@ function Home() {
             <h2 className={`text-3xl font-bold mb-6 text-center ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
               Our Sponsors
             </h2>
-            <HorizontalSponsorSlider /> {/* Replaced CircularSponsorSlider with HorizontalSponsorSlider */}
+            <HorizontalSponsorSlider />
           </motion.div>
 
           <NewsletterSignup />
@@ -199,4 +216,3 @@ function Home() {
 }
 
 export default Home
-
