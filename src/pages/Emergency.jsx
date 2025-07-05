@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect } from "react"
 import { Helmet } from "react-helmet-async"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import {
   Phone,
   Ambulance,
@@ -40,21 +40,18 @@ const EmergencyGuide = ({ title, steps }) => {
 
 function Emergency() {
   const { darkMode } = useContext(DarkModeContext)
-  const [selectedGuide, setSelectedGuide] = useState(null)
   const [location, setLocation] = useState(null)
   const [locationError, setLocationError] = useState(null)
 
-  // Get user location
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        (position) =>
           setLocation({
             lat: position.coords.latitude,
             lng: position.coords.longitude,
-          })
-        },
-        (err) => setLocationError("Location access denied.")
+          }),
+        () => setLocationError("Location access denied.")
       )
     } else {
       setLocationError("Geolocation not supported.")
@@ -72,9 +69,44 @@ function Emergency() {
   ]
 
   const emergencyGuides = {
-    cpr: { title: "How to Perform CPR", icon: Heart, steps: [/* ... */] },
-    choking: { title: "How to Help a Choking Person", icon: Wind, steps: [/* ... */] },
-    bleeding: { title: "How to Stop Severe Bleeding", icon: FirstAid, steps: [/* ... */] },
+    cpr: {
+      title: "How to Perform CPR",
+      icon: Heart,
+      steps: [
+        "Check the scene for safety.",
+        "Tap and shout to check for responsiveness.",
+        "Call 911 immediately.",
+        "Check for breathing: look, listen, feel.",
+        "Begin compressions: push hard and fast on the center of the chest.",
+        "30 compressions followed by 2 rescue breaths.",
+        "Repeat the cycle until help arrives or the person recovers."
+      ],
+    },
+    choking: {
+      title: "How to Help a Choking Person",
+      icon: Wind,
+      steps: [
+        "Ask 'Are you choking?'.",
+        "If yes, give 5 back blows between shoulder blades.",
+        "If ineffective, perform Heimlich maneuver (abdominal thrusts).",
+        "Alternate 5 back blows and 5 thrusts.",
+        "If unconscious, begin CPR.",
+        "Call emergency services."
+      ],
+    },
+    bleeding: {
+      title: "How to Stop Severe Bleeding",
+      icon: FirstAid,
+      steps: [
+        "Wear gloves if available.",
+        "Expose and inspect the wound.",
+        "Apply direct pressure with a clean cloth or gauze.",
+        "Elevate the injured area if possible.",
+        "If bleeding doesn’t stop, add layers of cloth — don’t remove soaked ones.",
+        "Use a tourniquet only if bleeding is life-threatening.",
+        "Seek immediate medical attention."
+      ],
+    },
   }
 
   return (
@@ -91,9 +123,10 @@ function Emergency() {
           Emergency Services
         </motion.h1>
         <motion.p className="text-xl mb-8 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }}>
-          If you are experiencing a medical emergency, please call 911 immediately.
+          If you're in a medical emergency, call 911 immediately.
         </motion.p>
 
+        {/* Emergency Services Grid */}
         <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }}>
           {emergencyServices.map((service, index) => (
             <motion.div key={service.name} className={`p-6 rounded-lg shadow-md ${darkMode ? "bg-blue-800" : "bg-white"}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 * (index + 1) }}>
@@ -108,6 +141,7 @@ function Emergency() {
           ))}
         </motion.div>
 
+        {/* Emergency Guides */}
         <motion.h2 className="text-2xl font-semibold mb-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.6 }}>
           Emergency Guides
         </motion.h2>
@@ -117,6 +151,7 @@ function Emergency() {
           ))}
         </motion.div>
 
+        {/* When to Seek Emergency */}
         <motion.div className="mt-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.8 }}>
           <h2 className="text-2xl font-semibold mb-4">When to Seek Emergency Care</h2>
           <ul className="list-disc list-inside space-y-2">
@@ -133,7 +168,7 @@ function Emergency() {
           </ul>
         </motion.div>
 
-        {/* Nearby Hospital Map Section */}
+        {/* Nearby Hospital Map */}
         <motion.div className="mt-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.9 }}>
           <h2 className="text-2xl font-semibold mb-4 text-center">Nearby Hospitals & Clinics</h2>
           {locationError && <p className="text-red-500 text-center">{locationError}</p>}
