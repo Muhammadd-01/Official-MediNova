@@ -11,6 +11,15 @@
 .animation-delay-4000 {
   animation-delay: 4s;
 }
+/* Fix Leaflet map z-index */
+.leaflet-container {
+  z-index: 0 !important;
+}
+
+.leaflet-popup,
+.leaflet-control {
+  z-index: 100 !important;
+}
 
 @keyframes fadeIn {
   from {

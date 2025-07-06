@@ -24,36 +24,45 @@ import "leaflet-geosearch/dist/geosearch.css"
 import L from "leaflet"
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch"
 
-// Fix marker icons
+// Fix Leaflet icons
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 })
 
-// Emergency guide component
+// EmergencyGuide component
 function EmergencyGuide({ title, steps }) {
   const [isExpanded, setIsExpanded] = useState(false)
   return (
     <div className="mb-4">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex justify-between items-center w-full p-4 bg-red-100 dark:bg-red-800 rounded-lg focus:outline-none"
+        className="flex justify-between items-center w-full p-4 
+                   bg-red-100 dark:bg-blue-800 dark:text-white 
+                   rounded-lg focus:outline-none"
       >
         <h3 className="text-lg font-semibold">{title}</h3>
         {isExpanded ? <ChevronUp /> : <ChevronDown />}
       </button>
       {isExpanded && (
-        <ol className="list-decimal list-inside mt-2 p-4 bg-white dark:bg-blue-900 rounded-lg space-y-1 text-sm">
-          {steps.map((step, i) => <li key={i}>{step}</li>)}
+        <ol className="list-decimal list-inside mt-2 p-4 
+                      bg-white dark:bg-blue-900 dark:text-white 
+                      rounded-lg space-y-1 text-sm">
+          {steps.map((step, i) => (
+            <li key={i}>{step}</li>
+          ))}
         </ol>
       )}
     </div>
   )
 }
 
-// Search bar control
+// Search bar
 function SearchControl({ location }) {
   const map = useMap()
   useEffect(() => {
@@ -81,15 +90,18 @@ function Emergency() {
   const [error, setError] = useState(null)
   const [hospitals, setHospitals] = useState([])
 
-  // Live location tracking
+  // Track live location
   useEffect(() => {
     if (!navigator.geolocation) {
       setError("Geolocation not supported.")
       return
     }
     const watchId = navigator.geolocation.watchPosition(
-      pos => {
-        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+      (pos) => {
+        const loc = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        }
         setLocation(loc)
         fetchHospitals(loc)
       },
@@ -99,7 +111,7 @@ function Emergency() {
     return () => navigator.geolocation.clearWatch(watchId)
   }, [])
 
-  const fetchHospitals = async loc => {
+  const fetchHospitals = async (loc) => {
     const query = `
 [out:json][timeout:25];
 (
@@ -127,16 +139,46 @@ out body;
   ]
 
   const emergencyGuides = {
-    cpr: { title: "How to Perform CPR", steps: ["Ensure scene safety.", "Tap & shout.", "Call 911.", "Check breathing.", "30 compressions + 2 breaths cycles."] },
-    choking: { title: "Help Choking Person", steps: ["Ask if choking.", "5 back blows.", "5 abdominal thrusts.", "Repeat or start CPR."] },
-    bleeding: { title: "Stop Severe Bleeding", steps: ["Wear gloves.", "Press on wound.", "Add layers.", "Elevate limb.", "Tourniquet if needed.", "Call emergency services."] },
+    cpr: {
+      title: "How to Perform CPR",
+      steps: [
+        "Ensure scene safety.",
+        "Tap & shout.",
+        "Call 911.",
+        "Check breathing.",
+        "30 compressions + 2 breaths cycles.",
+      ],
+    },
+    choking: {
+      title: "Help Choking Person",
+      steps: [
+        "Ask if choking.",
+        "5 back blows.",
+        "5 abdominal thrusts.",
+        "Repeat or start CPR.",
+      ],
+    },
+    bleeding: {
+      title: "Stop Severe Bleeding",
+      steps: [
+        "Wear gloves.",
+        "Press on wound.",
+        "Add layers.",
+        "Elevate limb.",
+        "Tourniquet if needed.",
+        "Call emergency services.",
+      ],
+    },
   }
 
   return (
     <>
       <Helmet>
         <title>Emergency Services - MediCare</title>
-        <meta name="description" content="Emergency guides & live map with nearby hospitals/clinics." />
+        <meta
+          name="description"
+          content="Emergency guides & live map with nearby hospitals/clinics."
+        />
       </Helmet>
 
       <div
@@ -144,14 +186,24 @@ out body;
           darkMode ? "text-white" : "text-blue-900"
         }`}
       >
-        <motion.h1 className="text-3xl font-bold mb-6 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <motion.h1
+          className="text-3xl font-bold mb-6 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
           Emergency Services
         </motion.h1>
 
-        <motion.p className="text-xl mb-8 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+        <motion.p
+          className="text-xl mb-8 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           Call 911 in an emergency. Use guides & map below.
         </motion.p>
 
+        {/* Services */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {emergencyServices.map((s, idx) => (
             <motion.div
@@ -166,7 +218,10 @@ out body;
               <s.icon className="w-12 h-12 mx-auto mb-4" />
               <h2 className="text-xl font-semibold mb-2">{s.name}</h2>
               <p>
-                <a href={`tel:${s.phone}`} className="text-blue-500 hover:underline">
+                <a
+                  href={`tel:${s.phone}`}
+                  className="text-blue-500 hover:underline"
+                >
                   {s.phone}
                 </a>
               </p>
@@ -174,22 +229,35 @@ out body;
           ))}
         </div>
 
-        <motion.h2 className="text-2xl font-semibold mb-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        {/* Guides */}
+        <motion.h2
+          className="text-2xl font-semibold mb-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
           Emergency Guides
         </motion.h2>
         {Object.entries(emergencyGuides).map(([k, g]) => (
           <EmergencyGuide key={k} title={g.title} steps={g.steps} />
         ))}
 
-        <motion.div className="mt-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
-          <h2 className="text-2xl mb-4 text-center">Nearby Hospitals & Clinics</h2>
+        {/* Map */}
+        <motion.div
+          className="mt-12"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <h2 className="text-2xl mb-4 text-center">
+            Nearby Hospitals & Clinics
+          </h2>
           {error && <p className="text-red-500 text-center">{error}</p>}
           {location ? (
             <MapContainer
               center={[location.lat, location.lng]}
               zoom={14}
               scrollWheelZoom={false}
-              className="h-[450px] rounded-lg overflow-hidden shadow-lg"
+              className="h-[450px] rounded-lg overflow-hidden shadow-lg z-0"
             >
               <TileLayer
                 attribution="© OpenStreetMap contributors"
@@ -199,7 +267,7 @@ out body;
                 <Popup>Your Location</Popup>
               </Marker>
               <SearchControl location={location} />
-              {hospitals.map(h => (
+              {hospitals.map((h) => (
                 <Marker key={h.id} position={[h.lat, h.lon]}>
                   <Popup>{h.tags.name || "Local Clinic/Hospital"}</Popup>
                 </Marker>
