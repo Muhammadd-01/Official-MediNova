@@ -176,12 +176,12 @@ function MedicineSuggestion() {
   return (
     <>
       <Helmet>
-        <title>Medicine Suggestions - MediCare</title>
+        <title>Medicine Suggestions - MediNova</title>
         <meta
           name="description"
           content="Get personalized medicine suggestions based on your symptoms or search for common diseases. Safe dosage recommendations for various conditions."
         />
-        <link rel="canonical" href="https://www.medicare.com/medicine-suggestion" />
+        <link rel="canonical" href="https://www.MediNova.com/medicine-suggestion" />
       </Helmet>
 
       <div className={`max-w-4xl mx-auto ${darkMode ? "text-gray-200" : "text-gray-800"}`}>

@@ -32,18 +32,18 @@ function Home() {
   return (
     <>
       <Helmet>
-        <title>MediCare - Your Trusted Medical Platform</title>
+        <title>MediNova - Your Trusted Medical Platform</title>
         <meta
           name="description"
-          content="MediCare offers expert-backed medical consultations, personalized drug recommendations, and secure digital healthcare services 24/7."
+          content="MediNova offers expert-backed medical consultations, personalized drug recommendations, and secure digital healthcare services 24/7."
         />
-        <link rel="canonical" href="https://www.medicare.com" />
-        <meta property="og:title" content="MediCare - Your Trusted Medical Platform" />
+        <link rel="canonical" href="https://www.MediNova.com" />
+        <meta property="og:title" content="MediNova - Your Trusted Medical Platform" />
         <meta
           property="og:description"
           content="Expert-backed consultations, AI-powered medicine suggestions, and health tools. Secure, reliable, and always available."
         />
-        <meta property="og:url" content="https://www.medicare.com" />
+        <meta property="og:url" content="https://www.MediNova.com" />
         <meta property="og:type" content="website" />
       </Helmet>
 
@@ -59,7 +59,7 @@ function Home() {
             className={`text-5xl font-bold mb-8 text-center ${darkMode ? "text-gray-200" : "text-gray-800"}`}
             {...fadeInUp}
           >
-            Welcome to MediCare
+            Welcome to MediNova
           </motion.h1>
           <motion.p
             className={`text-xl mb-12 text-center ${darkMode ? "text-gray-300" : "text-gray-700"}`}
@@ -148,7 +148,7 @@ function Home() {
             {...fadeInUp}
           >
             <h2 className={`text-3xl font-bold mb-6 ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
-              Why Choose MediCare?
+              Why Choose MediNova?
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[
@@ -165,7 +165,7 @@ function Home() {
                 {
                   title: "24/7 Accessibility",
                   description:
-                    "Use MediCare anytime from home or travel — all services are mobile-optimized and secure.",
+                    "Use MediNova anytime from home or travel — all services are mobile-optimized and secure.",
                 },
                 {
                   title: "E-Prescription Support",
@@ -191,7 +191,7 @@ function Home() {
               Used by 1,200+ licensed practitioners and recommended by 40+ clinics nationwide.
             </p>
             <p className={`text-md text-center ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
-              MediCare complies with HIPAA, HIMS-Pakistan, and ICD-11 medical data standards.
+              MediNova complies with HIPAA, HIMS-Pakistan, and ICD-11 medical data standards.
             </p>
           </motion.div>
 

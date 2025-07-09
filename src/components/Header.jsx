@@ -25,7 +25,7 @@ function Header() {
               to="/"
               className="text-3xl font-extrabold tracking-wide text-blue-600 hover:text-blue-700 transition-all duration-300"
             >
-              MediCare
+              MediNova
             </Link>
 
             {/* Nav Links */}

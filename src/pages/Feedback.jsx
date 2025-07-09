@@ -15,15 +15,15 @@ function Feedback() {
   return (
     <>
       <Helmet>
-        <title>Provide Feedback - MediCare</title>
+        <title>Provide Feedback - MediNova</title>
         <meta
           name="description"
           content="Share your experience and help us improve our services. Your feedback is valuable to us."
         />
-        <link rel="canonical" href="https://www.medicare.com/feedback" />
-        <meta property="og:title" content="Provide Feedback - MediCare" />
+        <link rel="canonical" href="https://www.MediNova.com/feedback" />
+        <meta property="og:title" content="Provide Feedback - MediNova" />
         <meta property="og:description" content="Share your experience and help us improve our medical services." />
-        <meta property="og:url" content="https://www.medicare.com/feedback" />
+        <meta property="og:url" content="https://www.MediNova.com/feedback" />
         <meta property="og:type" content="website" />
       </Helmet>
 

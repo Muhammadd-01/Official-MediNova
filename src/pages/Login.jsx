@@ -23,8 +23,8 @@ function Login() {
   return (
     <>
       <Helmet>
-        <title>Login - MediCare</title>
-        <meta name="description" content="Log in to your MediCare account" />
+        <title>Login - MediNova</title>
+        <meta name="description" content="Log in to your MediNova account" />
       </Helmet>
 
       <div className={`min-h-screen flex items-center justify-center ${darkMode ? "bg-gray-900" : "bg-gray-100"}`}>

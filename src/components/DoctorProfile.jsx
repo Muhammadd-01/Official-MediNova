@@ -18,7 +18,7 @@ function DoctorProfile({ doctor, onBookAppointment }) {
     },
     availableChannel: {
       "@type": "ServiceChannel",
-      serviceUrl: `https://www.medicare.com/consultation/${doctor.id}`,
+      serviceUrl: `https://www.MediNova.com/consultation/${doctor.id}`,
       servicePhone: doctor.phone,
     },
   }

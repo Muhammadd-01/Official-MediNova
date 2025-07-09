@@ -35,15 +35,15 @@ function News() {
   return (
     <>
       <Helmet>
-        <title>Medical News - MediCare</title>
+        <title>Medical News - MediNova</title>
         <meta name="description" content="Stay updated with the latest medical news and breakthroughs in healthcare." />
-        <link rel="canonical" href="https://www.medicare.com/news" />
-        <meta property="og:title" content="Latest Medical News - MediCare" />
+        <link rel="canonical" href="https://www.MediNova.com/news" />
+        <meta property="og:title" content="Latest Medical News - MediNova" />
         <meta
           property="og:description"
           content="Get the latest updates on medical research, treatments, and healthcare innovations."
         />
-        <meta property="og:url" content="https://www.medicare.com/news" />
+        <meta property="og:url" content="https://www.MediNova.com/news" />
         <meta property="og:type" content="website" />
       </Helmet>
 

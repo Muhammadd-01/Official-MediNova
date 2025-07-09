@@ -20,18 +20,18 @@ function Contact() {
   return (
     <>
       <Helmet>
-        <title>Contact Us - MediCare</title>
+        <title>Contact Us - MediNova</title>
         <meta
           name="description"
-          content="Get in touch with MediCare. We're here to answer your questions and provide support."
+          content="Get in touch with MediNova. We're here to answer your questions and provide support."
         />
-        <link rel="canonical" href="https://www.medicare.com/contact" />
-        <meta property="og:title" content="Contact MediCare - Get in Touch" />
+        <link rel="canonical" href="https://www.MediNova.com/contact" />
+        <meta property="og:title" content="Contact MediNova - Get in Touch" />
         <meta
           property="og:description"
           content="Contact our team for any questions or support regarding our medical services."
         />
-        <meta property="og:url" content="https://www.medicare.com/contact" />
+        <meta property="og:url" content="https://www.MediNova.com/contact" />
         <meta property="og:type" content="website" />
       </Helmet>
 
@@ -111,7 +111,7 @@ function Contact() {
               <p className="text-gray-700 mb-2">123 Medical Street</p>
               <p className="text-gray-700 mb-2">Health City, HC 12345</p>
               <p className="text-gray-700 mb-2">Phone: (123) 456-7890</p>
-              <p className="text-gray-700 mb-2">Email: info@medicare.com</p>
+              <p className="text-gray-700 mb-2">Email: info@MediNova.com</p>
             </div>
             <div className="aspect-w-16 aspect-h-9">
               <iframe

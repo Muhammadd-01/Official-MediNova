@@ -46,8 +46,8 @@ function Register() {
   return (
     <>
       <Helmet>
-        <title>Register - MediCare</title>
-        <meta name="description" content="Create a new MediCare account" />
+        <title>Register - MediNova</title>
+        <meta name="description" content="Create a new MediNova account" />
       </Helmet>
 
       <div

@@ -62,7 +62,7 @@ function Articles() {
         datePublished: article.date,
         description: article.excerpt,
         image: article.image,
-        url: `https://www.medicare.com/articles/${article.slug}`,
+        url: `https://www.MediNova.com/articles/${article.slug}`,
       },
     })),
   }
@@ -70,18 +70,18 @@ function Articles() {
   return (
     <>
       <Helmet>
-        <title>Health Articles - MediCare</title>
+        <title>Health Articles - MediNova</title>
         <meta
           name="description"
           content="Read the latest articles on various health topics. Expert advice and information from medical professionals."
         />
-        <link rel="canonical" href="https://www.medicare.com/articles" />
-        <meta property="og:title" content="Health Articles - MediCare" />
+        <link rel="canonical" href="https://www.MediNova.com/articles" />
+        <meta property="og:title" content="Health Articles - MediNova" />
         <meta
           property="og:description"
           content="Expert medical articles and health advice from our team of professionals."
         />
-        <meta property="og:url" content="https://www.medicare.com/articles" />
+        <meta property="og:url" content="https://www.MediNova.com/articles" />
         <meta property="og:type" content="website" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
@@ -103,7 +103,7 @@ function Articles() {
               >
                 Read More
               </Link>
-              <SocialShare url={`https://www.medicare.com/articles/${article.slug}`} title={article.title} />
+              <SocialShare url={`https://www.MediNova.com/articles/${article.slug}`} title={article.title} />
               <div className="mt-4">
                 <h3 className="font-semibold mb-2">Related Topics:</h3>
                 <ul className="list-disc list-inside">

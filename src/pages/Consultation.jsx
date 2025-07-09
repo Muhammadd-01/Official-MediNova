@@ -73,18 +73,18 @@ function Consultation() {
   return (
     <>
       <Helmet>
-        <title>Book a Consultation - MediCare</title>
+        <title>Book a Consultation - MediNova</title>
         <meta
           name="description"
           content="Book a consultation with our expert doctors. View doctor profiles and availability for personalized medical advice."
         />
-        <link rel="canonical" href="https://www.medicare.com/consultation" />
-        <meta property="og:title" content="Expert Medical Consultations - MediCare" />
+        <link rel="canonical" href="https://www.MediNova.com/consultation" />
+        <meta property="og:title" content="Expert Medical Consultations - MediNova" />
         <meta
           property="og:description"
           content="Book a consultation with our experienced doctors for personalized medical advice."
         />
-        <meta property="og:url" content="https://www.medicare.com/consultation" />
+        <meta property="og:url" content="https://www.MediNova.com/consultation" />
         <meta property="og:type" content="website" />
       </Helmet>
 
