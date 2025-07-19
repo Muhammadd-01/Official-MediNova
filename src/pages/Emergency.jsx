@@ -1,3 +1,4 @@
+// ✅ Customized Emergency.jsx - Google Maps like features
 import { useState, useContext, useEffect } from "react"
 import { Helmet } from "react-helmet-async"
 import { motion } from "framer-motion"
@@ -14,10 +15,12 @@ import {
 import { DarkModeContext } from "../App"
 import {
   MapContainer,
+  LayersControl,
   TileLayer,
   Marker,
   Popup,
   useMap,
+  Circle,
 } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 import "leaflet-geosearch/dist/geosearch.css"
@@ -25,34 +28,25 @@ import L from "leaflet"
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch"
 
 // Fix Leaflet icons
-delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 })
 
-// EmergencyGuide component
 function EmergencyGuide({ title, steps }) {
   const [isExpanded, setIsExpanded] = useState(false)
   return (
     <div className="mb-4">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex justify-between items-center w-full p-4 
-                   bg-red-100 dark:bg-blue-800 dark:text-white 
-                   rounded-lg focus:outline-none"
+        className="flex justify-between items-center w-full p-4 bg-red-100 dark:bg-blue-800 dark:text-white rounded-lg"
       >
         <h3 className="text-lg font-semibold">{title}</h3>
         {isExpanded ? <ChevronUp /> : <ChevronDown />}
       </button>
       {isExpanded && (
-        <ol className="list-decimal list-inside mt-2 p-4 
-                      bg-white dark:bg-blue-900 dark:text-white 
-                      rounded-lg space-y-1 text-sm">
+        <ol className="list-decimal list-inside mt-2 p-4 bg-white dark:bg-blue-900 dark:text-white rounded-lg space-y-1 text-sm">
           {steps.map((step, i) => (
             <li key={i}>{step}</li>
           ))}
@@ -62,7 +56,6 @@ function EmergencyGuide({ title, steps }) {
   )
 }
 
-// Search bar
 function SearchControl({ location }) {
   const map = useMap()
   useEffect(() => {
@@ -71,14 +64,11 @@ function SearchControl({ location }) {
     const control = new GeoSearchControl({
       provider,
       style: "bar",
-      searchLabel: "Search nearby hospitals/clinics...",
+      searchLabel: "Search hospitals...",
       autoClose: true,
       showMarker: false,
-      retainZoomLevel: false,
-      updateMap: false,
     })
     map.addControl(control)
-    control.getContainer().addEventListener("click", () => map.scrollWheelZoom.disable())
     return () => map.removeControl(control)
   }, [map, location])
   return null
@@ -90,7 +80,6 @@ function Emergency() {
   const [error, setError] = useState(null)
   const [hospitals, setHospitals] = useState([])
 
-  // Track live location
   useEffect(() => {
     if (!navigator.geolocation) {
       setError("Geolocation not supported.")
@@ -98,10 +87,7 @@ function Emergency() {
     }
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
-        const loc = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        }
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
         setLocation(loc)
         fetchHospitals(loc)
       },
@@ -132,15 +118,14 @@ out body;
     }
   }
 
-  // ✅ Authentic Pakistani Services
   const emergencyServices = [
     { name: "Edhi Ambulance", phone: "115", icon: Ambulance },
     { name: "Chhipa Ambulance", phone: "1020", icon: Ambulance },
     { name: "Rescue 1122", phone: "1122", icon: Hospital },
     { name: "Police Emergency", phone: "15", icon: Phone },
     { name: "Fire Brigade", phone: "16", icon: Phone },
-    { name: "Bomb Disposal / Terrorism", phone: "1717", icon: Phone },
-    { name: "Poison Control (Karachi)", phone: "(021) 99215718", icon: Phone },
+    { name: "Bomb Disposal", phone: "1717", icon: Phone },
+    { name: "Poison Control", phone: "(021) 99215718", icon: Phone },
   ]
 
   const emergencyGuides = {
@@ -180,101 +165,52 @@ out body;
     <>
       <Helmet>
         <title>Emergency Services - MediCare</title>
-        <meta
-          name="description"
-          content="Emergency guides & live map with nearby hospitals/clinics."
-        />
+        <meta name="description" content="Emergency guides & live map with nearby hospitals/clinics." />
       </Helmet>
 
-      <div
-        className={`max-w-5xl mx-auto px-4 py-8 ${
-          darkMode ? "text-white" : "text-blue-900"
-        }`}
-      >
-        <motion.h1
-          className="text-3xl font-bold mb-6 text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          Emergency Services
-        </motion.h1>
+      <div className={`max-w-5xl mx-auto px-4 py-8 ${darkMode ? "text-white" : "text-blue-900"}`}>
+        <motion.h1 className="text-3xl font-bold mb-6 text-center">Emergency Services</motion.h1>
 
-        <motion.p
-          className="text-xl mb-8 text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
+        <motion.p className="text-xl mb-8 text-center">
           Call emergency numbers. Use guides & location map below.
         </motion.p>
 
-        {/* Services */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {emergencyServices.map((s, idx) => (
-            <motion.div
-              key={s.name}
-              className={`p-6 rounded-lg shadow-md text-center ${
-                darkMode ? "bg-gray-800" : "bg-white"
-              }`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 * idx }}
-            >
+            <motion.div key={s.name} className={`p-6 rounded-lg shadow-md text-center ${darkMode ? "bg-gray-800" : "bg-white"}`}>
               <s.icon className="w-12 h-12 mx-auto mb-4" />
               <h2 className="text-xl font-semibold mb-2">{s.name}</h2>
-              <p>
-                <a
-                  href={`tel:${s.phone}`}
-                  className="text-blue-500 hover:underline"
-                >
-                  {s.phone}
-                </a>
-              </p>
+              <p><a href={`tel:${s.phone}`} className="text-blue-500 hover:underline">{s.phone}</a></p>
             </motion.div>
           ))}
         </div>
 
-        {/* Guides */}
-        <motion.h2
-          className="text-2xl font-semibold mb-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          Emergency Guides
-        </motion.h2>
+        <motion.h2 className="text-2xl font-semibold mb-4">Emergency Guides</motion.h2>
         {Object.entries(emergencyGuides).map(([k, g]) => (
           <EmergencyGuide key={k} title={g.title} steps={g.steps} />
         ))}
 
-        {/* Map */}
-        <motion.div
-          className="mt-12"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <h2 className="text-2xl mb-4 text-center">
-            Nearby Hospitals & Clinics
-          </h2>
+        <motion.div className="mt-12">
+          <h2 className="text-2xl mb-4 text-center">Nearby Hospitals & Clinics</h2>
           {error && <p className="text-red-500 text-center">{error}</p>}
           {location ? (
-            <MapContainer
-              center={[location.lat, location.lng]}
-              zoom={14}
-              scrollWheelZoom={false}
-              className="h-[450px] rounded-lg overflow-hidden shadow-lg z-0"
-            >
-              <TileLayer
-                attribution="© OpenStreetMap contributors"
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
+            <MapContainer center={[location.lat, location.lng]} zoom={15} className="h-[450px] rounded-lg shadow-lg">
+              <LayersControl position="topright">
+                <LayersControl.BaseLayer checked name="Standard">
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                </LayersControl.BaseLayer>
+                <LayersControl.BaseLayer name="Satellite">
+                  <TileLayer url="https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" subdomains={["mt0", "mt1", "mt2", "mt3"]} />
+                </LayersControl.BaseLayer>
+              </LayersControl>
               <Marker position={[location.lat, location.lng]}>
-                <Popup>Your Location</Popup>
+                <Popup>You are here</Popup>
               </Marker>
+              <Circle center={[location.lat, location.lng]} radius={500} pathOptions={{ color: "blue" }} />
               <SearchControl location={location} />
               {hospitals.map((h) => (
                 <Marker key={h.id} position={[h.lat, h.lon]}>
-                  <Popup>{h.tags.name || "Local Clinic/Hospital"}</Popup>
+                  <Popup>{h.tags.name || "Hospital/Clinic"}</Popup>
                 </Marker>
               ))}
             </MapContainer>
@@ -287,4 +223,4 @@ out body;
   )
 }
 
-export default Emergency
+export default Emergency;
