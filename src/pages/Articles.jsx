@@ -1,259 +1,213 @@
-import React, { useContext, useEffect, useState } from "react"
-import { Helmet } from "react-helmet-async"
-import { Link } from "react-router-dom"
-import LazyImage from "../components/LazyImage"
-import NewsletterSignup from "../components/NewsletterSignup"
-import { DarkModeContext } from "../App"
-import { motion } from "framer-motion"
+import React, { useContext, useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
+import LazyImage from "../components/LazyImage";
+import NewsletterSignup from "../components/NewsletterSignup";
+import { DarkModeContext } from "../App";
+import { motion, AnimatePresence } from "framer-motion";
 
 function SocialShare({ url, title }) {
   const encodedUrl = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(title);
 
   return (
-    <div className="flex flex-wrap gap-2 mt-4">
-      <a
-        href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-full text-xs shadow transition"
-      >
-        Facebook
-      </a>
-      <a
-        href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="bg-blue-400 hover:bg-blue-500 text-white px-3 py-1 rounded-full text-xs shadow transition"
-      >
-        Twitter
-      </a>
-      <a
-        href={`https://www.linkedin.com/shareArticle?url=${encodedUrl}&title=${encodedTitle}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded-full text-xs shadow transition"
-      >
-        LinkedIn
-      </a>
+    <div className="mt-4 flex gap-2">
+      <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`} target="_blank" rel="noopener noreferrer"
+        className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs hover:bg-blue-700 transition">Facebook</a>
+      <a href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`} target="_blank" rel="noopener noreferrer"
+        className="bg-blue-400 text-white px-3 py-1 rounded-full text-xs hover:bg-blue-500 transition">Twitter</a>
+      <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`} target="_blank" rel="noopener noreferrer"
+        className="bg-blue-800 text-white px-3 py-1 rounded-full text-xs hover:bg-blue-900 transition">LinkedIn</a>
     </div>
   );
 }
 
 function Articles() {
-  const { darkMode } = useContext(DarkModeContext)
-  const [articles, setArticles] = useState([])
-  const [filterTag, setFilterTag] = useState("")
-  const [filterAuthor, setFilterAuthor] = useState("")
-  const [page, setPage] = useState(1)
+  const { darkMode } = useContext(DarkModeContext);
+  const [articles, setArticles] = useState([]);
+  const [allArticles, setAllArticles] = useState([]);
+  const [page, setPage] = useState(1);
+  const [authorFilter, setAuthorFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+  const [tagFilter, setTagFilter] = useState("");
+  const [sortBy, setSortBy] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [lazyAnimate, setLazyAnimate] = useState(true);
 
-  const ARTICLES_PER_PAGE = 9;
+  const articlesPerPage = 20;
 
   useEffect(() => {
     const fetchArticles = async () => {
-      try {
-        const devRes = await fetch(`https://dev.to/api/articles?tag=health&per_page=30&page=${page}`)
-        const devData = await devRes.json()
+      setLoading(true);
+      const devtoTags = ["health", "medical", "science", "lifestyle"];
+      const requests = devtoTags.map(tag =>
+        fetch(`https://dev.to/api/articles?tag=${tag}&per_page=100`).then(res => res.json())
+      );
+      const results = await Promise.all(requests);
+      const combined = results.flat();
+      setAllArticles(combined);
+      setLoading(false);
+    };
+    fetchArticles();
+  }, []);
 
-        const medRes = await fetch(`https://api.spaceflightnewsapi.net/v4/articles/?limit=15&offset=${(page - 1) * 15}`)
-        const medData = await medRes.json()
+  useEffect(() => {
+    let filtered = allArticles.filter(article => {
+      const matchAuthor = authorFilter ? article.user?.name?.toLowerCase() === authorFilter.toLowerCase() : true;
+      const matchDate = dateFilter ? article.readable_publish_date === dateFilter : true;
+      const matchTag = tagFilter ? article.tag_list.includes(tagFilter) : true;
+      return matchAuthor && matchDate && matchTag;
+    });
 
-        const mappedMed = medData.results.map((a) => ({
-          id: a.id + "-sf",
-          title: a.title,
-          description: a.summary,
-          cover_image: a.image_url,
-          url: a.url,
-          tags: ["space", "news"],
-          tag_list: ["space", "news"],
-          user: { name: "SpaceFlight News" },
-          published_at: a.published_at,
-          readable_publish_date: new Date(a.published_at).toLocaleDateString(),
-        }))
-
-        setArticles([...devData, ...mappedMed])
-      } catch (err) {
-        console.error("Error fetching articles:", err)
-      }
+    if (sortBy === "popularity") {
+      filtered = [...filtered].sort((a, b) => (b.public_reactions_count || 0) - (a.public_reactions_count || 0));
     }
-    fetchArticles()
-  }, [page])
 
-  const filteredArticles = articles.filter((a) => {
-    const matchesTag = filterTag ? a.tag_list?.includes(filterTag) : true
-    const matchesAuthor = filterAuthor ? a.user?.name?.includes(filterAuthor) : true
-    return matchesTag && matchesAuthor
-  })
+    setArticles(filtered);
+    setPage(1);
+  }, [authorFilter, dateFilter, tagFilter, sortBy, allArticles]);
 
-  const paginatedArticles = filteredArticles.slice(0, ARTICLES_PER_PAGE)
+  const uniqueAuthors = [...new Set(allArticles.map(article => article.user?.name).filter(Boolean))];
+  const uniqueDates = [...new Set(allArticles.map(article => article.readable_publish_date).filter(Boolean))];
+  const uniqueTags = [...new Set(allArticles.flatMap(article => article.tag_list))];
 
-  const uniqueTags = Array.from(
-    new Set(articles.flatMap((a) => (Array.isArray(a.tag_list) ? a.tag_list : [])))
-  )
+  const indexOfLast = page * articlesPerPage;
+  const indexOfFirst = indexOfLast - articlesPerPage;
+  const currentArticles = articles.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(articles.length / articlesPerPage);
 
-  const uniqueAuthors = Array.from(
-    new Set(articles.map((a) => a.user?.name).filter(Boolean))
-  )
+  const handlePageChange = (direction) => {
+    setLazyAnimate(false);
+    setLoading(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => {
+      setPage(prev => direction === "next" ? prev + 1 : prev - 1);
+      setLazyAnimate(true);
+      setLoading(false);
+    }, 300);
+  };
 
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    itemListElement: filteredArticles.map((article, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      item: {
-        "@type": "Article",
-        headline: article.title,
-        author: {
-          "@type": "Person",
-          name: article.user?.name || "Unknown Author",
-        },
-        datePublished: article.published_at,
-        description: article.description,
-        image: article.cover_image,
-        url: article.url,
-      },
-    })),
-  }
+  const resetFilters = () => {
+    setAuthorFilter("");
+    setDateFilter("");
+    setTagFilter("");
+    setSortBy("");
+  };
 
   return (
     <>
       <Helmet>
         <title>Health Articles - MediNova</title>
-        <meta
-          name="description"
-          content="Read the latest articles on various health topics. Expert advice and information from medical professionals."
-        />
-        <link rel="canonical" href="https://www.MediNova.com/articles" />
-        <meta property="og:title" content="Health Articles - MediNova" />
-        <meta
-          property="og:description"
-          content="Expert medical articles and health advice from our team of professionals."
-        />
-        <meta property="og:url" content="https://www.MediNova.com/articles" />
-        <meta property="og:type" content="website" />
-        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+        <meta name="description" content="Explore trending health articles from Dev.to" />
       </Helmet>
 
       <div className={`${darkMode ? "text-blue-200" : "text-blue-900"}`}>
         <h1 className="text-3xl font-bold mb-6">Health Articles</h1>
 
-        <motion.div 
-          className="mb-6 flex flex-col md:flex-row md:justify-end gap-4"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <select
-            onChange={(e) => setFilterTag(e.target.value)}
-            value={filterTag}
-            className="border px-3 py-2 rounded shadow w-full md:w-48"
-          >
-            <option value="">Filter by Tag</option>
-            {uniqueTags.map((tag, i) => (
-              <option key={i} value={tag}>{tag}</option>
-            ))}
-          </select>
-
-          <select
-            onChange={(e) => setFilterAuthor(e.target.value)}
-            value={filterAuthor}
-            className="border px-3 py-2 rounded shadow w-full md:w-48"
-          >
+        <div className="flex flex-col md:flex-row flex-wrap gap-4 mb-6">
+          <select className="p-2 border rounded w-full md:w-1/3" value={authorFilter} onChange={e => setAuthorFilter(e.target.value)}>
             <option value="">Filter by Author</option>
-            {uniqueAuthors.map((author, i) => (
-              <option key={i} value={author}>{author}</option>
+            {uniqueAuthors.map((author, index) => (
+              <option key={index} value={author}>{author}</option>
             ))}
           </select>
-        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {paginatedArticles.map((article) => (
-            <motion.div 
-              key={article.id} 
-              className={`${darkMode ? "bg-blue-800 text-white" : "bg-white text-blue-900"} p-6 rounded-2xl shadow-xl border border-blue-200 transition-all duration-300 hover:shadow-2xl flex flex-col justify-between`}
-              whileHover={{ scale: 1.02 }}
-            >
-              <div>
-                {article.cover_image && (
-                  <LazyImage src={article.cover_image} alt={article.title} className="w-full h-48 object-cover mb-4 rounded-xl" />
-                )}
-                <h2 className="text-xl font-semibold mb-2 line-clamp-2">{article.title}</h2>
-                <p className="mb-4 text-sm line-clamp-3">{article.description}</p>
-                <p className={`text-xs ${darkMode ? "text-blue-300" : "text-blue-600"} mb-2`}>
-                  By {article.user?.name || "Unknown Author"} | {article.readable_publish_date}
-                </p>
-                <a
-                  href={article.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block mt-2 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 text-sm transition duration-300"
+          <select className="p-2 border rounded w-full md:w-1/3" value={dateFilter} onChange={e => setDateFilter(e.target.value)}>
+            <option value="">Filter by Date</option>
+            {uniqueDates.map((date, index) => (
+              <option key={index} value={date}>{date}</option>
+            ))}
+          </select>
+
+          <select className="p-2 border rounded w-full md:w-1/3" value={tagFilter} onChange={e => setTagFilter(e.target.value)}>
+            <option value="">Filter by Tag</option>
+            {uniqueTags.map((tag, index) => (
+              <option key={index} value={tag}>{tag}</option>
+            ))}
+          </select>
+
+          <select className="p-2 border rounded w-full md:w-1/3" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+            <option value="">Sort Articles</option>
+            <option value="popularity">By Popularity</option>
+          </select>
+
+          <button onClick={resetFilters} className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full md:w-auto">Reset Filters</button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 min-h-[400px]">
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div
+                key="loader"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="col-span-full text-center"
+              >
+                <p className="text-lg">Loading articles...</p>
+              </motion.div>
+            ) : (
+              currentArticles.map((article) => (
+                <motion.div key={article.id}
+                  layout
+                  initial={{ opacity: 0, y: lazyAnimate ? 20 : 0 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.4 }}
+                  className={`${darkMode ? "bg-blue-800 text-white" : "bg-white text-blue-900"} p-6 rounded-2xl shadow-xl border border-blue-200 hover:shadow-2xl`}
                 >
-                  Read More ↗
-                </a>
-                <SocialShare url={article.url} title={article.title} />
-              </div>
-              <div className="mt-4">
-                <h3 className="font-semibold mb-1 text-sm">Tags:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {(Array.isArray(article.tag_list) ? article.tag_list : []).map((tag, index) => (
-                    <a
-                      key={index}
-                      href={`https://dev.to/t/${encodeURIComponent(tag)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs hover:bg-blue-200"
-                    >
-                      #{tag}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          ))}
+                  {article.cover_image && (
+                    <LazyImage src={article.cover_image} alt={article.title} className="w-full h-48 object-cover mb-4 rounded-xl" />
+                  )}
+                  <h2 className="text-xl font-semibold mb-2 line-clamp-2">{article.title}</h2>
+                  <p className="mb-4 text-sm line-clamp-3">{article.description}</p>
+                  <p className={`text-xs ${darkMode ? "text-blue-300" : "text-blue-600"} mb-2`}>
+                    By {article.user?.name || "Unknown Author"} | {article.readable_publish_date}
+                  </p>
+                  <a href={article.url} target="_blank" rel="noopener noreferrer"
+                    className="inline-block mt-2 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 text-sm transition duration-300">
+                    Read More ↗
+                  </a>
+                  <SocialShare url={article.url} title={article.title} />
+                  <div className="mt-4">
+                    <h3 className="font-semibold mb-1 text-sm">Tags:</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {(Array.isArray(article.tag_list) ? article.tag_list : []).map((tag, index) => (
+                        <Link key={index} to={`/search?q=${encodeURIComponent(tag)}`}
+                          className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs hover:bg-blue-200">#{tag}</Link>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </AnimatePresence>
         </div>
 
-        <div className="flex justify-center gap-4 mb-12">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <button
-            onClick={() => setPage((p) => p + 1)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Next
-          </button>
-        </div>
+        <div className="flex justify-center items-center gap-4">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.05 }}
+            disabled={page <= 1}
+            onClick={() => handlePageChange("prev")}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+          >Previous</motion.button>
 
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Explore More</h2>
-          <ul className="list-disc list-inside">
-            <li>
-              <Link to="/medicine-suggestion" className="text-blue-600 hover:underline">
-                Get personalized medicine suggestions
-              </Link>
-            </li>
-            <li>
-              <Link to="/consultation" className="text-blue-600 hover:underline">
-                Book a consultation with our experts
-              </Link>
-            </li>
-            <li>
-              <Link to="/news" className="text-blue-600 hover:underline">
-                Read the latest medical news
-              </Link>
-            </li>
-          </ul>
+          <span>Page {page} of {totalPages}</span>
+
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.05 }}
+            disabled={page >= totalPages}
+            onClick={() => handlePageChange("next")}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+          >Next</motion.button>
         </div>
 
         <NewsletterSignup />
       </div>
     </>
-  )
+  );
 }
 
-export default Articles
+export default Articles;
