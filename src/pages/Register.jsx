@@ -8,18 +8,17 @@ import { AuthContext, DarkModeContext } from "../App"
 
 function Register() {
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    fullName: "",
     email: "",
     password: "",
-    confirmPassword: "",
     dateOfBirth: "",
     phoneNumber: "",
-    address: "",
-    city: "",
+    gender: "",
+    bloodGroup: "",
     country: "",
     termsAccepted: false,
   })
+
   const { login } = useContext(AuthContext)
   const { darkMode } = useContext(DarkModeContext)
   const navigate = useNavigate()
@@ -34,11 +33,12 @@ function Register() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match")
+    // Basic validation
+    if (!formData.termsAccepted) {
+      alert("You must agree to the terms and conditions.")
       return
     }
-    // In a real application, you would create a new user account here
+    // Simulate login
     login({ email: formData.email })
     navigate("/")
   }
@@ -51,211 +51,200 @@ function Register() {
       </Helmet>
 
       <div
-        className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${darkMode ? "bg-gray-900" : "bg-gray-100"}`}
+        className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${
+          darkMode ? "bg-gray-900" : "bg-gray-100"
+        }`}
       >
         <motion.div
-          className={`max-w-md w-full space-y-8 p-10 ${darkMode ? "bg-gray-800" : "bg-white"} rounded-xl shadow-lg`}
+          className={`max-w-md w-full space-y-8 p-10 ${
+            darkMode ? "bg-gray-800" : "bg-white"
+          } rounded-xl shadow-lg`}
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div>
-            <h2 className={`mt-6 text-center text-3xl font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>
-              Create your account
-            </h2>
-          </div>
+          <h2 className={`text-center text-3xl font-extrabold ${
+            darkMode ? "text-white" : "text-gray-900"
+          }`}>
+            Create Your MediNova Account
+          </h2>
+
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            <div className="mb-6">
-              <label htmlFor="first-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                First Name
+            {/* Full Name */}
+            <div>
+              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Full Name
               </label>
               <input
-                id="first-name"
-                name="firstName"
+                id="fullName"
+                name="fullName"
                 type="text"
                 required
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  darkMode ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300 text-gray-900"
-                } placeholder-gray-500 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm mb-4`}
-                placeholder="First Name"
-                value={formData.firstName}
+                placeholder="John Doe"
+                className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
+                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
+                }`}
+                value={formData.fullName}
                 onChange={handleChange}
               />
             </div>
-            <div className="mb-6">
-              <label htmlFor="last-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Last Name
+
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Email
               </label>
               <input
-                id="last-name"
-                name="lastName"
-                type="text"
-                required
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  darkMode ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300 text-gray-900"
-                } placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm mb-4`}
-                placeholder="Last Name"
-                value={formData.lastName}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="mb-6">
-              <label
-                htmlFor="email-address"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Email address
-              </label>
-              <input
-                id="email-address"
+                id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
                 required
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  darkMode ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300 text-gray-900"
-                } placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm mb-4`}
-                placeholder="Email address"
+                placeholder="you@example.com"
+                className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
+                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
+                }`}
                 value={formData.email}
                 onChange={handleChange}
               />
             </div>
-            <div className="mb-6">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+
+            {/* Password */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Password
               </label>
               <input
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="new-password"
                 required
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  darkMode ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300 text-gray-900"
-                } placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm mb-4`}
-                placeholder="Password"
+                placeholder="********"
+                className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
+                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
+                }`}
                 value={formData.password}
                 onChange={handleChange}
               />
             </div>
-            <div className="mb-6">
-              <label
-                htmlFor="confirm-password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Confirm Password
-              </label>
-              <input
-                id="confirm-password"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  darkMode ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300 text-gray-900"
-                } placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm mb-4`}
-                placeholder="Confirm Password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="mb-6">
-              <label
-                htmlFor="date-of-birth"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
+
+            {/* Date of Birth */}
+            <div>
+              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Date of Birth
               </label>
               <input
-                id="date-of-birth"
+                id="dateOfBirth"
                 name="dateOfBirth"
                 type="date"
                 required
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  darkMode ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300 text-gray-900"
-                } placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm mb-4`}
+                className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
+                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
+                }`}
                 value={formData.dateOfBirth}
                 onChange={handleChange}
               />
             </div>
-            <div className="mb-6">
-              <label htmlFor="phone-number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+
+            {/* Phone Number */}
+            <div>
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Phone Number
               </label>
               <input
-                id="phone-number"
+                id="phoneNumber"
                 name="phoneNumber"
                 type="tel"
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  darkMode ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300 text-gray-900"
-                } placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm mb-4`}
-                placeholder="Phone Number"
+                placeholder="+92 300 1234567"
+                className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
+                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
+                }`}
                 value={formData.phoneNumber}
                 onChange={handleChange}
               />
             </div>
-            <div className="mb-6">
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Address
+
+            {/* Gender */}
+            <div>
+              <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Gender
               </label>
-              <input
-                id="address"
-                name="address"
-                type="text"
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  darkMode ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300 text-gray-900"
-                } placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm mb-4`}
-                placeholder="Address"
-                value={formData.address}
+              <select
+                id="gender"
+                name="gender"
+                required
+                className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
+                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
+                }`}
+                value={formData.gender}
                 onChange={handleChange}
-              />
+              >
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
             </div>
-            <div className="mb-6">
-              <label htmlFor="city" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                City
+
+            {/* Blood Group */}
+            <div>
+              <label htmlFor="bloodGroup" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Blood Group
               </label>
-              <input
-                id="city"
-                name="city"
-                type="text"
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  darkMode ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300 text-gray-900"
-                } placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm mb-4`}
-                placeholder="City"
-                value={formData.city}
+              <select
+                id="bloodGroup"
+                name="bloodGroup"
+                required
+                className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
+                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
+                }`}
+                value={formData.bloodGroup}
                 onChange={handleChange}
-              />
+              >
+                <option value="">Select Blood Group</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
             </div>
-            <div className="mb-6">
-              <label htmlFor="country" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+
+            {/* Country */}
+            <div>
+              <label htmlFor="country" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Country
               </label>
               <input
                 id="country"
                 name="country"
                 type="text"
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  darkMode ? "border-gray-700 bg-gray-700 text-white" : "border-gray-300 text-gray-900"
-                } placeholder-gray-500 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm mb-4`}
-                placeholder="Country"
+                required
+                placeholder="Pakistan"
+                className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
+                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
+                }`}
                 value={formData.country}
                 onChange={handleChange}
               />
             </div>
 
-            <div className="flex items-center mb-6">
+            {/* Terms */}
+            <div className="flex items-center">
               <input
-                id="terms-and-conditions"
+                id="termsAccepted"
                 name="termsAccepted"
                 type="checkbox"
+                required
                 className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                 checked={formData.termsAccepted}
                 onChange={handleChange}
-                required
               />
               <label
-                htmlFor="terms-and-conditions"
-                className={`ml-2 block text-sm ${darkMode ? "text-gray-300" : "text-gray-900"}`}
+                htmlFor="termsAccepted"
+                className={`ml-2 text-sm ${darkMode ? "text-gray-300" : "text-gray-900"}`}
               >
                 I agree to the{" "}
                 <a href="#" className="text-indigo-600 hover:text-indigo-500">
@@ -264,10 +253,11 @@ function Register() {
               </label>
             </div>
 
+            {/* Submit */}
             <div>
               <button
                 type="submit"
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="w-full flex justify-center py-2 px-4 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 Register
               </button>
@@ -280,4 +270,3 @@ function Register() {
 }
 
 export default Register
-
