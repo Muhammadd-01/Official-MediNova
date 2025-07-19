@@ -11,14 +11,14 @@ function SocialShare({ url, title }) {
   const encodedTitle = encodeURIComponent(title);
 
   return (
-    <div className="flex gap-3 mt-4">
+    <div className="flex flex-wrap gap-2 mt-4">
       <a
         href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
         target="_blank"
         rel="noopener noreferrer"
         className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-full text-xs shadow transition"
       >
-        Share on Facebook
+        Facebook
       </a>
       <a
         href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`}
@@ -26,7 +26,7 @@ function SocialShare({ url, title }) {
         rel="noopener noreferrer"
         className="bg-blue-400 hover:bg-blue-500 text-white px-3 py-1 rounded-full text-xs shadow transition"
       >
-        Share on Twitter
+        Twitter
       </a>
       <a
         href={`https://www.linkedin.com/shareArticle?url=${encodedUrl}&title=${encodedTitle}`}
@@ -34,7 +34,7 @@ function SocialShare({ url, title }) {
         rel="noopener noreferrer"
         className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded-full text-xs shadow transition"
       >
-        Share on LinkedIn
+        LinkedIn
       </a>
     </div>
   );
