@@ -184,23 +184,23 @@ function Articles() {
           </AnimatePresence>
         </div>
 
-        <div className="flex justify-center items-center gap-4">
+        <div className="flex justify-center items-center gap-4 mt-6">
           <motion.button
-            whileTap={{ scale: 0.9 }}
+            whileTap={{ scale: 0.95 }}
             whileHover={{ scale: 1.05 }}
             disabled={page <= 1}
             onClick={() => handlePageChange("prev")}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+            className="bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold px-6 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50"
           >Previous</motion.button>
 
-          <span>Page {page} of {totalPages}</span>
+          <span className="text-lg font-medium">Page {page} of {totalPages}</span>
 
           <motion.button
-            whileTap={{ scale: 0.9 }}
+            whileTap={{ scale: 0.95 }}
             whileHover={{ scale: 1.05 }}
             disabled={page >= totalPages}
             onClick={() => handlePageChange("next")}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+            className="bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold px-6 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50"
           >Next</motion.button>
         </div>
 
