@@ -3,9 +3,42 @@ import { Helmet } from "react-helmet-async"
 import { Link } from "react-router-dom"
 import LazyImage from "../components/LazyImage"
 import NewsletterSignup from "../components/NewsletterSignup"
-import SocialShare from "../components/SocialShare"
 import { DarkModeContext } from "../App"
 import { motion } from "framer-motion"
+
+function SocialShare({ url, title }) {
+  const encodedUrl = encodeURIComponent(url);
+  const encodedTitle = encodeURIComponent(title);
+
+  return (
+    <div className="flex gap-3 mt-4">
+      <a
+        href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-full text-xs shadow transition"
+      >
+        Share on Facebook
+      </a>
+      <a
+        href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="bg-blue-400 hover:bg-blue-500 text-white px-3 py-1 rounded-full text-xs shadow transition"
+      >
+        Share on Twitter
+      </a>
+      <a
+        href={`https://www.linkedin.com/shareArticle?url=${encodedUrl}&title=${encodedTitle}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded-full text-xs shadow transition"
+      >
+        Share on LinkedIn
+      </a>
+    </div>
+  );
+}
 
 function Articles() {
   const { darkMode } = useContext(DarkModeContext)
@@ -77,7 +110,6 @@ function Articles() {
       <div className={`${darkMode ? "text-blue-200" : "text-blue-900"}`}>
         <h1 className="text-3xl font-bold mb-6">Health Articles</h1>
 
-        {/* Filters */}
         <motion.div 
           className="mb-6 flex flex-col md:flex-row md:justify-end gap-4"
           initial={{ opacity: 0, y: -10 }}
@@ -107,42 +139,45 @@ function Articles() {
           </select>
         </motion.div>
 
-        {/* Articles Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {filteredArticles.map((article) => (
             <motion.div 
               key={article.id} 
-              className={`${darkMode ? "bg-blue-800 text-white" : "bg-white text-blue-900"} p-6 rounded-2xl shadow-xl border border-blue-200 transition-all duration-300 hover:shadow-2xl`}
+              className={`${darkMode ? "bg-blue-800 text-white" : "bg-white text-blue-900"} p-6 rounded-2xl shadow-xl border border-blue-200 transition-all duration-300 hover:shadow-2xl flex flex-col justify-between`}
               whileHover={{ scale: 1.02 }}
             >
-              {article.cover_image && (
-                <LazyImage src={article.cover_image} alt={article.title} className="w-full h-48 object-cover mb-4 rounded-xl" />
-              )}
-              <h2 className="text-xl font-semibold mb-2 line-clamp-2">{article.title}</h2>
-              <p className="mb-4 text-sm line-clamp-3">{article.description}</p>
-              <p className={`text-xs ${darkMode ? "text-blue-300" : "text-blue-600"} mb-2`}>
-                By {article.user?.name || "Unknown Author"} | {article.readable_publish_date}
-              </p>
-              <a
-                href={article.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block mt-2 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 text-sm transition duration-300"
-              >
-                Read More ↗
-              </a>
-              <SocialShare url={article.url} title={article.title} />
+              <div>
+                {article.cover_image && (
+                  <LazyImage src={article.cover_image} alt={article.title} className="w-full h-48 object-cover mb-4 rounded-xl" />
+                )}
+                <h2 className="text-xl font-semibold mb-2 line-clamp-2">{article.title}</h2>
+                <p className="mb-4 text-sm line-clamp-3">{article.description}</p>
+                <p className={`text-xs ${darkMode ? "text-blue-300" : "text-blue-600"} mb-2`}>
+                  By {article.user?.name || "Unknown Author"} | {article.readable_publish_date}
+                </p>
+                <a
+                  href={article.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block mt-2 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 text-sm transition duration-300"
+                >
+                  Read More ↗
+                </a>
+                <SocialShare url={article.url} title={article.title} />
+              </div>
               <div className="mt-4">
                 <h3 className="font-semibold mb-1 text-sm">Tags:</h3>
                 <div className="flex flex-wrap gap-2">
                   {(Array.isArray(article.tag_list) ? article.tag_list : []).map((tag, index) => (
-                    <Link
+                    <a
                       key={index}
-                      to={`/search?q=${encodeURIComponent(tag)}`}
+                      href={`https://dev.to/t/${encodeURIComponent(tag)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs hover:bg-blue-200"
                     >
                       #{tag}
-                    </Link>
+                    </a>
                   ))}
                 </div>
               </div>
