@@ -45,19 +45,47 @@ function Articles() {
   const [articles, setArticles] = useState([])
   const [filterTag, setFilterTag] = useState("")
   const [filterAuthor, setFilterAuthor] = useState("")
+  const [page, setPage] = useState(1)
+
+  const ARTICLES_PER_PAGE = 9;
 
   useEffect(() => {
-    fetch("https://dev.to/api/articles?tag=health&per_page=40")
-      .then((res) => res.json())
-      .then((data) => setArticles(data))
-      .catch((err) => console.error("Error fetching articles:", err))
-  }, [])
+    const fetchArticles = async () => {
+      try {
+        const devRes = await fetch(`https://dev.to/api/articles?tag=health&per_page=30&page=${page}`)
+        const devData = await devRes.json()
+
+        const medRes = await fetch(`https://api.spaceflightnewsapi.net/v4/articles/?limit=15&offset=${(page - 1) * 15}`)
+        const medData = await medRes.json()
+
+        const mappedMed = medData.results.map((a) => ({
+          id: a.id + "-sf",
+          title: a.title,
+          description: a.summary,
+          cover_image: a.image_url,
+          url: a.url,
+          tags: ["space", "news"],
+          tag_list: ["space", "news"],
+          user: { name: "SpaceFlight News" },
+          published_at: a.published_at,
+          readable_publish_date: new Date(a.published_at).toLocaleDateString(),
+        }))
+
+        setArticles([...devData, ...mappedMed])
+      } catch (err) {
+        console.error("Error fetching articles:", err)
+      }
+    }
+    fetchArticles()
+  }, [page])
 
   const filteredArticles = articles.filter((a) => {
-    const matchesTag = filterTag ? a.tags?.includes(filterTag) : true
+    const matchesTag = filterTag ? a.tag_list?.includes(filterTag) : true
     const matchesAuthor = filterAuthor ? a.user?.name?.includes(filterAuthor) : true
     return matchesTag && matchesAuthor
   })
+
+  const paginatedArticles = filteredArticles.slice(0, ARTICLES_PER_PAGE)
 
   const uniqueTags = Array.from(
     new Set(articles.flatMap((a) => (Array.isArray(a.tag_list) ? a.tag_list : [])))
@@ -140,7 +168,7 @@ function Articles() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {filteredArticles.map((article) => (
+          {paginatedArticles.map((article) => (
             <motion.div 
               key={article.id} 
               className={`${darkMode ? "bg-blue-800 text-white" : "bg-white text-blue-900"} p-6 rounded-2xl shadow-xl border border-blue-200 transition-all duration-300 hover:shadow-2xl flex flex-col justify-between`}
@@ -183,6 +211,22 @@ function Articles() {
               </div>
             </motion.div>
           ))}
+        </div>
+
+        <div className="flex justify-center gap-4 mb-12">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => setPage((p) => p + 1)}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Next
+          </button>
         </div>
 
         <div className="mb-8">
