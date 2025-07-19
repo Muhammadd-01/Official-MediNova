@@ -1,50 +1,37 @@
-import React, { useContext } from "react"
-import { Helmet } from "react-helmet-async"
-import { Link } from "react-router-dom"
-import LazyImage from "../components/LazyImage"
-import NewsletterSignup from "../components/NewsletterSignup"
-import SocialShare from "../components/SocialShare"
-import { DarkModeContext } from "../App"
-
-const articles = [
-  {
-    id: 1,
-    title: "The Importance of Regular Exercise",
-    excerpt: "Learn about the numerous benefits of incorporating regular exercise into your daily routine.",
-    author: "Dr. Jane Smith",
-    date: "2023-05-15",
-    image:
-      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    slug: "importance-of-regular-exercise",
-    relatedTopics: ["Nutrition", "Stress Management"],
-  },
-  {
-    id: 2,
-    title: "Nutrition Tips for a Healthy Heart",
-    excerpt:
-      "Discover the best foods and dietary habits to maintain a healthy heart and reduce the risk of cardiovascular diseases.",
-    author: "Dr. John Doe",
-    date: "2023-05-10",
-    image:
-      "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    slug: "nutrition-tips-for-healthy-heart",
-    relatedTopics: ["Exercise", "Cardiology"],
-  },
-  {
-    id: 3,
-    title: "Understanding and Managing Stress",
-    excerpt: "Explore effective strategies to recognize, cope with, and reduce stress in your daily life.",
-    author: "Dr. Mike Johnson",
-    date: "2023-05-05",
-    image:
-      "https://images.unsplash.com/photo-1541199249251-f713e6145474?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    slug: "understanding-and-managing-stress",
-    relatedTopics: ["Mental Health", "Exercise"],
-  },
-]
+import React, { useContext, useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
+import LazyImage from "../components/LazyImage";
+import NewsletterSignup from "../components/NewsletterSignup";
+import SocialShare from "../components/SocialShare";
+import { DarkModeContext } from "../App";
 
 function Articles() {
-  const { darkMode } = useContext(DarkModeContext)
+  const { darkMode } = useContext(DarkModeContext);
+  const [articles, setArticles] = useState([]);
+
+  useEffect(() => {
+    fetch("https://dev.to/api/articles?per_page=9&tag=health")
+      .then((res) => res.json())
+      .then((data) => {
+        const formatted = data.map((item, index) => ({
+          id: item.id,
+          title: item.title,
+          excerpt: item.description || item.title,
+          author: item.user.name,
+          date: new Date(item.published_at).toISOString().split("T")[0],
+          image: item.cover_image ||
+            "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=80",
+          slug: item.slug,
+          url: item.url,
+          relatedTopics: Array.isArray(item.tag_list)
+            ? item.tag_list
+            : item.tag_list?.split(",") || [],
+        }));
+        setArticles(formatted);
+      })
+      .catch((err) => console.error("Error fetching articles:", err));
+  }, []);
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -62,27 +49,16 @@ function Articles() {
         datePublished: article.date,
         description: article.excerpt,
         image: article.image,
-        url: `https://www.MediNova.com/articles/${article.slug}`,
+        url: article.url,
       },
     })),
-  }
+  };
 
   return (
     <>
       <Helmet>
         <title>Health Articles - MediNova</title>
-        <meta
-          name="description"
-          content="Read the latest articles on various health topics. Expert advice and information from medical professionals."
-        />
-        <link rel="canonical" href="https://www.MediNova.com/articles" />
-        <meta property="og:title" content="Health Articles - MediNova" />
-        <meta
-          property="og:description"
-          content="Expert medical articles and health advice from our team of professionals."
-        />
-        <meta property="og:url" content="https://www.MediNova.com/articles" />
-        <meta property="og:type" content="website" />
+        <meta name="description" content="Read the latest articles on various health topics." />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 
@@ -91,7 +67,11 @@ function Articles() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {articles.map((article) => (
             <div key={article.id} className={`${darkMode ? "bg-blue-700" : "bg-white"} p-6 rounded-lg shadow-md`}>
-              <LazyImage src={article.image} alt={article.title} className="w-full h-48 object-cover mb-4 rounded" />
+              <LazyImage
+                src={article.image}
+                alt={article.title}
+                className="w-full h-48 object-cover mb-4 rounded"
+              />
               <h2 className="text-2xl font-semibold mb-2">{article.title}</h2>
               <p className="mb-4">{article.excerpt}</p>
               <p className={`text-sm ${darkMode ? "text-blue-300" : "text-blue-600"} mb-4`}>
@@ -103,22 +83,24 @@ function Articles() {
               >
                 Read More
               </Link>
-              <SocialShare url={`https://www.MediNova.com/articles/${article.slug}`} title={article.title} />
-              <div className="mt-4">
-                <h3 className="font-semibold mb-2">Related Topics:</h3>
-                <ul className="list-disc list-inside">
-                  {article.relatedTopics.map((topic, index) => (
-                    <li key={index}>
-                      <Link to={`/search?q=${encodeURIComponent(topic)}`} className="text-blue-600 hover:underline">
-                        {topic}
-                      </Link>
-                    </li>
+              <SocialShare url={article.url} title={article.title} />
+              <div className="flex flex-wrap gap-2 mt-4">
+                {(Array.isArray(article.relatedTopics) ? article.relatedTopics : [])
+                  .slice(0, 4)
+                  .map((tag, index) => (
+                    <Link
+                      key={index}
+                      to={`/search?q=${encodeURIComponent(tag.trim())}`}
+                      className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-700 text-blue-600 rounded-full hover:bg-blue-200 transition"
+                    >
+                      {tag.trim()}
+                    </Link>
                   ))}
-                </ul>
               </div>
             </div>
           ))}
         </div>
+
         <div className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Explore More</h2>
           <ul className="list-disc list-inside">
@@ -139,11 +121,11 @@ function Articles() {
             </li>
           </ul>
         </div>
+
         <NewsletterSignup />
       </div>
     </>
-  )
+  );
 }
 
-export default Articles
-
+export default Articles;
