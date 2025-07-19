@@ -14,7 +14,6 @@ function Register() {
     dateOfBirth: "",
     phoneNumber: "",
     gender: "",
-    bloodGroup: "",
     country: "",
     termsAccepted: false,
   })
@@ -25,20 +24,18 @@ function Register() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
-    setFormData((prevState) => ({
-      ...prevState,
+    setFormData((prev) => ({
+      ...prev,
       [name]: type === "checkbox" ? checked : value,
     }))
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    // Basic validation
     if (!formData.termsAccepted) {
-      alert("You must agree to the terms and conditions.")
+      alert("Please accept the terms and conditions.")
       return
     }
-    // Simulate login
     login({ email: formData.email })
     navigate("/")
   }
@@ -50,22 +47,14 @@ function Register() {
         <meta name="description" content="Create a new MediNova account" />
       </Helmet>
 
-      <div
-        className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${
-          darkMode ? "bg-gray-900" : "bg-gray-100"
-        }`}
-      >
+      <div className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${darkMode ? "bg-gray-900" : "bg-gray-100"}`}>
         <motion.div
-          className={`max-w-md w-full space-y-8 p-10 ${
-            darkMode ? "bg-gray-800" : "bg-white"
-          } rounded-xl shadow-lg`}
+          className={`max-w-md w-full space-y-8 p-10 ${darkMode ? "bg-gray-800" : "bg-white"} rounded-xl shadow-lg`}
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className={`text-center text-3xl font-extrabold ${
-            darkMode ? "text-white" : "text-gray-900"
-          }`}>
+          <h2 className={`text-center text-3xl font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>
             Create Your MediNova Account
           </h2>
 
@@ -185,33 +174,6 @@ function Register() {
               </select>
             </div>
 
-            {/* Blood Group */}
-            <div>
-              <label htmlFor="bloodGroup" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Blood Group
-              </label>
-              <select
-                id="bloodGroup"
-                name="bloodGroup"
-                required
-                className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
-                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
-                }`}
-                value={formData.bloodGroup}
-                onChange={handleChange}
-              >
-                <option value="">Select Blood Group</option>
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
-              </select>
-            </div>
-
             {/* Country */}
             <div>
               <label htmlFor="country" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -231,7 +193,7 @@ function Register() {
               />
             </div>
 
-            {/* Terms */}
+            {/* Terms & Conditions */}
             <div className="flex items-center">
               <input
                 id="termsAccepted"
@@ -242,10 +204,7 @@ function Register() {
                 checked={formData.termsAccepted}
                 onChange={handleChange}
               />
-              <label
-                htmlFor="termsAccepted"
-                className={`ml-2 text-sm ${darkMode ? "text-gray-300" : "text-gray-900"}`}
-              >
+              <label htmlFor="termsAccepted" className={`ml-2 text-sm ${darkMode ? "text-gray-300" : "text-gray-900"}`}>
                 I agree to the{" "}
                 <a href="#" className="text-indigo-600 hover:text-indigo-500">
                   Terms and Conditions
