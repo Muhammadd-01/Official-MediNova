@@ -1,19 +1,19 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useLocation } from "react-router-dom"
 import { ArrowUp } from "lucide-react"
 
 const GoToTop = () => {
   const [isVisible, setIsVisible] = useState(false)
+  const location = useLocation()
 
+  // Show button after scrolling 300px
   const toggleVisibility = () => {
-    if (window.pageYOffset > 300) {
-      setIsVisible(true)
-    } else {
-      setIsVisible(false)
-    }
+    setIsVisible(window.pageYOffset > 300)
   }
 
+  // Scroll to top
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -21,10 +21,16 @@ const GoToTop = () => {
     })
   }
 
+  // Scroll to top automatically on route change
+  useEffect(() => {
+    scrollToTop()
+  }, [location.pathname])
+
+  // Listen for manual scroll
   useEffect(() => {
     window.addEventListener("scroll", toggleVisibility)
     return () => window.removeEventListener("scroll", toggleVisibility)
-  }, [toggleVisibility]) // Added toggleVisibility to dependencies
+  }, [])
 
   return (
     <>
@@ -41,4 +47,3 @@ const GoToTop = () => {
 }
 
 export default GoToTop
-

@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState, useContext, useEffect } from "react"
-import { Helmet } from "react-helmet-async"
-import { motion, AnimatePresence } from "framer-motion"
-import { Search, AlertCircle, ChevronDown, ChevronUp } from "lucide-react"
-import { DarkModeContext } from "../App"
-import axios from "axios"
+import { useState, useContext, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { DarkModeContext } from "../App";
+import axios from "axios";
 
 const symptoms = [
   "Fever",
@@ -24,7 +24,7 @@ const symptoms = [
   "Diarrhea",
   "Vomiting",
   "Chest pain",
-]
+];
 
 const allergies = [
   "Penicillin",
@@ -40,7 +40,7 @@ const allergies = [
   "Soy",
   "Wheat",
   "Fish",
-]
+];
 
 const commonDiseases = {
   "Common Cold": {
@@ -48,7 +48,8 @@ const commonDiseases = {
     medicines: ["Acetaminophen", "Ibuprofen", "Loratadine"],
   },
   Influenza: {
-    description: "A contagious respiratory illness caused by influenza viruses.",
+    description:
+      "A contagious respiratory illness caused by influenza viruses.",
     medicines: ["Acetaminophen", "Ibuprofen"],
   },
   Allergies: {
@@ -56,14 +57,16 @@ const commonDiseases = {
     medicines: ["Loratadine"],
   },
   "Acid Reflux": {
-    description: "A condition where stomach acid flows back into the esophagus.",
+    description:
+      "A condition where stomach acid flows back into the esophagus.",
     medicines: ["Omeprazole"],
   },
   "Strep Throat": {
-    description: "A bacterial infection causing inflammation and pain in the throat.",
+    description:
+      "A bacterial infection causing inflammation and pain in the throat.",
     medicines: ["Amoxicillin", "Acetaminophen"],
   },
-}
+};
 
 function MedicineSuggestion() {
   const [formData, setFormData] = useState({
@@ -71,86 +74,102 @@ function MedicineSuggestion() {
     gender: "",
     weight: "",
     height: "",
+    bloodGroup: "",
     symptoms: [],
     allergies: [],
     medicalHistory: "",
     currentMedications: "",
-  })
-  const [suggestions, setSuggestions] = useState(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [recentSearches, setRecentSearches] = useState([])
-  const [searchResult, setSearchResult] = useState(null)
-  const [isRareDisease, setIsRareDisease] = useState(false)
-  const [medicineData, setMedicineData] = useState({})
-  const { darkMode } = useContext(DarkModeContext)
-  const [isPregnant, setIsPregnant] = useState(false)
-  const [isBreastfeeding, setIsBreastfeeding] = useState(false)
+  });
+
+  
+  const [suggestions, setSuggestions] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [recentSearches, setRecentSearches] = useState([]);
+  const [searchResult, setSearchResult] = useState(null);
+  const [isRareDisease, setIsRareDisease] = useState(false);
+  const [medicineData, setMedicineData] = useState({});
+  const { darkMode } = useContext(DarkModeContext);
+  const [isPregnant, setIsPregnant] = useState(false);
+  const [isBreastfeeding, setIsBreastfeeding] = useState(false);
 
   useEffect(() => {
-    const savedSearches = localStorage.getItem("recentSearches")
+    const savedSearches = localStorage.getItem("recentSearches");
     if (savedSearches) {
-      setRecentSearches(JSON.parse(savedSearches))
+      setRecentSearches(JSON.parse(savedSearches));
     }
     const fetchMedicines = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/medicines")
-        const medicinesObj = {}
+        const response = await axios.get("http://localhost:5000/api/medicines");
+        const medicinesObj = {};
         response.data.forEach((medicine) => {
-          medicinesObj[medicine.name] = medicine
-        })
-        setMedicineData(medicinesObj)
+          medicinesObj[medicine.name] = medicine;
+        });
+        setMedicineData(medicinesObj);
       } catch (error) {
-        console.error("Error fetching medicines:", error)
+        console.error("Error fetching medicines:", error);
       }
-    }
+    };
 
-    fetchMedicines()
-  }, [])
+    fetchMedicines();
+  }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    let updatedValue = value
+ const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  let updatedValue = value;
 
-    if (name === "weight" && Number(value) > 500) {
-      updatedValue = "500"
-    } else if (name === "height" && Number(value) > 300) {
-      updatedValue = "300"
-    }
-
-    setFormData({ ...formData, [name]: updatedValue })
+  // Limit weight and height
+  if (name === "weight" && Number(value) > 500) {
+    updatedValue = "500";
+  } else if (name === "height" && Number(value) > 300) {
+    updatedValue = "300";
   }
+
+  // Reset pregnancy and breastfeeding if gender is changed to male
+  if (name === "gender" && value === "male") {
+    setIsPregnant(false);
+    setIsBreastfeeding(false);
+  }
+
+  setFormData({ ...formData, [name]: updatedValue });
+};
+
 
   const handleCheckboxChange = (e, category) => {
-    const { value, checked } = e.target
+    const { value, checked } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [category]: checked ? [...prevData[category], value] : prevData[category].filter((item) => item !== value),
-    }))
-  }
+      [category]: checked
+        ? [...prevData[category], value]
+        : prevData[category].filter((item) => item !== value),
+    }));
+  };
 
   const handleSearch = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (searchTerm.trim() !== "") {
-      const updatedSearches = [searchTerm, ...recentSearches.filter((s) => s !== searchTerm)].slice(0, 5)
-      setRecentSearches(updatedSearches)
-      localStorage.setItem("recentSearches", JSON.stringify(updatedSearches))
+      const updatedSearches = [
+        searchTerm,
+        ...recentSearches.filter((s) => s !== searchTerm),
+      ].slice(0, 5);
+      setRecentSearches(updatedSearches);
+      localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
 
-      const disease = commonDiseases[searchTerm]
+      const disease = commonDiseases[searchTerm];
       if (disease) {
-        setSearchResult(disease)
-        setIsRareDisease(false)
+        setSearchResult(disease);
+        setIsRareDisease(false);
       } else {
-        setSearchResult(null)
-        setIsRareDisease(true)
+        setSearchResult(null);
+        setIsRareDisease(true);
       }
     }
-  }
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     let suggestedMedicines = Object.keys(medicineData)
       .sort(() => 0.5 - Math.random())
-      .slice(0, 2)
+      .slice(0, 2);
 
     if (formData.gender === "female" && (isPregnant || isBreastfeeding)) {
       // Filter out medicines that are not safe for pregnant or breastfeeding women
@@ -158,8 +177,8 @@ function MedicineSuggestion() {
       suggestedMedicines = suggestedMedicines.filter(
         (medicine) =>
           !medicineData[medicine].name.toLowerCase().includes("ibuprofen") &&
-          !medicineData[medicine].name.toLowerCase().includes("aspirin"),
-      )
+          !medicineData[medicine].name.toLowerCase().includes("aspirin")
+      );
     }
 
     setSuggestions({
@@ -170,21 +189,28 @@ function MedicineSuggestion() {
           ? "Please consult with your doctor before taking any medication."
           : "Take with food. Avoid alcohol consumption.",
       possibleSideEffects: medicineData[suggestedMedicines[0]]?.sideEffects,
-    })
-  }
+    });
+  };
 
   return (
     <>
       <Helmet>
-        <title>Medicine Suggestions - MediCare</title>
+        <title>Medicine Suggestions - MediNova</title>
         <meta
           name="description"
           content="Get personalized medicine suggestions based on your symptoms or search for common diseases. Safe dosage recommendations for various conditions."
         />
-        <link rel="canonical" href="https://www.medicare.com/medicine-suggestion" />
+        <link
+          rel="canonical"
+          href="https://www.MediNova.com/medicine-suggestion"
+        />
       </Helmet>
 
-      <div className={`max-w-4xl mx-auto ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
+      <div
+        className={`max-w-4xl mx-auto ${
+          darkMode ? "text-gray-200" : "text-gray-800"
+        }`}
+      >
         <motion.h1
           className="text-3xl font-bold mb-6 text-center text-professionalBlue-800 dark:text-professionalBlue-200"
           initial={{ opacity: 0, y: -20 }}
@@ -195,7 +221,9 @@ function MedicineSuggestion() {
         </motion.h1>
 
         <motion.div
-          className={`mb-8 p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-800" : "bg-white"}`}
+          className={`mb-8 p-6 rounded-lg shadow-md ${
+            darkMode ? "bg-gray-800" : "bg-white"
+          }`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -207,7 +235,9 @@ function MedicineSuggestion() {
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search for a disease..."
               className={`flex-grow p-2 border rounded-l-md ${
-                darkMode ? "bg-gray-700 text-gray-200" : "bg-professionalBlue-50 text-gray-800"
+                darkMode
+                  ? "bg-gray-700 text-gray-200"
+                  : "bg-professionalBlue-50 text-gray-800"
               }`}
             />
             <button
@@ -226,7 +256,9 @@ function MedicineSuggestion() {
                     key={index}
                     onClick={() => setSearchTerm(search)}
                     className={`px-3 py-1 rounded-full text-sm ${
-                      darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-200 text-gray-800"
+                      darkMode
+                        ? "bg-gray-700 text-gray-200"
+                        : "bg-gray-200 text-gray-800"
                     } hover:bg-professionalBlue-600 hover:text-white transition-colors duration-300`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -241,7 +273,11 @@ function MedicineSuggestion() {
           <AnimatePresence>
             {searchResult && (
               <motion.div
-                className={`mt-4 p-4 rounded-lg ${darkMode ? "bg-professionalBlue-900" : "bg-professionalBlue-100"}`}
+                className={`mt-4 p-4 rounded-lg ${
+                  darkMode
+                    ? "bg-professionalBlue-900"
+                    : "bg-professionalBlue-100"
+                }`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -262,7 +298,9 @@ function MedicineSuggestion() {
           <AnimatePresence>
             {isRareDisease && (
               <motion.div
-                className={`mt-4 p-4 rounded-lg ${darkMode ? "bg-yellow-900" : "bg-yellow-100"}`}
+                className={`mt-4 p-4 rounded-lg ${
+                  darkMode ? "bg-yellow-900" : "bg-yellow-100"
+                }`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -270,11 +308,13 @@ function MedicineSuggestion() {
               >
                 <div className="flex items-center mb-2">
                   <AlertCircle className="mr-2 text-yellow-600 dark:text-yellow-400" />
-                  <h2 className="text-xl font-semibold">Rare or Uncommon Disease</h2>
+                  <h2 className="text-xl font-semibold">
+                    Rare or Uncommon Disease
+                  </h2>
                 </div>
                 <p>
-                  This disease is not commonly searched. Please fill out the detailed form below for a personalized
-                  suggestion.
+                  This disease is not commonly searched. Please fill out the
+                  detailed form below for a personalized suggestion.
                 </p>
               </motion.div>
             )}
@@ -283,7 +323,9 @@ function MedicineSuggestion() {
 
         <motion.form
           onSubmit={handleSubmit}
-          className={`mb-8 space-y-6 p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-800" : "bg-white"}`}
+          className={`mb-8 space-y-6 p-6 rounded-lg shadow-md ${
+            darkMode ? "bg-gray-800" : "bg-white"
+          }`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
@@ -300,7 +342,9 @@ function MedicineSuggestion() {
                 value={formData.age}
                 onChange={handleInputChange}
                 className={`w-full p-2 border rounded ${
-                  darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
+                  darkMode
+                    ? "bg-gray-700 text-gray-200"
+                    : "bg-gray-100 text-gray-800"
                 }`}
                 required
               />
@@ -315,7 +359,9 @@ function MedicineSuggestion() {
                 value={formData.gender}
                 onChange={handleInputChange}
                 className={`w-full p-2 border rounded ${
-                  darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
+                  darkMode
+                    ? "bg-gray-700 text-gray-200"
+                    : "bg-gray-100 text-gray-800"
                 }`}
                 required
               >
@@ -327,7 +373,9 @@ function MedicineSuggestion() {
             </div>
             {formData.gender === "female" && (
               <div className="mt-4">
-                <label className="block mb-2 font-medium">Pregnancy Status:</label>
+                <label className="block mb-2 font-medium">
+                  Pregnancy Status:
+                </label>
                 <div className="flex items-center mb-2">
                   <input
                     type="radio"
@@ -356,7 +404,9 @@ function MedicineSuggestion() {
             )}
             {isPregnant && (
               <div className="mt-4">
-                <label className="block mb-2 font-medium">Breastfeeding Status:</label>
+                <label className="block mb-2 font-medium">
+                  Breastfeeding Status:
+                </label>
                 <div className="flex items-center mb-2">
                   <input
                     type="radio"
@@ -394,14 +444,18 @@ function MedicineSuggestion() {
                 value={formData.weight}
                 onChange={handleInputChange}
                 className={`w-full p-2 border rounded ${
-                  darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
+                  darkMode
+                    ? "bg-gray-700 text-gray-200"
+                    : "bg-gray-100 text-gray-800"
                 }`}
                 required
                 min="1"
                 max="500"
               />
               {formData.weight > 500 && (
-                <p className="text-red-500 text-sm mt-1">Weight exceeds our database limit. Please consult a doctor.</p>
+                <p className="text-red-500 text-sm mt-1">
+                  Weight exceeds our database limit. Please consult a doctor.
+                </p>
               )}
             </div>
             <div>
@@ -415,17 +469,49 @@ function MedicineSuggestion() {
                 value={formData.height}
                 onChange={handleInputChange}
                 className={`w-full p-2 border rounded ${
-                  darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
+                  darkMode
+                    ? "bg-gray-700 text-gray-200"
+                    : "bg-gray-100 text-gray-800"
                 }`}
                 required
                 min="1"
                 max="300"
               />
               {Number(formData.height) > 300 && (
-                <p className="text-red-500 text-sm mt-1">Height exceeds our database limit. Please consult a doctor.</p>
+                <p className="text-red-500 text-sm mt-1">
+                  Height exceeds our database limit. Please consult a doctor.
+                </p>
               )}
             </div>
           </div>
+          <div>
+            <label htmlFor="bloodGroup" className="block mb-2 font-medium">
+              Blood Group:
+            </label>
+            <select
+              id="bloodGroup"
+              name="bloodGroup"
+              value={formData.bloodGroup}
+              onChange={handleInputChange}
+              className={`w-full p-2 border rounded ${
+                darkMode
+                  ? "bg-gray-700 text-gray-200"
+                  : "bg-gray-100 text-gray-800"
+              }`}
+              required
+            >
+              <option value="">Select Blood Group</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+            </select>
+          </div>
+
           <div>
             <label className="block mb-2 font-medium">Symptoms:</label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -474,13 +560,18 @@ function MedicineSuggestion() {
               value={formData.medicalHistory}
               onChange={handleInputChange}
               className={`w-full p-2 border rounded ${
-                darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
+                darkMode
+                  ? "bg-gray-700 text-gray-200"
+                  : "bg-gray-100 text-gray-800"
               }`}
               rows="4"
             ></textarea>
           </div>
           <div>
-            <label htmlFor="currentMedications" className="block mb-2 font-medium">
+            <label
+              htmlFor="currentMedications"
+              className="block mb-2 font-medium"
+            >
               Current Medications:
             </label>
             <textarea
@@ -489,7 +580,9 @@ function MedicineSuggestion() {
               value={formData.currentMedications}
               onChange={handleInputChange}
               className={`w-full p-2 border rounded ${
-                darkMode ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-800"
+                darkMode
+                  ? "bg-gray-700 text-gray-200"
+                  : "bg-gray-100 text-gray-800"
               }`}
               rows="4"
             ></textarea>
@@ -507,21 +600,37 @@ function MedicineSuggestion() {
         <AnimatePresence>
           {suggestions && (
             <motion.div
-              className={`p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-800 text-gray-200" : "bg-white text-gray-800"}`}
+              className={`p-6 rounded-lg shadow-md ${
+                darkMode
+                  ? "bg-gray-800 text-gray-200"
+                  : "bg-white text-gray-800"
+              }`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5 }}
             >
-              <h2 className="text-2xl font-semibold mb-4">Suggested Medicines</h2>
+              <h2 className="text-2xl font-semibold mb-4">
+                Suggested Medicines
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Primary Suggestion</h3>
-                  <MedicineCard medicine={medicineData[suggestions.primarySuggestion]} />
+                  <h3 className="text-xl font-semibold mb-2">
+                    Primary Suggestion
+                  </h3>
+                  <MedicineCard
+                    medicine={medicineData[suggestions.primarySuggestion]}
+                  />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Alternative Suggestion</h3>
-                  <MedicineCard medicine={medicineData[suggestions.alternativeSuggestions[0]]} />
+                  <h3 className="text-xl font-semibold mb-2">
+                    Alternative Suggestion
+                  </h3>
+                  <MedicineCard
+                    medicine={
+                      medicineData[suggestions.alternativeSuggestions[0]]
+                    }
+                  />
                 </div>
               </div>
               <div className="mt-6">
@@ -529,19 +638,20 @@ function MedicineSuggestion() {
                 <p>{suggestions.precautions}</p>
               </div>
               <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-                Please consult with a healthcare professional before taking any medication.
+                Please consult with a healthcare professional before taking any
+                medication.
               </p>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
     </>
-  )
+  );
 }
 
 function MedicineCard({ medicine }) {
-  const [isExpanded, setIsExpanded] = useState(false)
-  const { darkMode } = useContext(DarkModeContext)
+  const [isExpanded, setIsExpanded] = useState(false);
+  const { darkMode } = useContext(DarkModeContext);
 
   return (
     <motion.div
@@ -589,11 +699,14 @@ function MedicineCard({ medicine }) {
         onClick={() => setIsExpanded(!isExpanded)}
       >
         {isExpanded ? "Show Less" : "Show More"}
-        {isExpanded ? <ChevronUp className="ml-1" /> : <ChevronDown className="ml-1" />}
+        {isExpanded ? (
+          <ChevronUp className="ml-1" />
+        ) : (
+          <ChevronDown className="ml-1" />
+        )}
       </button>
     </motion.div>
-  )
+  );
 }
 
-export default MedicineSuggestion
-
+export default MedicineSuggestion;

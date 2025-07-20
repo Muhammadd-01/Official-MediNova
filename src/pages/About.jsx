@@ -9,18 +9,18 @@ function About() {
   return (
     <>
       <Helmet>
-        <title>About MediCare - Your Trusted Medical Resource</title>
+        <title>About MediNova - Your Trusted Medical Resource</title>
         <meta
           name="description"
-          content="Learn about MediCare's mission, values, and commitment to providing high-quality medical information and services."
+          content="Learn about MediNova's mission, values, and commitment to providing high-quality medical information and services."
         />
-        <link rel="canonical" href="https://www.medicare.com/about" />
-        <meta property="og:title" content="About MediCare - Your Trusted Medical Resource" />
+        <link rel="canonical" href="https://www.MediNova.com/about" />
+        <meta property="og:title" content="About MediNova - Your Trusted Medical Resource" />
         <meta
           property="og:description"
-          content="Discover MediCare's dedication to improving healthcare accessibility and information."
+          content="Discover MediNova's dedication to improving healthcare accessibility and information."
         />
-        <meta property="og:url" content="https://www.medicare.com/about" />
+        <meta property="og:url" content="https://www.MediNova.com/about" />
         <meta property="og:type" content="website" />
       </Helmet>
 
@@ -31,7 +31,7 @@ function About() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          About MediCare
+          About MediNova
         </motion.h1>
         <motion.div
           className={`${darkMode ? "bg-gray-800" : "bg-white"} rounded-lg shadow-lg p-8 mb-16`}
@@ -41,7 +41,7 @@ function About() {
         >
           <h2 className={`text-3xl font-bold mb-6 ${darkMode ? "text-white" : "text-blue-900"}`}>Our Mission</h2>
           <p className={`${darkMode ? "text-blue-200" : "text-blue-800"} mb-6`}>
-            At MediCare, our mission is to provide accessible, reliable, and comprehensive medical information and
+            At MediNova, our mission is to provide accessible, reliable, and comprehensive medical information and
             services to empower individuals in making informed decisions about their health. We strive to bridge the gap
             between medical expertise and public understanding, ensuring that quality healthcare knowledge is available
             to all.
@@ -78,7 +78,7 @@ function About() {
           />
           <h2 className={`text-3xl font-bold mb-6 ${darkMode ? "text-white" : "text-blue-900"}`}>Our Team</h2>
           <p className={`${darkMode ? "text-blue-200" : "text-blue-800"} mb-6`}>
-            MediCare is powered by a diverse team of healthcare professionals, including doctors, pharmacists, and
+            MediNova is powered by a diverse team of healthcare professionals, including doctors, pharmacists, and
             medical researchers. Our experts are dedicated to providing the highest quality of medical information and
             services to our users.
           </p>
@@ -86,7 +86,7 @@ function About() {
           <p className={`${darkMode ? "text-blue-200" : "text-blue-800"}`}>
             We are committed to continually improving and expanding our services to meet the evolving needs of our
             users. Whether you're seeking personalized medicine suggestions, expert consultations, or the latest health
-            news, MediCare is here to support you on your health journey.
+            news, MediNova is here to support you on your health journey.
           </p>
         </motion.div>
       </div>

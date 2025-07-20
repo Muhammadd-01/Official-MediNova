@@ -2,9 +2,9 @@ import React from "react"
 
 const faqs = [
   {
-    question: "What services does MediCare offer?",
+    question: "What services does MediNova offer?",
     answer:
-      "MediCare offers a range of services including medicine suggestions based on symptoms, expert consultations, health articles, and the latest medical news.",
+      "MediNova offers a range of services including medicine suggestions based on symptoms, expert consultations, health articles, and the latest medical news.",
   },
   {
     question: "How can I book a consultation with a doctor?",

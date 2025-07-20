@@ -32,7 +32,7 @@ function Chatbot() {
 
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-pro" })
-      const prompt = `You are a medical assistant chatbot for MediCare, a trusted medical resource website. Please provide a helpful and informative response to the following user query: "${input}"`
+      const prompt = `You are a medical assistant chatbot for MediNova, a trusted medical resource website. Please provide a helpful and informative response to the following user query: "${input}"`
       const result = await model.generateContent(prompt)
       const response = await result.response
       const text = response.text()
@@ -77,7 +77,7 @@ function Chatbot() {
           >
             <div className="flex flex-col h-full">
               <div className={`p-4 ${darkMode ? "bg-gray-700" : "bg-blue-500"} text-white`}>
-                <h3 className="text-lg font-semibold">MediCare Chatbot</h3>
+                <h3 className="text-lg font-semibold">MediNova Chatbot</h3>
               </div>
               <div className="flex-grow overflow-y-auto p-4">
                 {messages.map((message, index) => (

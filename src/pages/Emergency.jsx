@@ -1,36 +1,54 @@
-import { useState, useContext } from "react"
+// ✅ Customized Emergency.jsx - Google Maps like features
+import { useState, useContext, useEffect } from "react"
 import { Helmet } from "react-helmet-async"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import {
   Phone,
   Ambulance,
   Hospital,
   Heart,
   Wind,
-  AmbulanceIcon as FirstAid,
+  Plus,
   ChevronDown,
   ChevronUp,
 } from "lucide-react"
 import { DarkModeContext } from "../App"
+import {
+  MapContainer,
+  LayersControl,
+  TileLayer,
+  Marker,
+  Popup,
+  useMap,
+  Circle,
+} from "react-leaflet"
+import "leaflet/dist/leaflet.css"
+import "leaflet-geosearch/dist/geosearch.css"
+import L from "leaflet"
+import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch"
 
-const EmergencyGuide = ({ title, steps }) => {
+// Fix Leaflet icons
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+})
+
+function EmergencyGuide({ title, steps }) {
   const [isExpanded, setIsExpanded] = useState(false)
-
   return (
     <div className="mb-4">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex justify-between items-center w-full p-4 bg-red-100 rounded-lg focus:outline-none"
+        className="flex justify-between items-center w-full p-4 bg-red-100 dark:bg-blue-800 dark:text-white rounded-lg"
       >
         <h3 className="text-lg font-semibold">{title}</h3>
         {isExpanded ? <ChevronUp /> : <ChevronDown />}
       </button>
       {isExpanded && (
-        <ol className="list-decimal list-inside mt-2 p-4 bg-white rounded-lg">
-          {steps.map((step, index) => (
-            <li key={index} className="mb-2">
-              {step}
-            </li>
+        <ol className="list-decimal list-inside mt-2 p-4 bg-white dark:bg-blue-900 dark:text-white rounded-lg space-y-1 text-sm">
+          {steps.map((step, i) => (
+            <li key={i}>{step}</li>
           ))}
         </ol>
       )}
@@ -38,76 +56,107 @@ const EmergencyGuide = ({ title, steps }) => {
   )
 }
 
+function SearchControl({ location }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!location) return
+    const provider = new OpenStreetMapProvider({ params: { countrycodes: "pk" } })
+    const control = new GeoSearchControl({
+      provider,
+      style: "bar",
+      searchLabel: "Search hospitals...",
+      autoClose: true,
+      showMarker: false,
+    })
+    map.addControl(control)
+    return () => map.removeControl(control)
+  }, [map, location])
+  return null
+}
+
 function Emergency() {
   const { darkMode } = useContext(DarkModeContext)
-  const [selectedGuide, setSelectedGuide] = useState(null)
+  const [location, setLocation] = useState(null)
+  const [error, setError] = useState(null)
+  const [hospitals, setHospitals] = useState([])
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setError("Geolocation not supported.")
+      return
+    }
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        setLocation(loc)
+        fetchHospitals(loc)
+      },
+      () => setError("Location access denied."),
+      { enableHighAccuracy: true }
+    )
+    return () => navigator.geolocation.clearWatch(watchId)
+  }, [])
+
+  const fetchHospitals = async (loc) => {
+    const query = `
+[out:json][timeout:25];
+(
+  node["amenity"="hospital"](around:5000,${loc.lat},${loc.lng});
+  node["amenity"="clinic"](around:5000,${loc.lat},${loc.lng});
+);
+out body;
+`
+    try {
+      const res = await fetch("https://overpass-api.de/api/interpreter", {
+        method: "POST",
+        body: query,
+      })
+      const json = await res.json()
+      setHospitals(json.elements)
+    } catch {
+      setError("Failed to fetch nearby hospitals.")
+    }
+  }
 
   const emergencyServices = [
-    { name: "Ambulance", phone: "911", icon: Ambulance },
-    { name: "Emergency Room", phone: "(555) 123-4567", icon: Hospital },
-    { name: "Poison Control", phone: "(800) 222-1222", icon: Phone },
+    { name: "Edhi Ambulance", phone: "115", icon: Ambulance },
+    { name: "Chhipa Ambulance", phone: "1020", icon: Ambulance },
+    { name: "Rescue 1122", phone: "1122", icon: Hospital },
+    { name: "Police Emergency", phone: "15", icon: Phone },
+    { name: "Fire Brigade", phone: "16", icon: Phone },
+    { name: "Bomb Disposal", phone: "1717", icon: Phone },
+    { name: "Poison Control", phone: "(021) 99215718", icon: Phone },
   ]
 
   const emergencyGuides = {
     cpr: {
       title: "How to Perform CPR",
-      icon: Heart,
       steps: [
-        "Check the scene for safety",
-        "Check for responsiveness by tapping the person and shouting 'Are you okay?'",
-        "If unresponsive, call 911 or ask someone else to do it",
-        "Check for breathing: look for chest movement, listen for breath sounds, and feel for air from the nose or mouth",
-        "If not breathing normally, begin chest compressions:",
-        "- Place the heel of one hand on the center of the chest",
-        "- Place the other hand on top and interlock fingers",
-        "- Keep arms straight and position shoulders directly above hands",
-        "- Push hard and fast at a rate of 100-120 compressions per minute",
-        "- Allow the chest to fully recoil between compressions",
-        "After 30 compressions, give 2 rescue breaths:",
-        "- Tilt the head back and lift the chin",
-        "- Pinch the nose shut and create a seal over the mouth",
-        "- Give 2 breaths, each lasting about 1 second",
-        "Continue cycles of 30 compressions and 2 breaths until help arrives or the person starts breathing normally",
+        "Ensure scene safety.",
+        "Tap & shout.",
+        "Call 911.",
+        "Check breathing.",
+        "30 compressions + 2 breaths cycles.",
       ],
     },
     choking: {
-      title: "How to Help a Choking Person",
-      icon: Wind,
+      title: "Help Choking Person",
       steps: [
-        "Recognize signs of choking: inability to speak, cough, or breathe",
-        "Ask the person 'Are you choking?' If they nod yes, take action",
-        "Stand behind the person and slightly to one side",
-        "Support their chest with one hand and lean them forward",
-        "Give up to 5 sharp back blows between the shoulder blades with the heel of your hand",
-        "If back blows don't work, perform abdominal thrusts (Heimlich maneuver):",
-        "- Stand behind the person and wrap your arms around their waist",
-        "- Make a fist with one hand and place it just above the navel",
-        "- Grasp your fist with the other hand",
-        "- Press hard into the abdomen with quick, upward thrusts",
-        "Alternate between 5 back blows and 5 abdominal thrusts",
-        "If the person becomes unconscious, lower them to the ground and begin CPR",
-        "Continue until the object is expelled or emergency help arrives",
+        "Ask if choking.",
+        "5 back blows.",
+        "5 abdominal thrusts.",
+        "Repeat or start CPR.",
       ],
     },
     bleeding: {
-      title: "How to Stop Severe Bleeding",
-      icon: FirstAid,
+      title: "Stop Severe Bleeding",
       steps: [
-        "Ensure your own safety and wear protective gloves if available",
-        "Expose the wound by removing or cutting away clothing",
-        "Apply direct pressure to the wound using a clean cloth or sterile gauze",
-        "If blood soaks through, add more layers without removing the original dressing",
-        "Elevate the injured area above the heart if possible",
-        "For limb injuries, locate the pressure point above the wound (e.g., inside of the upper arm for arm wounds)",
-        "Apply firm pressure to the pressure point while maintaining direct pressure on the wound",
-        "If bleeding is life-threatening, consider applying a tourniquet as a last resort:",
-        "- Place the tourniquet 2-3 inches above the wound, not on a joint",
-        "- Tighten until bleeding stops",
-        "- Note the time of application",
-        "Secure the dressing with a bandage",
-        "Keep the person calm and lying down",
-        "Monitor for signs of shock (pale, cool, clammy skin; rapid breathing; weakness)",
-        "Seek immediate medical attention or call emergency services",
+        "Wear gloves.",
+        "Press on wound.",
+        "Add layers.",
+        "Elevate limb.",
+        "Tourniquet if needed.",
+        "Call emergency services.",
       ],
     },
   }
@@ -116,122 +165,62 @@ function Emergency() {
     <>
       <Helmet>
         <title>Emergency Services - MediCare</title>
-        <meta
-          name="description"
-          content="Access emergency medical services, important contact information, and step-by-step guides for common emergencies. Available 24/7 for your safety."
-        />
-        <link rel="canonical" href="https://www.medicare.com/emergency" />
-        <meta property="og:title" content="Emergency Medical Services - MediCare" />
-        <meta
-          property="og:description"
-          content="Quick access to emergency services, contact information, and guides for immediate medical assistance."
-        />
-        <meta property="og:url" content="https://www.medicare.com/emergency" />
-        <meta property="og:type" content="website" />
+        <meta name="description" content="Emergency guides & live map with nearby hospitals/clinics." />
       </Helmet>
 
-      <div className={`max-w-4xl mx-auto ${darkMode ? "text-blue-100" : "text-blue-900"}`}>
-        <motion.h1
-          className="text-3xl font-bold mb-6 text-center"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          Emergency Services
-        </motion.h1>
-        <motion.p
-          className="text-xl mb-8 text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          If you are experiencing a medical emergency, please call 911 immediately.
+      <div className={`max-w-5xl mx-auto px-4 py-8 ${darkMode ? "text-white" : "text-blue-900"}`}>
+        <motion.h1 className="text-3xl font-bold mb-6 text-center">Emergency Services</motion.h1>
+
+        <motion.p className="text-xl mb-8 text-center">
+          Call emergency numbers. Use guides & location map below.
         </motion.p>
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          {emergencyServices.map((service, index) => (
-            <motion.div
-              key={service.name}
-              className={`p-6 rounded-lg shadow-md ${darkMode ? "bg-blue-800" : "bg-white"}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 * (index + 1) }}
-            >
-              <service.icon className="w-12 h-12 mb-4 mx-auto" />
-              <h2 className="text-xl font-semibold mb-2 text-center">{service.name}</h2>
-              <p className="text-center">
-                <a href={`tel:${service.phone}`} className="text-blue-500 hover:underline">
-                  {service.phone}
-                </a>
-              </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          {emergencyServices.map((s, idx) => (
+            <motion.div key={s.name} className={`p-6 rounded-lg shadow-md text-center ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+              <s.icon className="w-12 h-12 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold mb-2">{s.name}</h2>
+              <p><a href={`tel:${s.phone}`} className="text-blue-500 hover:underline">{s.phone}</a></p>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
 
-        <motion.h2
-          className="text-2xl font-semibold mb-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-        >
-          Emergency Guides
-        </motion.h2>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.7 }}>
-          {Object.entries(emergencyGuides).map(([key, guide]) => (
-            <EmergencyGuide key={key} title={guide.title} steps={guide.steps} />
-          ))}
-        </motion.div>
+        <motion.h2 className="text-2xl font-semibold mb-4">Emergency Guides</motion.h2>
+        {Object.entries(emergencyGuides).map(([k, g]) => (
+          <EmergencyGuide key={k} title={g.title} steps={g.steps} />
+        ))}
 
-        <AnimatePresence>
-          {selectedGuide && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className={`bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-8 ${
-                darkMode ? "text-blue-100" : "text-blue-900"
-              }`}
-            >
-              <h3 className="text-2xl font-semibold mb-4">{emergencyGuides[selectedGuide].title}</h3>
-              <ol className="list-decimal list-inside space-y-2">
-                {emergencyGuides[selectedGuide].steps.map((step, index) => (
-                  <li key={index} className="mb-2">
-                    {step.startsWith("-") ? <span className="ml-4">{step.substring(1).trim()}</span> : step}
-                  </li>
-                ))}
-              </ol>
-            </motion.div>
+        <motion.div className="mt-12">
+          <h2 className="text-2xl mb-4 text-center">Nearby Hospitals & Clinics</h2>
+          {error && <p className="text-red-500 text-center">{error}</p>}
+          {location ? (
+            <MapContainer center={[location.lat, location.lng]} zoom={15} className="h-[450px] rounded-lg shadow-lg">
+              <LayersControl position="topright">
+                <LayersControl.BaseLayer checked name="Standard">
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                </LayersControl.BaseLayer>
+                <LayersControl.BaseLayer name="Satellite">
+                  <TileLayer url="https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" subdomains={["mt0", "mt1", "mt2", "mt3"]} />
+                </LayersControl.BaseLayer>
+              </LayersControl>
+              <Marker position={[location.lat, location.lng]}>
+                <Popup>You are here</Popup>
+              </Marker>
+              <Circle center={[location.lat, location.lng]} radius={500} pathOptions={{ color: "blue" }} />
+              <SearchControl location={location} />
+              {hospitals.map((h) => (
+                <Marker key={h.id} position={[h.lat, h.lon]}>
+                  <Popup>{h.tags.name || "Hospital/Clinic"}</Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          ) : (
+            <p className="text-center text-gray-500">Locating you...</p>
           )}
-        </AnimatePresence>
-
-        <motion.div
-          className="mt-12"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.8 }}
-        >
-          <h2 className="text-2xl font-semibold mb-4">When to Seek Emergency Care</h2>
-          <ul className="list-disc list-inside space-y-2">
-            <li>Chest pain or difficulty breathing</li>
-            <li>Severe bleeding or head trauma</li>
-            <li>Loss of consciousness</li>
-            <li>Severe burns or poisoning</li>
-            <li>Broken bones or dislocated joints</li>
-            <li>Severe allergic reactions</li>
-            <li>Sudden severe headache or vision problems</li>
-            <li>Sudden weakness or numbness, especially on one side of the body</li>
-            <li>Seizures</li>
-            <li>Severe abdominal pain</li>
-          </ul>
         </motion.div>
       </div>
     </>
   )
 }
 
-export default Emergency
-
+export default Emergency;

@@ -6,7 +6,7 @@ const slides = [
   {
     image:
       "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&h=600&q=80",
-    title: "Welcome to MediCare",
+    title: "Welcome to MediNova",
     description: "Your trusted source for medical information and expert consultations.",
   },
   {

@@ -14,9 +14,9 @@ function Footer() {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-semibold mb-4">About MediCare</h3>
+            <h3 className="text-lg font-semibold mb-4">About MediNova</h3>
             <p className="text-sm">
-              MediCare is your trusted source for medical information, expert consultations, and health-related
+              MediNova is your trusted source for medical information, expert consultations, and health-related
               services.
             </p>
           </div>
@@ -74,7 +74,7 @@ function Footer() {
             <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
             <p className="text-sm mb-2">123 Medical Street, Health City, HC 12345</p>
             <p className="text-sm mb-2">Phone: (123) 456-7890</p>
-            <p className="text-sm mb-2">Email: info@medicare.com</p>
+            <p className="text-sm mb-2">Email: info@MediNova.com</p>
             <div className="mt-4 flex space-x-4">
               <a
                 href="https://www.facebook.com"
@@ -104,7 +104,7 @@ function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-8 border-t border-gray-300 dark:border-gray-700 text-center">
-          <p>&copy; 2023 MediCare. All rights reserved.</p>
+          <p>&copy; 2023 MediNova. All rights reserved.</p>
         </div>
       </div>
     </footer>
