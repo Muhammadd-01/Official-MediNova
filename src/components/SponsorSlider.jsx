@@ -9,6 +9,7 @@ const sponsors = [
   { name: "HealthPlus", logo: "/sponsor-logos/healthplus.png" },
   { name: "BioLife", logo: "/sponsor-logos/biolife.png" },
   { name: "CureAll", logo: "/sponsor-logos/cureall.png" },
+  //
 ]
 
 const SponsorSlider = () => {
