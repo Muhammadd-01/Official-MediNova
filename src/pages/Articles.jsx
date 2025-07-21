@@ -5,7 +5,6 @@ import LazyImage from "../components/LazyImage";
 import NewsletterSignup from "../components/NewsletterSignup";
 import { DarkModeContext } from "../App";
 import { motion, AnimatePresence } from "framer-motion";
-//import "../styles/shine.css"; // ✅ Make sure this path is correct
 
 function SocialShare({ url, title }) {
   const encodedUrl = encodeURIComponent(url);
@@ -190,45 +189,18 @@ function Articles() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 min-h-[400px]">
           <AnimatePresence mode="wait">
             {loading ? (
-             <motion.div
-  key={articles.id}
-  layout
-  initial={{ opacity: 0, y: 20 }}
-  whileInView={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.6, ease: "easeOut" }}
-  className={`card-transform ${darkMode ? "bg-blue-800 text-white" : "bg-white text-blue-900"} p-6 rounded-2xl border border-blue-200 w-full max-w-2xl mx-auto`}
->
-  <motion.h2
-    initial={{ opacity: 0, x: -40 }}
-    whileHover={{ opacity: 1, x: 0 }}
-    transition={{ duration: 0.4 }}
-    className="text-xl font-semibold mb-2"
-  >
-    {Articles.title}
-  </motion.h2>
-
-  <motion.p
-    initial={{ opacity: 0, x: 40 }}
-    whileHover={{ opacity: 1, x: 0 }}
-    transition={{ duration: 0.5 }}
-    className="text-sm"
-  >
-    {articles.description}
-  </motion.p>
-</motion.div>
+              <p>Loading...</p>
             ) : (
               currentArticles.map((article) => (
                 <motion.div
                   key={article.id}
                   layout
-                  initial={{ opacity: 0, y: lazyAnimate ? 20 : 0 }}
+                  initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ scale: 1.05, boxShadow: "0px 15px 30px rgba(0,0,0,0.2)" }}
                   exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.4 }}
-          className={`card-popout ${darkMode ? "bg-blue-800 text-white" : "bg-white text-blue-900"} p-6 rounded-2xl border border-blue-200`}
-
-
-
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className={`transform transition-transform duration-300 ${darkMode ? "bg-blue-800 text-white" : "bg-white text-blue-900"} p-6 rounded-2xl border border-blue-200`}
                 >
                   {article.cover_image && (
                     <LazyImage
