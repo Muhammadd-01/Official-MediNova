@@ -1,57 +1,61 @@
-"use client"
+import { Canvas, useFrame } from '@react-three/fiber'
+import { Sphere, OrbitControls } from '@react-three/drei'
+import { useRef } from 'react'
+import * as THREE from 'three'
 
-import { useContext } from "react"
-import { motion } from "framer-motion"
-import { DarkModeContext } from "../App"
-
-const BackgroundAnimation = () => {
-  const { darkMode } = useContext(DarkModeContext)
+const Molecule = () => {
+  const ref = useRef()
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime()
+    ref.current.rotation.y = t * 0.2
+    ref.current.rotation.x = Math.sin(t * 0.1) * 0.5
+  })
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-      <motion.div
-        className="absolute inset-0"
-        animate={{
-          background: darkMode
-            ? [
-                "linear-gradient(to bottom right, #1a202c, #2d3748, #4a5568)",
-                "linear-gradient(to bottom right, #2d3748, #4a5568, #718096)",
-                "linear-gradient(to bottom right, #1a202c, #2d3748, #4a5568)",
-              ]
-            : [
-                "linear-gradient(to bottom right, #e6f2ff, #ffffff, #cce4ff)",
-                "linear-gradient(to bottom right, #ffffff, #cce4ff, #99c9ff)",
-                "linear-gradient(to bottom right, #e6f2ff, #ffffff, #cce4ff)",
-              ],
-        }}
-        transition={{ repeat: Number.POSITIVE_INFINITY, duration: 20, ease: "linear" }}
-      />
-      {[...Array(50)].map((_, i) => (
-        <motion.div
-          key={i}
-          className={`absolute rounded-full ${darkMode ? "bg-blue-400" : "bg-blue-600"}`}
-          style={{
-            width: Math.random() * 4 + 2,
-            height: Math.random() * 4 + 2,
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-          }}
-          animate={{
-            scale: [1, 1.5, 1],
-            opacity: [0.3, 0.7, 0.3],
-            x: [0, Math.random() * 100 - 50, 0],
-            y: [0, Math.random() * 100 - 50, 0],
-          }}
-          transition={{
-            duration: Math.random() * 10 + 10,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
+    <group ref={ref}>
+      {[...Array(6)].map((_, i) => {
+        const angle = (i / 6) * Math.PI * 2
+        const x = Math.cos(angle) * 1.5
+        const z = Math.sin(angle) * 1.5
+        return (
+          <Sphere key={i} args={[0.15, 32, 32]}>
+            <meshStandardMaterial color="#8B5E3C" />
+            <mesh position={[x, 0, z]} />
+          </Sphere>
+        )
+      })}
+    </group>
+  )
+}
+
+const PulseRing = () => {
+  const ringRef = useRef()
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime()
+    const scale = 1 + Math.sin(t * 2) * 0.2
+    ringRef.current.scale.set(scale, scale, scale)
+  })
+
+  return (
+    <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[1.5, 1.6, 64]} />
+      <meshBasicMaterial color="white" transparent opacity={0.4} />
+    </mesh>
+  )
+}
+
+const BackgroundAnimation = () => {
+  return (
+    <div className="fixed inset-0 z-0 pointer-events-none">
+      <Canvas camera={{ position: [0, 2, 5], fov: 60 }}>
+        <ambientLight intensity={0.5} />
+        <pointLight position={[0, 5, 10]} intensity={1} color="#FFFFFF" />
+        <Molecule />
+        <PulseRing />
+        <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
+      </Canvas>
     </div>
   )
 }
 
 export default BackgroundAnimation
-

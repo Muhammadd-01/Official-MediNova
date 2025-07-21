@@ -11,11 +11,15 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
+/* Brown glow hover effect */
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+  filter: drop-shadow(0 0 2em #8b3a3aaa); /* Rich brown shadow */
 }
+
+/* Optional: change if you're using React logo */
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  filter: drop-shadow(0 0 2em #b04c41aa); /* Lighter brown highlight */
 }
 
 @keyframes logo-spin {
@@ -37,6 +41,7 @@
   padding: 2em;
 }
 
+/* Updated from gray to muted brown */
 .read-the-docs {
-  color: #888;
+  color: #a56969; /* Soft muted brown */
 }

@@ -55,16 +55,11 @@ function Home() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <motion.h1
-            className={`text-5xl font-bold mb-8 text-center ${darkMode ? "text-gray-200" : "text-gray-800"}`}
-            {...fadeInUp}
-          >
+          <motion.h1 className="text-5xl font-bold mb-8 text-center text-foreground" {...fadeInUp}>
             Welcome to MediNova
           </motion.h1>
-          <motion.p
-            className={`text-xl mb-12 text-center ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-            {...fadeInUp}
-          >
+
+          <motion.p className="text-xl mb-12 text-center text-muted-foreground" {...fadeInUp}>
             Your digital bridge to licensed doctors, evidence-based medicine recommendations, and real-time health guidance — all under one secure platform.
           </motion.p>
 
@@ -102,9 +97,7 @@ function Home() {
             ].map((service, index) => (
               <motion.div
                 key={service.title}
-                className={`${
-                  darkMode ? "bg-gray-800" : "bg-white"
-                } rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl`}
+                className="bg-card text-card-foreground rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 {...fadeInUp}
@@ -116,13 +109,11 @@ function Home() {
                   className="w-full h-48 object-cover"
                 />
                 <div className="p-6">
-                  <h2 className={`text-2xl font-semibold mb-4 ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
-                    {service.title}
-                  </h2>
-                  <p className={`${darkMode ? "text-gray-300" : "text-gray-700"} mb-4`}>{service.description}</p>
+                  <h2 className="text-2xl font-semibold mb-4 text-foreground">{service.title}</h2>
+                  <p className="text-muted-foreground mb-4">{service.description}</p>
                   <Link
                     to={service.link}
-                    className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors duration-300"
+                    className="inline-block bg-primary text-primary-foreground px-4 py-2 rounded hover:brightness-110 transition-colors duration-300"
                   >
                     Learn More
                   </Link>
@@ -142,14 +133,10 @@ function Home() {
           </motion.div>
 
           <motion.div
-            className={`${
-              darkMode ? "bg-gray-800" : "bg-white"
-            } rounded-lg shadow-lg p-8 mb-16 transition-all duration-300 hover:shadow-xl`}
+            className="bg-card text-card-foreground rounded-lg shadow-lg p-8 mb-16 transition-all duration-300 hover:shadow-xl"
             {...fadeInUp}
           >
-            <h2 className={`text-3xl font-bold mb-6 ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
-              Why Choose MediNova?
-            </h2>
+            <h2 className="text-3xl font-bold mb-6 text-foreground">Why Choose MediNova?</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[
                 {
@@ -174,23 +161,21 @@ function Home() {
                 },
               ].map((item, index) => (
                 <motion.div key={item.title} {...fadeInUp} transition={{ delay: 0.1 * (index + 1) }}>
-                  <h3 className={`text-xl font-semibold mb-4 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
-                    {item.title}
-                  </h3>
-                  <p className={`${darkMode ? "text-gray-400" : "text-gray-600"}`}>{item.description}</p>
+                  <h3 className="text-xl font-semibold mb-4 text-foreground">{item.title}</h3>
+                  <p className="text-muted-foreground">{item.description}</p>
                 </motion.div>
               ))}
             </div>
           </motion.div>
 
           <motion.div className="mb-16" {...fadeInUp}>
-            <h2 className={`text-3xl font-bold mb-6 text-center ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
+            <h2 className="text-3xl font-bold mb-6 text-center text-foreground">
               Trusted by Healthcare Professionals
             </h2>
-            <p className={`text-lg text-center mb-4 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
+            <p className="text-lg text-center mb-4 text-muted-foreground">
               Used by 1,200+ licensed practitioners and recommended by 40+ clinics nationwide.
             </p>
-            <p className={`text-md text-center ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
+            <p className="text-md text-center text-muted-foreground">
               MediNova complies with HIPAA, HIMS-Pakistan, and ICD-11 medical data standards.
             </p>
           </motion.div>
@@ -201,9 +186,7 @@ function Home() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.6 }}
           >
-            <h2 className={`text-3xl font-bold mb-6 text-center ${darkMode ? "text-gray-200" : "text-gray-800"}`}>
-              Our Sponsors
-            </h2>
+            <h2 className="text-3xl font-bold mb-6 text-center text-foreground">Our Sponsors</h2>
             <HorizontalSponsorSlider />
           </motion.div>
 

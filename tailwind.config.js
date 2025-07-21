@@ -11,12 +11,12 @@ module.exports = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "hsl(var(--primary))",                  // Brown from scarf
+          foreground: "hsl(var(--primary-foreground))",    // White text
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "hsl(var(--secondary))",                // Light beige/gray
+          foreground: "hsl(var(--secondary-foreground))",  // Dark text
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -38,17 +38,19 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        professionalBlue: {
-          50: "#E6F0F9",
-          100: "#CCE0F3",
-          200: "#99C2E7",
-          300: "#66A3DB",
-          400: "#3385CF",
-          500: "#0066C3",
-          600: "#00529C",
-          700: "#003D75",
-          800: "#00294E",
-          900: "#001427",
+
+        // Custom brown color palette
+        professionalBrown: {
+          50: "#f9f0ef",
+          100: "#f0dbd9",
+          200: "#e0b7b3",
+          300: "#d0948d",
+          400: "#c07067",
+          500: "#b04c41",
+          600: "#8b3a3a", // Main primary color from scarf
+          700: "#672c2c",
+          800: "#431d1d",
+          900: "#1e0f0f",
         },
       },
       borderRadius: {
@@ -58,18 +60,10 @@ module.exports = {
       },
       keyframes: {
         blob: {
-          "0%": {
-            transform: "translate(0px, 0px) scale(1)",
-          },
-          "33%": {
-            transform: "translate(30px, -50px) scale(1.1)",
-          },
-          "66%": {
-            transform: "translate(-20px, 20px) scale(0.9)",
-          },
-          "100%": {
-            transform: "tranlate(0px, 0px) scale(1)",
-          },
+          "0%": { transform: "translate(0px, 0px) scale(1)" },
+          "33%": { transform: "translate(30px, -50px) scale(1.1)" },
+          "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
+          "100%": { transform: "translate(0px, 0px) scale(1)" },
         },
         fadeIn: {
           "0%": { opacity: "0" },
@@ -84,4 +78,3 @@ module.exports = {
   },
   plugins: [require("tailwindcss-animate")],
 }
-

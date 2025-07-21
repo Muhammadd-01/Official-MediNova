@@ -1,10 +1,10 @@
-import React, { useContext } from "react"
-import { Helmet } from "react-helmet-async"
-import { motion } from "framer-motion"
-import { DarkModeContext } from "../App"
+import React, { useContext } from "react";
+import { Helmet } from "react-helmet-async";
+import { motion } from "framer-motion";
+import { DarkModeContext } from "../App";
 
 function About() {
-  const { darkMode } = useContext(DarkModeContext)
+  const { darkMode } = useContext(DarkModeContext);
 
   return (
     <>
@@ -26,7 +26,9 @@ function About() {
 
       <div className="container mx-auto px-4 py-16">
         <motion.h1
-          className={`text-5xl font-bold mb-8 text-center ${darkMode ? "text-white" : "text-blue-900"}`}
+          className={`text-5xl font-bold mb-8 text-center ${
+            darkMode ? "text-white" : "text-[#5c4433]"
+          }`}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -34,13 +36,17 @@ function About() {
           About MediNova
         </motion.h1>
         <motion.div
-          className={`${darkMode ? "bg-gray-800" : "bg-white"} rounded-lg shadow-lg p-8 mb-16`}
+          className={`${
+            darkMode ? "bg-[#3a2c22]" : "bg-[#fff9f5]"
+          } rounded-lg shadow-lg p-8 mb-16`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <h2 className={`text-3xl font-bold mb-6 ${darkMode ? "text-white" : "text-blue-900"}`}>Our Mission</h2>
-          <p className={`${darkMode ? "text-blue-200" : "text-blue-800"} mb-6`}>
+          <h2 className={`text-3xl font-bold mb-6 ${darkMode ? "text-white" : "text-[#5c4433]"}`}>
+            Our Mission
+          </h2>
+          <p className={`${darkMode ? "text-[#fbeadd]" : "text-[#6e4d39]"} mb-6`}>
             At MediNova, our mission is to provide accessible, reliable, and comprehensive medical information and
             services to empower individuals in making informed decisions about their health. We strive to bridge the gap
             between medical expertise and public understanding, ensuring that quality healthcare knowledge is available
@@ -51,8 +57,10 @@ function About() {
             alt="Medical professionals collaborating"
             className="w-full h-64 object-cover rounded-lg mb-6"
           />
-          <h2 className={`text-3xl font-bold mb-6 ${darkMode ? "text-white" : "text-blue-900"}`}>Our Values</h2>
-          <ul className={`list-disc list-inside ${darkMode ? "text-blue-200" : "text-blue-800"} mb-6`}>
+          <h2 className={`text-3xl font-bold mb-6 ${darkMode ? "text-white" : "text-[#5c4433]"}`}>
+            Our Values
+          </h2>
+          <ul className={`list-disc list-inside ${darkMode ? "text-[#fbeadd]" : "text-[#6e4d39]"} mb-6`}>
             <li>
               Accuracy and Reliability: We are committed to providing up-to-date and scientifically accurate medical
               information.
@@ -76,14 +84,18 @@ function About() {
             alt="Medical technology"
             className="w-full h-64 object-cover rounded-lg mb-6"
           />
-          <h2 className={`text-3xl font-bold mb-6 ${darkMode ? "text-white" : "text-blue-900"}`}>Our Team</h2>
-          <p className={`${darkMode ? "text-blue-200" : "text-blue-800"} mb-6`}>
+          <h2 className={`text-3xl font-bold mb-6 ${darkMode ? "text-white" : "text-[#5c4433]"}`}>
+            Our Team
+          </h2>
+          <p className={`${darkMode ? "text-[#fbeadd]" : "text-[#6e4d39]"} mb-6`}>
             MediNova is powered by a diverse team of healthcare professionals, including doctors, pharmacists, and
             medical researchers. Our experts are dedicated to providing the highest quality of medical information and
             services to our users.
           </p>
-          <h2 className={`text-3xl font-bold mb-6 ${darkMode ? "text-white" : "text-blue-900"}`}>Our Commitment</h2>
-          <p className={`${darkMode ? "text-blue-200" : "text-blue-800"}`}>
+          <h2 className={`text-3xl font-bold mb-6 ${darkMode ? "text-white" : "text-[#5c4433]"}`}>
+            Our Commitment
+          </h2>
+          <p className={`${darkMode ? "text-[#fbeadd]" : "text-[#6e4d39]"}`}>
             We are committed to continually improving and expanding our services to meet the evolving needs of our
             users. Whether you're seeking personalized medicine suggestions, expert consultations, or the latest health
             news, MediNova is here to support you on your health journey.
@@ -91,8 +103,7 @@ function About() {
         </motion.div>
       </div>
     </>
-  )
+  );
 }
 
-export default About
-
+export default About;
