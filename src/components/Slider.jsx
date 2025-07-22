@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { DarkModeContext } from "../App"
+import React, { useState, useEffect, useContext } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { DarkModeContext } from "../App";
 
 const slides = [
   {
@@ -21,18 +21,20 @@ const slides = [
     title: "Latest Health Articles",
     description: "Stay informed with our regularly updated health articles.",
   },
-]
+];
 
 function Slider() {
-  const [currentSlide, setCurrentSlide] = useState(0)
-  const { darkMode } = useContext(DarkModeContext)
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const { darkMode } = useContext(DarkModeContext);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prevSlide) => (prevSlide + 1) % slides.length)
-    }, 5000)
-    return () => clearInterval(timer)
-  }, [])
+      setCurrentSlide((prevSlide) => (prevSlide + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const textColor = darkMode ? "text-white" : "text-[#0B1C3D]";
 
   return (
     <div className="relative w-full h-[600px] overflow-hidden rounded-lg shadow-lg">
@@ -51,7 +53,7 @@ function Slider() {
             className="w-full h-full object-cover"
           />
           <div
-            className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#3C1E1E] to-transparent text-white p-8`}
+            className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#E1EBF7]/80 to-transparent px-8 py-6 ${textColor}`}
           >
             <h2 className="text-4xl font-bold mb-4">{slides[currentSlide].title}</h2>
             <p className="text-xl">{slides[currentSlide].description}</p>
@@ -71,7 +73,7 @@ function Slider() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-export default Slider
+export default Slider;

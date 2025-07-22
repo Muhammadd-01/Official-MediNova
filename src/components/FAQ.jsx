@@ -31,7 +31,7 @@ const faqs = [
 function FAQ() {
   return (
     <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4 text-[hsl(0,100%,99%)] dark:text-white">
+      <h2 className="text-2xl font-bold mb-4 text-[#0A2A43] dark:text-[#FDFBFB]">
         Frequently Asked Questions
       </h2>
       <div className="space-y-4">
@@ -40,8 +40,8 @@ function FAQ() {
             key={index}
             className={`
               p-4 rounded-lg shadow
-              bg-[#FDFBFB] text-[#7F2323] 
-              dark:bg-[#7F2323] dark:text-[#FDFBFB]
+              bg-[#FDFBFB] text-[#0A2A43]
+              dark:bg-[#0A2A43] dark:text-[#FDFBFB]
             `}
           >
             <h3 className="text-lg font-semibold mb-2">{faq.question}</h3>

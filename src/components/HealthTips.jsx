@@ -17,8 +17,8 @@ const HealthTips = () => {
   const { darkMode } = useContext(DarkModeContext)
 
   const bgColor = darkMode ? "bg-[#7F2323]" : "bg-transparent"
-  const textColor = darkMode ? "text-white" : "text-[#7F2323]"
-  const bulletColor = darkMode ? "text-[#FDFBFB]" : "text-[#7F2323]"
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#1E1E1E]"
+  const bulletColor = darkMode ? "text-[#FDFBFB]" : "text-[#1E1E1E]"
 
   return (
     <motion.div

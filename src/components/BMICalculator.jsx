@@ -1,40 +1,38 @@
-import { useState, useContext } from "react"
-import { motion } from "framer-motion"
-import { DarkModeContext } from "../App"
+import { useState, useContext } from "react";
+import { motion } from "framer-motion";
+import { DarkModeContext } from "../App";
 
 const BMICalculator = () => {
-  const [height, setHeight] = useState("")
-  const [weight, setWeight] = useState("")
-  const [bmi, setBMI] = useState(null)
-  const { darkMode } = useContext(DarkModeContext)
+  const [height, setHeight] = useState("");
+  const [weight, setWeight] = useState("");
+  const [bmi, setBMI] = useState(null);
+  const { darkMode } = useContext(DarkModeContext);
 
-  const calculateBMI = (e) => {
-    e.preventDefault()
-    if (height && weight) {
-      const heightInMeters = height / 100
-      const bmiValue = (weight / (heightInMeters * heightInMeters)).toFixed(1)
-      setBMI(bmiValue)
-    }
-  }
-
-  const bgColor = darkMode ? "bg-[#7F2323]" : "bg-transparent"
-  const textColor = darkMode ? "text-white" : "text-[#7F2323]"
-  const inputBg = darkMode ? "bg-[#5e1a1a]" : "bg-[#FDFBFB]"
-  const inputText = darkMode ? "text-white" : "text-[#7F2323]"
-  const buttonBg = darkMode ? "bg-white text-[#7F2323]" : "bg-[#7F2323] text-[#FDFBFB]"
-  const buttonHover = darkMode ? "hover:bg-[#FDFBFB]" : "hover:bg-[#5e1a1a]"
+  // Unified medical blue theme
+  const primaryText = darkMode ? "text-[#FDFBFB]" : "text-[#122C47]";
+  const bgColor = darkMode ? "bg-[#7F2323]" : "bg-white";
+  const inputBg = darkMode ? "bg-[#5e1a1a]" : "bg-[#FDFBFB]";
+  const inputText = darkMode ? "text-white" : "text-[#122C47]";
+  const borderColor = "border border-[#E1E1E1]";
+  const buttonBg = darkMode
+    ? "bg-white text-[#7F2323]"
+    : "bg-[#122C47] text-[#FDFBFB]";
+  const buttonHover = darkMode
+    ? "hover:bg-[#FDFBFB] hover:text-[#7F2323]"
+    : "hover:text-gray-300 hover:bg-[#0f1f36]";
 
   return (
     <motion.div
-      className={`p-6 rounded-lg shadow-md ${bgColor} ${textColor}`}
+      className={`p-6 rounded-lg shadow-md ${bgColor} ${primaryText}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
       <h2 className="text-2xl font-semibold mb-4">BMI Calculator</h2>
+
       <form onSubmit={calculateBMI} className="space-y-4">
         <div>
-          <label htmlFor="height" className="block mb-1">
+          <label htmlFor="height" className={`block mb-1 ${primaryText}`}>
             Height (cm):
           </label>
           <input
@@ -42,12 +40,13 @@ const BMICalculator = () => {
             id="height"
             value={height}
             onChange={(e) => setHeight(e.target.value)}
-            className={`w-full p-2 rounded ${inputBg} ${inputText} border border-[#FDFBFB] focus:outline-none`}
+            className={`w-full p-2 rounded ${inputBg} ${inputText} ${borderColor} focus:outline-none`}
             required
           />
         </div>
+
         <div>
-          <label htmlFor="weight" className="block mb-1">
+          <label htmlFor="weight" className={`block mb-1 ${primaryText}`}>
             Weight (kg):
           </label>
           <input
@@ -55,10 +54,11 @@ const BMICalculator = () => {
             id="weight"
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
-            className={`w-full p-2 rounded ${inputBg} ${inputText} border border-[#FDFBFB] focus:outline-none`}
+            className={`w-full p-2 rounded ${inputBg} ${inputText} ${borderColor} focus:outline-none`}
             required
           />
         </div>
+
         <button
           type="submit"
           className={`px-4 py-2 rounded transition duration-300 ${buttonBg} ${buttonHover}`}
@@ -66,8 +66,9 @@ const BMICalculator = () => {
           Calculate BMI
         </button>
       </form>
+
       {bmi && (
-        <div className="mt-4">
+        <div className={`mt-4 ${primaryText}`}>
           <p className="font-semibold">Your BMI: {bmi}</p>
           <p>
             {bmi < 18.5
@@ -81,7 +82,16 @@ const BMICalculator = () => {
         </div>
       )}
     </motion.div>
-  )
-}
+  );
 
-export default BMICalculator
+  function calculateBMI(e) {
+    e.preventDefault();
+    if (height && weight) {
+      const heightInMeters = height / 100;
+      const bmiValue = (weight / (heightInMeters * heightInMeters)).toFixed(1);
+      setBMI(bmiValue);
+    }
+  }
+};
+
+export default BMICalculator;

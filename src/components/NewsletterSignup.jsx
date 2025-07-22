@@ -14,8 +14,8 @@ function NewsletterSignup() {
     <div
       className={`
         p-6 rounded-lg shadow-md
-        bg-[#FDFBFB] text-[#7F2323]
-        dark:bg-[#7F2323] dark:text-[#FDFBFB]
+        bg-[#FDFBFB] text-[#0A2A43]
+        dark:bg-[#0A2A43] dark:text-[#FDFBFB]
       `}
     >
       <h2 className="text-2xl font-bold mb-4">Subscribe to Our Newsletter</h2>
@@ -28,8 +28,8 @@ function NewsletterSignup() {
           required
           className={`
             flex-grow px-4 py-2 rounded-md border-2
-            border-[#7F2323] text-[#7F2323] bg-[#FDFBFB]
-            dark:border-[#FDFBFB] dark:text-[#FDFBFB] dark:bg-[#7F2323]
+            border-[#0A2A43] text-[#0A2A43] bg-[#FDFBFB]
+            dark:border-[#FDFBFB] dark:text-[#FDFBFB] dark:bg-[#0A2A43]
             focus:outline-none
           `}
         />
@@ -37,8 +37,8 @@ function NewsletterSignup() {
           type="submit"
           className={`
             px-6 py-2 rounded-md transition duration-300
-            bg-[#7F2323] text-[#FDFBFB] hover:bg-[#692020]
-            dark:bg-[#FDFBFB] dark:text-[#7F2323] dark:hover:bg-[#e0dddd]
+            bg-[#0A2A43] text-[#FDFBFB] hover:bg-[#062030]
+            dark:bg-[#FDFBFB] dark:text-[#0A2A43] dark:hover:bg-[#e0dddd]
           `}
         >
           Subscribe
