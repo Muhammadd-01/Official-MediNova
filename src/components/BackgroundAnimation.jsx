@@ -1,61 +1,103 @@
-import { Canvas, useFrame } from '@react-three/fiber'
-import { Sphere, OrbitControls } from '@react-three/drei'
-import { useRef } from 'react'
-import * as THREE from 'three'
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useRef, useMemo, useEffect } from "react";
+import * as THREE from "three";
 
-const Molecule = () => {
-  const ref = useRef()
+const NUM_PARTICLES = 1000;
+
+const BloodParticlesInstanced = () => {
+  const meshRef = useRef();
+  const { size, camera, mouse } = useThree();
+
+  // Positions, types: 0 = RBC, 1 = Platelet, 2 = WBC
+  const particles = useMemo(() => {
+    const arr = [];
+    for (let i = 0; i < NUM_PARTICLES; i++) {
+      arr.push({
+        position: new THREE.Vector3(
+          (Math.random() - 0.5) * 30,
+          (Math.random() - 0.5) * 18,
+          (Math.random() - 0.5) * 30
+        ),
+        type: Math.random() < 0.85 ? 0 : Math.random() < 0.5 ? 1 : 2 // Mostly RBC
+      });
+    }
+    return arr;
+  }, []);
+
+  const dummy = new THREE.Object3D();
+
   useFrame(({ clock }) => {
-    const t = clock.getElapsedTime()
-    ref.current.rotation.y = t * 0.2
-    ref.current.rotation.x = Math.sin(t * 0.1) * 0.5
-  })
+    const time = clock.getElapsedTime();
+    particles.forEach((p, i) => {
+      const offset = Math.sin(time + i) * 0.01;
+      const dx = Math.sin(time * 0.3 + i) * 0.002;
+      const dy = Math.cos(time * 0.2 + i) * 0.002;
+
+      // Cursor ripple interaction
+      const mouse3D = new THREE.Vector3(mouse.x * 10, mouse.y * 6, 0);
+      const dist = mouse3D.distanceTo(p.position);
+      const ripple = Math.max(0, 1 - dist / 5) * 0.5;
+
+      dummy.position.copy(p.position);
+      dummy.position.x += dx + ripple * (p.position.x - mouse3D.x) * 0.001;
+      dummy.position.y += dy + ripple * (p.position.y - mouse3D.y) * 0.001;
+      dummy.position.z += offset;
+
+      dummy.rotation.x = time * 0.2 + i;
+      dummy.rotation.y = time * 0.1 + i;
+
+      const scale = p.type === 0 ? 0.03 : p.type === 1 ? 0.015 : 0.05;
+      dummy.scale.setScalar(scale);
+
+      dummy.updateMatrix();
+      meshRef.current.setMatrixAt(i, dummy.matrix);
+    });
+    meshRef.current.instanceMatrix.needsUpdate = true;
+  });
+
+  // Color per type
+  const colorArray = useMemo(() => {
+    const colors = [];
+    particles.forEach((p) => {
+      const color =
+        p.type === 0
+          ? new THREE.Color("#8B0000") // RBC
+          : p.type === 1
+          ? new THREE.Color("#FFD700") // Platelet
+          : new THREE.Color("#FFFFFF"); // WBC
+      colors.push(color.r, color.g, color.b);
+    });
+    return new Float32Array(colors);
+  }, [particles]);
 
   return (
-    <group ref={ref}>
-      {[...Array(6)].map((_, i) => {
-        const angle = (i / 6) * Math.PI * 2
-        const x = Math.cos(angle) * 1.5
-        const z = Math.sin(angle) * 1.5
-        return (
-          <Sphere key={i} args={[0.15, 32, 32]}>
-            <meshStandardMaterial color="#8B5E3C" />
-            <mesh position={[x, 0, z]} />
-          </Sphere>
-        )
-      })}
-    </group>
-  )
-}
-
-const PulseRing = () => {
-  const ringRef = useRef()
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime()
-    const scale = 1 + Math.sin(t * 2) * 0.2
-    ringRef.current.scale.set(scale, scale, scale)
-  })
-
-  return (
-    <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]}>
-      <ringGeometry args={[1.5, 1.6, 64]} />
-      <meshBasicMaterial color="white" transparent opacity={0.4} />
-    </mesh>
-  )
-}
+    <instancedMesh ref={meshRef} args={[null, null, NUM_PARTICLES]}>
+      <sphereGeometry args={[1, 8, 8]}>
+        <instancedBufferAttribute
+          attach="attributes-color"
+          args={[colorArray, 3]}
+        />
+      </sphereGeometry>
+      <meshStandardMaterial
+        vertexColors
+        emissive="#220000"
+        emissiveIntensity={0.1}
+        roughness={0.4}
+      />
+    </instancedMesh>
+  );
+};
 
 const BackgroundAnimation = () => {
   return (
     <div className="fixed inset-0 z-0 pointer-events-none">
-      <Canvas camera={{ position: [0, 2, 5], fov: 60 }}>
-        <ambientLight intensity={0.5} />
-        <pointLight position={[0, 5, 10]} intensity={1} color="#FFFFFF" />
-        <Molecule />
-        <PulseRing />
-        <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
+      <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
+        <ambientLight intensity={0.4} />
+        <pointLight position={[5, 10, 5]} intensity={1} color="#FF5555" />
+        <BloodParticlesInstanced />
       </Canvas>
     </div>
-  )
-}
+  );
+};
 
-export default BackgroundAnimation
+export default BackgroundAnimation;
