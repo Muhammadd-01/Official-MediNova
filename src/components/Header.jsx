@@ -14,8 +14,8 @@ function Header() {
       <header
         className={`fixed top-0 left-0 w-full z-50 transition-colors duration-300 ${
           darkMode
-            ? "bg-gray-900/60 backdrop-blur-md text-white"
-            : "bg-white/60 backdrop-blur-md text-gray-900"
+            ? "bg-[#1a1a1a]/80 backdrop-blur-lg text-white"
+            : "bg-white/60 backdrop-blur-lg text-gray-900"
         } shadow-md`}
       >
         <div className="container mx-auto px-4 py-4">
@@ -45,7 +45,7 @@ function Header() {
                     className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                       darkMode
                         ? "text-gray-300 hover:bg-gray-700 hover:text-white"
-                        : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+                        : "text-gray-800 hover:bg-gray-200 hover:text-blue-600"
                     }`}
                   >
                     {item}
@@ -118,8 +118,8 @@ function Header() {
         {isMenuOpen && (
           <div
             className={`md:hidden transition-all duration-300 ${
-              darkMode ? "bg-gray-800/90 text-white" : "bg-white/90 text-gray-800"
-            } backdrop-blur-md`}
+              darkMode ? "bg-[#1a1a1a]/90 text-white" : "bg-white/90 text-gray-800"
+            } backdrop-blur-lg`}
           >
             <div className="px-4 py-4 space-y-2">
               {[
@@ -149,7 +149,7 @@ function Header() {
         )}
       </header>
 
-      {/* Spacer div to prevent content overlap */}
+      {/* Spacer to avoid overlap */}
       <div className="h-20 w-full"></div>
     </>
   )
