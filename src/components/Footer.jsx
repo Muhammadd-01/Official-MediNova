@@ -1,14 +1,16 @@
-import { useContext } from "react"
-import { Link } from "react-router-dom"
-import { DarkModeContext } from "../App"
+import { useContext } from "react";
+import { Link } from "react-router-dom";
+import { DarkModeContext } from "../App";
 
 function Footer() {
-  const { darkMode } = useContext(DarkModeContext)
+  const { darkMode } = useContext(DarkModeContext);
 
   return (
     <footer
       className={`${
-        darkMode ? "bg-gray-800 text-gray-200" : "bg-gray-100 text-gray-800"
+        darkMode
+          ? "bg-meronishRed-900 text-meronishRed-100"
+          : "bg-meronishRed-100 text-meronishRed-900"
       } py-8 transition-colors duration-300 mt-auto`}
     >
       <div className="container mx-auto px-4">
@@ -24,22 +26,22 @@ function Footer() {
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="hover:underline transition duration-300">
+                <Link to="/" className="hover:underline hover:text-meronishRed-600 transition duration-300">
                   Home
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="hover:underline transition duration-300">
+                <Link to="/about" className="hover:underline hover:text-meronishRed-600 transition duration-300">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link to="/articles" className="hover:underline transition duration-300">
+                <Link to="/articles" className="hover:underline hover:text-meronishRed-600 transition duration-300">
                   Articles
                 </Link>
               </li>
               <li>
-                <Link to="/news" className="hover:underline transition duration-300">
+                <Link to="/news" className="hover:underline hover:text-meronishRed-600 transition duration-300">
                   News
                 </Link>
               </li>
@@ -49,22 +51,22 @@ function Footer() {
             <h3 className="text-lg font-semibold mb-4">Services</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/medicine-suggestion" className="hover:underline transition duration-300">
+                <Link to="/medicine-suggestion" className="hover:underline hover:text-meronishRed-600 transition duration-300">
                   Medicine Suggestion
                 </Link>
               </li>
               <li>
-                <Link to="/consultation" className="hover:underline transition duration-300">
+                <Link to="/consultation" className="hover:underline hover:text-meronishRed-600 transition duration-300">
                   Expert Consultation
                 </Link>
               </li>
               <li>
-                <Link to="/feedback" className="hover:underline transition duration-300">
+                <Link to="/feedback" className="hover:underline hover:text-meronishRed-600 transition duration-300">
                   Feedback
                 </Link>
               </li>
               <li>
-                <Link to="/emergency" className="hover:underline transition duration-300">
+                <Link to="/emergency" className="hover:underline hover:text-meronishRed-600 transition duration-300">
                   Emergency Services
                 </Link>
               </li>
@@ -80,7 +82,7 @@ function Footer() {
                 href="https://www.facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800"
+                className="text-meronishRed-600 hover:text-meronishRed-800"
               >
                 Facebook
               </a>
@@ -88,7 +90,7 @@ function Footer() {
                 href="https://www.twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-600"
+                className="text-meronishRed-500 hover:text-meronishRed-700"
               >
                 Twitter
               </a>
@@ -96,20 +98,19 @@ function Footer() {
                 href="https://www.linkedin.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-700 hover:text-blue-900"
+                className="text-meronishRed-700 hover:text-meronishRed-900"
               >
                 LinkedIn
               </a>
             </div>
           </div>
         </div>
-        <div className="mt-8 pt-8 border-t border-gray-300 dark:border-gray-700 text-center">
+        <div className="mt-8 pt-8 border-t border-meronishRed-300 dark:border-meronishRed-700 text-center">
           <p>&copy; 2023 MediNova. All rights reserved.</p>
         </div>
       </div>
     </footer>
-  )
+  );
 }
 
-export default Footer
-
+export default Footer;

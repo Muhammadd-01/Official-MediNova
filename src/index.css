@@ -3,105 +3,103 @@
 @tailwind utilities;
 @import "leaflet/dist/leaflet.css";
 
-/* Add any custom styles below this line */
+/* ✅ Animation Delays */
 .animation-delay-2000 {
   animation-delay: 2s;
 }
-
 .animation-delay-4000 {
   animation-delay: 4s;
 }
 
-/* Fix Leaflet map z-index */
+/* ✅ Leaflet Z-index Fix */
 .leaflet-container {
   z-index: 0 !important;
 }
-
 .leaflet-popup,
 .leaflet-control {
   z-index: 100 !important;
 }
 
+/* ✅ Fade-in Animation */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-
 .animate-fadeIn {
   animation: fadeIn 1s ease-in;
 }
 
-/* 🌞 Light Mode */
+/* 🌞 Light Mode (Default) */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 10%;
+  --background: 0 0% 100%;              /* White */
+  --foreground: 0 100% 99%;             /* #FDFBFB */
 
-  --primary: 0 45% 38%; /* Brown from scarf */
-  --primary-foreground: 0 0% 100%;
+  --primary: 0 60% 30%;                 /* #7F2323 (Meron) */
+  --primary-foreground: 0 100% 99%;
 
-  --secondary: 0 0% 90%;
-  --secondary-foreground: 0 0% 15%;
+  --secondary: 0 45% 40%;
+  --secondary-foreground: 0 100% 99%;
 
-  --muted: 0 0% 95%;
-  --muted-foreground: 0 0% 45%;
+  --accent: 0 50% 35%;
+  --accent-foreground: 0 100% 99%;
 
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 15%;
+  --muted: 0 30% 85%;
+  --muted-foreground: 0 100% 90%;
 
-  --border: 0 0% 80%;
-  --input: 0 0% 90%;
-  --ring: 0 0% 70%;
-  --accent: 0 0% 85%;
-  --accent-foreground: 0 0% 20%;
-  --popover: 0 0% 98%;
-  --popover-foreground: 0 0% 10%;
-  --destructive: 0 70% 50%;
-  --destructive-foreground: 0 0% 100%;
+  --border: 0 30% 80%;
+  --input: 0 20% 95%;
+  --ring: 0 40% 65%;
+
+  --popover: 0 30% 98%;
+  --popover-foreground: 0 100% 98%;
+
+  --card: 0 10% 97%;
+  --card-foreground: 0 100% 99%;
 }
 
-/* 🌙 Dark Mode */
+/* 🌙 Dark Mode (Triggered by `.dark` class) */
 .dark {
-  --background: 0 0% 11%;
-  --foreground: 0 0% 95%;
+  --background: 0 60% 30%;             /* #7F2323 */
+  --foreground: 0 0% 100%;             /* #FFFFFF */
 
-  --primary: 0 45% 38%;
+  --primary: 0 60% 25%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 0 0% 20%;
-  --secondary-foreground: 0 0% 90%;
+  --secondary: 0 50% 20%;
+  --secondary-foreground: 0 0% 100%;
 
-  --muted: 0 0% 25%;
-  --muted-foreground: 0 0% 75%;
+  --accent: 0 50% 15%;
+  --accent-foreground: 0 0% 100%;
 
-  --card: 0 0% 15%;
-  --card-foreground: 0 0% 95%;
+  --muted: 0 30% 25%;
+  --muted-foreground: 0 0% 90%;
 
-  --border: 0 0% 25%;
-  --input: 0 0% 30%;
-  --ring: 0 0% 50%;
-  --accent: 0 0% 30%;
-  --accent-foreground: 0 0% 90%;
-  --popover: 0 0% 20%;
-  --popover-foreground: 0 0% 95%;
-  --destructive: 0 70% 40%;
+  --border: 0 30% 30%;
+  --input: 0 30% 25%;
+  --ring: 0 40% 35%;
+
+  --popover: 0 40% 20%;
+  --popover-foreground: 0 0% 100%;
+
+  --card: 0 50% 20%;
+  --card-foreground: 0 0% 100%;
+
+  --destructive: 0 70% 35%;
   --destructive-foreground: 0 0% 100%;
 }
 
-/* Actual body colors for fallback */
+/* ✅ Global Styles */
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 main {
   background-color: transparent;
 }
 
-/* Ensure background particles are clickable */
+/* ✅ Background animation interaction fix */
 .fixed.inset-0.pointer-events-none {
   pointer-events: auto;
 }

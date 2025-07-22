@@ -16,9 +16,13 @@ const healthTips = [
 const HealthTips = () => {
   const { darkMode } = useContext(DarkModeContext)
 
+  const bgColor = darkMode ? "bg-[#7F2323]" : "bg-transparent"
+  const textColor = darkMode ? "text-white" : "text-[#7F2323]"
+  const bulletColor = darkMode ? "text-[#FDFBFB]" : "text-[#7F2323]"
+
   return (
     <motion.div
-      className={`p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-700 text-gray-200" : "bg-white text-gray-800"}`}
+      className={`p-6 rounded-lg shadow-md ${bgColor} ${textColor}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -31,10 +35,10 @@ const HealthTips = () => {
             className="flex items-start"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
+            transition={{ duration: 0.4, delay: index * 0.07 }}
           >
-            <span className="text-blue-600 mr-2">•</span>
-            {tip}
+            <span className={`mr-2 ${bulletColor}`}>•</span>
+            <span>{tip}</span>
           </motion.li>
         ))}
       </ul>
@@ -43,4 +47,3 @@ const HealthTips = () => {
 }
 
 export default HealthTips
-

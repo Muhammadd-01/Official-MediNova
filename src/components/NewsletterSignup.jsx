@@ -5,14 +5,19 @@ function NewsletterSignup() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    // Here you would typically send the email to your server
     console.log("Subscribing email:", email)
     alert("Thank you for subscribing!")
     setEmail("")
   }
 
   return (
-    <div className="bg-blue-100 p-6 rounded-lg shadow-md">
+    <div
+      className={`
+        p-6 rounded-lg shadow-md
+        bg-[#FDFBFB] text-[#7F2323]
+        dark:bg-[#7F2323] dark:text-[#FDFBFB]
+      `}
+    >
       <h2 className="text-2xl font-bold mb-4">Subscribe to Our Newsletter</h2>
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">
         <input
@@ -21,11 +26,20 @@ function NewsletterSignup() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Enter your email"
           required
-          className="flex-grow px-4 py-2 rounded-md border-2 border-blue-300 focus:outline-none focus:border-blue-500"
+          className={`
+            flex-grow px-4 py-2 rounded-md border-2
+            border-[#7F2323] text-[#7F2323] bg-[#FDFBFB]
+            dark:border-[#FDFBFB] dark:text-[#FDFBFB] dark:bg-[#7F2323]
+            focus:outline-none
+          `}
         />
         <button
           type="submit"
-          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-300"
+          className={`
+            px-6 py-2 rounded-md transition duration-300
+            bg-[#7F2323] text-[#FDFBFB] hover:bg-[#692020]
+            dark:bg-[#FDFBFB] dark:text-[#7F2323] dark:hover:bg-[#e0dddd]
+          `}
         >
           Subscribe
         </button>
@@ -35,4 +49,3 @@ function NewsletterSignup() {
 }
 
 export default NewsletterSignup
-

@@ -50,17 +50,22 @@ function Slider() {
             alt={slides[currentSlide].title}
             className="w-full h-full object-cover"
           />
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-900 to-transparent text-white p-8">
+          <div
+            className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#3C1E1E] to-transparent text-white p-8`}
+          >
             <h2 className="text-4xl font-bold mb-4">{slides[currentSlide].title}</h2>
             <p className="text-xl">{slides[currentSlide].description}</p>
           </div>
         </motion.div>
       </AnimatePresence>
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
         {slides.map((_, index) => (
           <button
             key={index}
-            className={`w-3 h-3 rounded-full ${index === currentSlide ? "bg-white" : "bg-gray-400"}`}
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              index === currentSlide ? "bg-white scale-125" : "bg-gray-400"
+            }`}
             onClick={() => setCurrentSlide(index)}
           ></button>
         ))}
@@ -70,4 +75,3 @@ function Slider() {
 }
 
 export default Slider
-

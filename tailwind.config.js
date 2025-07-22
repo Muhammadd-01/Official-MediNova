@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: ["class"],
+  darkMode: "class",
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
@@ -8,56 +8,73 @@ module.exports = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        background: "#7F2323", // Main background color
+        foreground: "#FDFBFB", // Default text color
+
         primary: {
-          DEFAULT: "hsl(var(--primary))",                  // Brown from scarf
-          foreground: "hsl(var(--primary-foreground))",    // White text
+          DEFAULT: "#7F2323",
+          foreground: "#FDFBFB",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",                // Light beige/gray
-          foreground: "hsl(var(--secondary-foreground))",  // Dark text
+          DEFAULT: "#7F2323",
+          foreground: "#FDFBFB",
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: "#a91b1b",
+          foreground: "#ffffff",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "#7F2323",
+          foreground: "#FDFBFB",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "#7F2323",
+          foreground: "#FDFBFB",
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: "#7F2323",
+          foreground: "#FDFBFB",
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: "#7F2323",
+          foreground: "#FDFBFB",
         },
 
-        // Custom brown color palette
-        professionalBrown: {
-          50: "#f9f0ef",
-          100: "#f0dbd9",
-          200: "#e0b7b3",
-          300: "#d0948d",
-          400: "#c07067",
-          500: "#b04c41",
-          600: "#8b3a3a", // Main primary color from scarf
-          700: "#672c2c",
-          800: "#431d1d",
-          900: "#1e0f0f",
+        deepMeron: {
+          DEFAULT: "#7F2323",
+          light: "#9c2b2b",
+          dark: "#5c1a1a",
+        },
+        meronText: {
+          DEFAULT: "#FDFBFB",
+        },
+
+        meronishRed: {
+          50: "#fff1f1",
+          100: "#fcdede",
+          200: "#f8bcbc",
+          300: "#f28a8a",
+          400: "#e94c4c",
+          500: "#c23737",
+          600: "#9e2b2b",
+          700: "#741f1f",
+          800: "#4a1414",
+          900: "#1f0505",
+        },
+
+        // Dark mode overrides
+        dark: {
+          background: "#1a1a1a",
+          foreground: "#ffffff",
         },
       },
+
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+
       keyframes: {
         blob: {
           "0%": { transform: "translate(0px, 0px) scale(1)" },
@@ -70,6 +87,7 @@ module.exports = {
           "100%": { opacity: "1" },
         },
       },
+
       animation: {
         blob: "blob 7s infinite",
         fadeIn: "fadeIn 1s ease-in",
@@ -77,4 +95,4 @@ module.exports = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-}
+};

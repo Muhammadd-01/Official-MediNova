@@ -3,6 +3,8 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
 .logo {
@@ -14,12 +16,11 @@
 
 /* Brown glow hover effect */
 .logo:hover {
-  filter: drop-shadow(0 0 2em #8b3a3aaa); /* Rich brown shadow */
+  filter: drop-shadow(0 0 2em #8b3a3aaa);
 }
 
-/* Optional: change if you're using React logo */
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #b04c41aa); /* Lighter brown highlight */
+  filter: drop-shadow(0 0 2em #b04c41aa);
 }
 
 @keyframes logo-spin {
@@ -39,9 +40,12 @@
 
 .card {
   padding: 2em;
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border-radius: 1rem;
+  transition: all 0.3s ease;
 }
 
-/* Updated from gray to muted brown */
 .read-the-docs {
-  color: #a56969; /* Soft muted brown */
+  color: hsl(var(--muted-foreground));
 }

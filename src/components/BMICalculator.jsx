@@ -17,9 +17,16 @@ const BMICalculator = () => {
     }
   }
 
+  const bgColor = darkMode ? "bg-[#7F2323]" : "bg-transparent"
+  const textColor = darkMode ? "text-white" : "text-[#7F2323]"
+  const inputBg = darkMode ? "bg-[#5e1a1a]" : "bg-[#FDFBFB]"
+  const inputText = darkMode ? "text-white" : "text-[#7F2323]"
+  const buttonBg = darkMode ? "bg-white text-[#7F2323]" : "bg-[#7F2323] text-[#FDFBFB]"
+  const buttonHover = darkMode ? "hover:bg-[#FDFBFB]" : "hover:bg-[#5e1a1a]"
+
   return (
     <motion.div
-      className={`p-6 rounded-lg shadow-md ${darkMode ? "bg-gray-700 text-gray-200" : "bg-white text-gray-800"}`}
+      className={`p-6 rounded-lg shadow-md ${bgColor} ${textColor}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -35,7 +42,7 @@ const BMICalculator = () => {
             id="height"
             value={height}
             onChange={(e) => setHeight(e.target.value)}
-            className={`w-full p-2 rounded ${darkMode ? "bg-gray-600 text-gray-200" : "bg-gray-100 text-gray-800"}`}
+            className={`w-full p-2 rounded ${inputBg} ${inputText} border border-[#FDFBFB] focus:outline-none`}
             required
           />
         </div>
@@ -48,13 +55,13 @@ const BMICalculator = () => {
             id="weight"
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
-            className={`w-full p-2 rounded ${darkMode ? "bg-gray-600 text-gray-200" : "bg-gray-100 text-gray-800"}`}
+            className={`w-full p-2 rounded ${inputBg} ${inputText} border border-[#FDFBFB] focus:outline-none`}
             required
           />
         </div>
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors duration-300"
+          className={`px-4 py-2 rounded transition duration-300 ${buttonBg} ${buttonHover}`}
         >
           Calculate BMI
         </button>
@@ -62,7 +69,15 @@ const BMICalculator = () => {
       {bmi && (
         <div className="mt-4">
           <p className="font-semibold">Your BMI: {bmi}</p>
-          <p>{bmi < 18.5 ? "Underweight" : bmi < 25 ? "Normal weight" : bmi < 30 ? "Overweight" : "Obese"}</p>
+          <p>
+            {bmi < 18.5
+              ? "Underweight"
+              : bmi < 25
+              ? "Normal weight"
+              : bmi < 30
+              ? "Overweight"
+              : "Obese"}
+          </p>
         </div>
       )}
     </motion.div>
@@ -70,4 +85,3 @@ const BMICalculator = () => {
 }
 
 export default BMICalculator
-
