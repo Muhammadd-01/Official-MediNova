@@ -6,14 +6,12 @@ function Footer() {
   const { darkMode } = useContext(DarkModeContext);
 
   const bgColor = "bg-white/30 dark:bg-[#0D3B66]/30 backdrop-blur-md shadow-md";
-  const textColor = darkMode ? "text-white" : "text-[#0D3B66]";
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]";
   const hoverColor = darkMode ? "hover:text-gray-300" : "hover:text-[#00C2CB]";
   const borderColor = darkMode ? "border-white/20" : "border-[#0D3B66]/20";
 
   return (
-    <footer
-      className={`py-10 transition-all duration-300 mt-auto w-full ${bgColor} ${textColor}`}
-    >
+    <footer className={`py-10 transition-all duration-300 mt-auto w-full ${bgColor} ${textColor}`}>
       <div className="px-4 max-w-screen-xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About */}

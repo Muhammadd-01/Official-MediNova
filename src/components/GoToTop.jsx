@@ -37,7 +37,7 @@ const GoToTop = () => {
       {isVisible && (
         <div
           onClick={scrollToTop}
-          className="fixed bottom-24 right-4 cursor-pointer bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300 z-50"
+          className="fixed bottom-24 right-4 cursor-pointer bg-[#002c4b] text-white p-2 rounded-full shadow-lg hover:bg-[#014269] transition-colors duration-300 z-50"
         >
           <ArrowUp size={24} />
         </div>

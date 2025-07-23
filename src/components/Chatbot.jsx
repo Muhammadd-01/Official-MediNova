@@ -55,9 +55,7 @@ function Chatbot() {
   return (
     <>
       <motion.button
-        className={`fixed bottom-4 right-4 p-4 rounded-full ${
-          darkMode ? "bg-blue-600 text-white" : "bg-blue-500 text-white"
-        } shadow-lg z-50`}
+        className="fixed bottom-4 right-4 p-4 rounded-full bg-[#072D5F] text-white shadow-lg z-50"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(!isOpen)}
@@ -76,7 +74,7 @@ function Chatbot() {
             } rounded-lg shadow-xl overflow-hidden z-50`}
           >
             <div className="flex flex-col h-full">
-              <div className={`p-4 ${darkMode ? "bg-gray-700" : "bg-blue-500"} text-white`}>
+              <div className={`p-4 ${darkMode ? "bg-gray-700" : "bg-[#072D5F]"} text-white`}>
                 <h3 className="text-lg font-semibold">MediNova Chatbot</h3>
               </div>
               <div className="flex-grow overflow-y-auto p-4">
@@ -85,9 +83,7 @@ function Chatbot() {
                     <span
                       className={`inline-block p-2 rounded-lg ${
                         message.sender === "user"
-                          ? darkMode
-                            ? "bg-blue-600 text-white"
-                            : "bg-blue-500 text-white"
+                          ? "bg-[#072D5F] text-white"
                           : darkMode
                             ? "bg-gray-700 text-white"
                             : "bg-gray-200 text-gray-800"
@@ -117,9 +113,7 @@ function Chatbot() {
                   />
                   <button
                     type="submit"
-                    className={`px-4 py-2 rounded-r-md ${
-                      darkMode ? "bg-blue-600 text-white" : "bg-blue-500 text-white"
-                    }`}
+                    className="px-4 py-2 rounded-r-md bg-[#072D5F] text-white"
                     disabled={isLoading}
                   >
                     <Send size={20} />
@@ -135,4 +129,3 @@ function Chatbot() {
 }
 
 export default Chatbot
-
