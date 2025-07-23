@@ -25,7 +25,11 @@ function DoctorProfile({ doctor, onBookAppointment }) {
 
   return (
     <motion.div
-      className={`${darkMode ? "bg-gray-800 text-[#01497C]" : "bg-white text-[#01497C]"} p-6 rounded-lg shadow-md`}
+      className={`${
+        darkMode
+          ? "bg-gray-900 text-white"
+          : "bg-white text-[#01497C]"
+      } p-6 rounded-lg shadow-md`}
       whileHover={{ scale: 1.05, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}
       whileTap={{ scale: 0.95 }}
       initial={{ opacity: 0, y: 20 }}
@@ -81,7 +85,11 @@ function DoctorProfile({ doctor, onBookAppointment }) {
       </motion.p>
 
       <motion.button
-        className={`w-full bg-[#01497C] hover:bg-[#013760] text-white px-4 py-2 rounded transition duration-300`}
+        className={`w-full ${
+          darkMode
+            ? "bg-[#01497C] hover:bg-[#013760] text-white"
+            : "bg-[#01497C] hover:bg-[#013760] text-white"
+        } px-4 py-2 rounded transition duration-300`}
         whileHover={{ scale: 1.05, boxShadow: "0 5px 10px rgba(0,0,0,0.2)" }}
         whileTap={{ scale: 0.95 }}
         onClick={onBookAppointment}

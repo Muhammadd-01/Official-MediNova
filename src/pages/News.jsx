@@ -19,7 +19,7 @@ export default function News() {
   const [country, setCountry] = useState("")
   const [sort, setSort] = useState("recent")
 
-  const API_KEY = "pub_c23217c4872549139b929f791ca977d8" // ✅ Use your NewsData.io key
+  const API_KEY = "pub_c23217c4872549139b929f791ca977d8"
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -64,6 +64,15 @@ export default function News() {
       ? [...news].sort((a, b) => b.popularity - a.popularity)
       : [...news].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
 
+  const darkMode = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+  const mainColor = "#06294D"
+  const mainTextClass = darkMode ? "text-[#A5C9FF]" : "text-[#06294D]"
+  const bgCard = darkMode ? "bg-gray-900" : "bg-white"
+  const descText = darkMode ? "text-gray-300" : "text-gray-600"
+  const metaText = darkMode ? "text-gray-500" : "text-gray-400"
+  const linkText = darkMode ? "text-[#89B9FF]" : "text-[#06294D]"
+  const buttonBg = darkMode ? "bg-[#89B9FF] hover:bg-[#A5C9FF]" : "bg-[#06294D] hover:bg-[#0D3E70]"
+
   return (
     <>
       <Helmet><title>Medical News | MediNova</title></Helmet>
@@ -80,10 +89,15 @@ export default function News() {
           ))}
         </select>
 
-        <button onClick={resetFilters} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Reset Filters</button>
+        <button
+          onClick={resetFilters}
+          className={`${buttonBg} text-white px-4 py-2 rounded transition duration-300`}
+        >
+          Reset Filters
+        </button>
       </div>
 
-      {loading && <p>Loading news...</p>}
+      {loading && <p className={`${mainTextClass}`}>Loading news...</p>}
       {error && <p className="text-red-600">{error}</p>}
 
       <AnimatePresence>
@@ -94,22 +108,22 @@ export default function News() {
           exit={{ opacity: 0 }}
         >
           {sortedNews.map((item, idx) => (
-            <div key={idx} className="bg-white shadow rounded-lg overflow-hidden">
+            <div key={idx} className={`${bgCard} shadow rounded-lg overflow-hidden`}>
               {item.image_url && (
                 <img src={item.image_url} alt={item.title} className="w-full h-48 object-cover" />
               )}
               <div className="p-4">
-                <h2 className="text-lg font-bold">{item.title}</h2>
-                <p className="text-gray-600 text-sm mt-2">{item.description}</p>
+                <h2 className={`text-lg font-bold mb-2 ${mainTextClass}`}>{item.title}</h2>
+                <p className={`text-sm mt-2 ${descText}`}>{item.description}</p>
                 <a
                   href={item.link}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-blue-600 text-sm mt-3 inline-block"
+                  className={`mt-3 inline-block font-semibold text-sm ${linkText}`}
                 >
                   Read full article →
                 </a>
-                <p className="text-xs text-gray-400 mt-2">
+                <p className={`text-xs mt-2 ${metaText}`}>
                   {item.source_id} | {new Date(item.pubDate).toLocaleString()}
                 </p>
               </div>
