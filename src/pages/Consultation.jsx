@@ -88,7 +88,7 @@ function Consultation() {
         <meta property="og:type" content="website" />
       </Helmet>
 
-      <div className={`${darkMode ? "text-blue-200" : "text-blue-900"}`}>
+      <div className={`${darkMode ? "text-[#D6EAFB]" : "text-[#01497C]"}`}>
         <motion.h1
           className="text-4xl font-bold mb-8 text-center"
           initial={{ opacity: 0, y: -20 }}
@@ -97,6 +97,7 @@ function Consultation() {
         >
           Book a Consultation
         </motion.h1>
+
         <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           initial={{ opacity: 0 }}
@@ -114,6 +115,7 @@ function Consultation() {
             </motion.div>
           ))}
         </motion.div>
+
         <motion.div
           className="mt-8"
           initial={{ opacity: 0, y: 20 }}
@@ -123,17 +125,17 @@ function Consultation() {
           <h2 className="text-2xl font-semibold mb-4">Related Services</h2>
           <ul className="list-disc list-inside">
             <li>
-              <Link to="/medicine-suggestion" className="text-blue-600 hover:underline">
+              <Link to="/medicine-suggestion" className="text-[#01497C] hover:underline hover:text-[#023A63]">
                 Get personalized medicine suggestions
               </Link>
             </li>
             <li>
-              <Link to="/articles" className="text-blue-600 hover:underline">
+              <Link to="/articles" className="text-[#01497C] hover:underline hover:text-[#023A63]">
                 Read our health articles
               </Link>
             </li>
             <li>
-              <Link to="/news" className="text-blue-600 hover:underline">
+              <Link to="/news" className="text-[#01497C] hover:underline hover:text-[#023A63]">
                 Stay updated with the latest medical news
               </Link>
             </li>
@@ -150,13 +152,15 @@ function Consultation() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className={`${darkMode ? "bg-blue-800 text-blue-200" : "bg-white text-blue-900"} p-8 rounded-lg shadow-xl max-w-md w-full`}
+              className={`${darkMode ? "bg-[#01497C] text-[#D6EAFB]" : "bg-white text-[#01497C]"} p-8 rounded-lg shadow-xl max-w-md w-full`}
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
             >
               <h2 className="text-2xl font-bold mb-4">Upgrade to Premium</h2>
-              <p className="mb-6">Unlock premium features to book consultations with our expert doctors.</p>
+              <p className="mb-6">
+                Unlock premium features to book consultations with our expert doctors.
+              </p>
               <div className="flex justify-between">
                 <button
                   onClick={() => setShowPremiumModal(false)}
@@ -166,10 +170,9 @@ function Consultation() {
                 </button>
                 <button
                   onClick={() => {
-                    // Handle premium upgrade logic here
                     setShowPremiumModal(false)
                   }}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300"
+                  className="bg-[#01497C] text-white px-4 py-2 rounded hover:bg-[#023A63] transition duration-300"
                 >
                   Upgrade Now
                 </button>
@@ -183,4 +186,3 @@ function Consultation() {
 }
 
 export default Consultation
-
