@@ -1,6 +1,6 @@
-import { useContext } from "react"
-import { motion } from "framer-motion"
-import { DarkModeContext } from "../App"
+import { useContext } from "react";
+import { motion } from "framer-motion";
+import { DarkModeContext } from "../App";
 
 const healthTips = [
   "Stay hydrated by drinking at least 8 glasses of water a day.",
@@ -11,14 +11,14 @@ const healthTips = [
   "Limit processed foods and sugary drinks in your diet.",
   "Don't skip breakfast – it's the most important meal of the day.",
   "Regular health check-ups can help detect issues early.",
-]
+];
 
 const HealthTips = () => {
-  const { darkMode } = useContext(DarkModeContext)
+  const { darkMode } = useContext(DarkModeContext);
 
-  const bgColor = darkMode ? "bg-[#7F2323]" : "bg-transparent"
-  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]"
-  const bulletColor = textColor // keep same as text color for consistency
+  const bgColor = darkMode ? "bg-[#0A2A43]" : "bg-transparent";
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]";
+  const bulletColor = textColor;
 
   return (
     <motion.div
@@ -43,7 +43,7 @@ const HealthTips = () => {
         ))}
       </ul>
     </motion.div>
-  )
-}
+  );
+};
 
-export default HealthTips
+export default HealthTips;

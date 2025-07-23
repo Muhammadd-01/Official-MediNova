@@ -8,18 +8,18 @@ const BMICalculator = () => {
   const [bmi, setBMI] = useState(null);
   const { darkMode } = useContext(DarkModeContext);
 
-  // Unified medical blue theme
-  const primaryText = darkMode ? "text-[#FDFBFB]" : "text-[#122C47]";
-  const bgColor = darkMode ? "bg-[#7F2323]" : "bg-white";
-  const inputBg = darkMode ? "bg-[#5e1a1a]" : "bg-[#FDFBFB]";
-  const inputText = darkMode ? "text-white" : "text-[#122C47]";
-  const borderColor = "border border-[#E1E1E1]";
+  // Color scheme adjusted to match navbar (dark: #0A2A43, light: #FDFBFB)
+  const primaryText = darkMode ? "text-[#FDFBFB]" : "text-[#0A2A43]";
+  const bgColor = darkMode ? "bg-[#0A2A43]" : "bg-[#FDFBFB]";
+  const inputBg = darkMode ? "bg-[#0A2A43]" : "bg-white";
+  const inputText = darkMode ? "text-[#FDFBFB]" : "text-[#0A2A43]";
+  const borderColor = darkMode ? "border border-[#FDFBFB]" : "border border-[#D9D9D9]";
   const buttonBg = darkMode
-    ? "bg-white text-[#7F2323]"
-    : "bg-[#122C47] text-[#FDFBFB]";
+    ? "bg-[#FDFBFB] text-[#0A2A43]"
+    : "bg-[#0A2A43] text-[#FDFBFB]";
   const buttonHover = darkMode
-    ? "hover:bg-[#FDFBFB] hover:text-[#7F2323]"
-    : "hover:text-gray-300 hover:bg-[#0f1f36]";
+    ? "hover:bg-[#d6d6d6] hover:text-[#0A2A43]"
+    : "hover:bg-[#163954] hover:text-[#FDFBFB]";
 
   return (
     <motion.div
