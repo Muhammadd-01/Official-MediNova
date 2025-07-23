@@ -23,13 +23,17 @@ function DoctorProfile({ doctor, onBookAppointment }) {
     },
   };
 
+  const bgColor = darkMode
+    ? "bg-[#0A2A43]"
+    : "bg-white backdrop-blur-sm"; // No opacity in light mode
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#01497C]";
+  const buttonBg = darkMode
+    ? "bg-[#FDFBFB] text-[#0A2A43] hover:bg-[#d6d6d6]"
+    : "bg-[#01497C] text-white hover:bg-[#013760]";
+
   return (
     <motion.div
-      className={`p-6 rounded-lg shadow-md transition-all duration-300 ${
-        darkMode
-          ? "bg-[#0D1B2A] text-[#FDFBFB]" // Exact same dark navbar color
-          : "bg-white text-[#01497C]"
-      }`}
+      className={`p-6 rounded-lg shadow-md transition-all duration-300 ${bgColor} ${textColor}`}
       whileHover={{ scale: 1.05, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}
       whileTap={{ scale: 0.95 }}
       initial={{ opacity: 0, y: 20 }}
@@ -85,11 +89,7 @@ function DoctorProfile({ doctor, onBookAppointment }) {
       </motion.p>
 
       <motion.button
-        className={`w-full px-4 py-2 rounded transition duration-300 ${
-          darkMode
-            ? "bg-[#1B263B] hover:bg-[#112B40] text-white" // Button in dark mode
-            : "bg-[#01497C] hover:bg-[#013760] text-white"
-        }`}
+        className={`w-full px-4 py-2 rounded transition duration-300 ${buttonBg}`}
         whileHover={{ scale: 1.05, boxShadow: "0 5px 10px rgba(0,0,0,0.2)" }}
         whileTap={{ scale: 0.95 }}
         onClick={onBookAppointment}

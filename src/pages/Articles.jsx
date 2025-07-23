@@ -125,53 +125,41 @@ function Articles() {
         <meta name="description" content="Explore trending health articles from Dev.to" />
       </Helmet>
 
-      {/* Main Text Header */}
       <div className={`px-4 md:px-10 pt-6 ${darkMode ? "text-[#B8C4F4]" : "text-[#081F5C]"}`}>
         <h1 className="text-3xl font-bold mb-6">Health Articles</h1>
 
         {/* Filters */}
         <div className="flex flex-col md:flex-row flex-wrap gap-4 mb-6">
-          <select
-            className="p-2 border rounded w-full md:w-1/3"
-            value={authorFilter}
-            onChange={(e) => setAuthorFilter(e.target.value)}
-          >
-            <option value="">Filter by Author</option>
-            {uniqueAuthors.map((author, index) => (
-              <option key={index} value={author}>
-                {author}
-              </option>
-            ))}
-          </select>
+          {[{
+            value: authorFilter, setter: setAuthorFilter, placeholder: "Filter by Author", options: uniqueAuthors
+          }, {
+            value: dateFilter, setter: setDateFilter, placeholder: "Filter by Date", options: uniqueDates
+          }, {
+            value: tagFilter, setter: setTagFilter, placeholder: "Filter by Tag", options: uniqueTags
+          }].map((filter, idx) => (
+            <select
+              key={idx}
+              className={`p-2 border rounded w-full md:w-1/3 ${
+                darkMode
+                  ? "bg-[#081F5C] text-white border-[#B8C4F4]"
+                  : "bg-white text-[#081F5C]"
+              }`}
+              value={filter.value}
+              onChange={(e) => filter.setter(e.target.value)}
+            >
+              <option value="">{filter.placeholder}</option>
+              {filter.options.map((item, index) => (
+                <option key={index} value={item}>{item}</option>
+              ))}
+            </select>
+          ))}
 
           <select
-            className="p-2 border rounded w-full md:w-1/3"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-          >
-            <option value="">Filter by Date</option>
-            {uniqueDates.map((date, index) => (
-              <option key={index} value={date}>
-                {date}
-              </option>
-            ))}
-          </select>
-
-          <select
-            className="p-2 border rounded w-full md:w-1/3"
-            value={tagFilter}
-            onChange={(e) => setTagFilter(e.target.value)}
-          >
-            <option value="">Filter by Tag</option>
-            {uniqueTags.map((tag, index) => (
-              <option key={index} value={tag}>
-                {tag}
-              </option>
-            ))}
-          </select>
-
-          <select
-            className="p-2 border rounded w-full md:w-1/3"
+            className={`p-2 border rounded w-full md:w-1/3 ${
+              darkMode
+                ? "bg-[#081F5C] text-white border-[#B8C4F4]"
+                : "bg-white text-[#081F5C]"
+            }`}
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
@@ -222,7 +210,7 @@ function Articles() {
                     href={article.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block mt-2 bg-[#081F5C] text-white px-4 py-2 rounded-full hover:bg-[#061640] text-sm transition duration-300"
+                    className="inline-block mt-2 bg-white text-[#081F5C] px-4 py-2 rounded-full hover:bg-gray-100 text-sm transition duration-300 font-semibold"
                   >
                     Read More ↗
                   </a>
