@@ -12,30 +12,30 @@ function SocialShare({ url, title }) {
 
   return (
     <div className="mt-4 flex gap-2">
-      <a
-        href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="bg-[#081F5C] text-white px-3 py-1 rounded-full text-xs hover:bg-[#061640] transition"
-      >
-        Facebook
-      </a>
-      <a
-        href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="bg-[#081F5C] text-white px-3 py-1 rounded-full text-xs hover:bg-[#061640] transition"
-      >
-        Twitter
-      </a>
-      <a
-        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="bg-[#081F5C] text-white px-3 py-1 rounded-full text-xs hover:bg-[#061640] transition"
-      >
-        LinkedIn
-      </a>
+      {[
+        {
+          href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+          label: "Facebook",
+        },
+        {
+          href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+          label: "Twitter",
+        },
+        {
+          href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+          label: "LinkedIn",
+        },
+      ].map((item, index) => (
+        <a
+          key={index}
+          href={item.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-[#081F5C] text-white px-3 py-1 rounded-full text-xs hover:bg-[#061640] transition"
+        >
+          {item.label}
+        </a>
+      ))}
     </div>
   );
 }
@@ -83,8 +83,7 @@ function Articles() {
 
     if (sortBy === "popularity") {
       filtered = [...filtered].sort(
-        (a, b) =>
-          (b.public_reactions_count || 0) - (a.public_reactions_count || 0)
+        (a, b) => (b.public_reactions_count || 0) - (a.public_reactions_count || 0)
       );
     }
 
@@ -126,9 +125,11 @@ function Articles() {
         <meta name="description" content="Explore trending health articles from Dev.to" />
       </Helmet>
 
-      <div className={`${darkMode ? "text-[#B8C4F4]" : "text-[#081F5C]"}`}>
+      {/* Main Text Header */}
+      <div className={`px-4 md:px-10 pt-6 ${darkMode ? "text-[#B8C4F4]" : "text-[#081F5C]"}`}>
         <h1 className="text-3xl font-bold mb-6">Health Articles</h1>
 
+        {/* Filters */}
         <div className="flex flex-col md:flex-row flex-wrap gap-4 mb-6">
           <select
             className="p-2 border rounded w-full md:w-1/3"
@@ -186,7 +187,8 @@ function Articles() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 min-h-[400px]">
+        {/* Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10 min-h-[400px]">
           <AnimatePresence mode="wait">
             {loading ? (
               <p>Loading...</p>
@@ -200,7 +202,9 @@ function Articles() {
                   whileHover={{ scale: 1.05, boxShadow: "0px 15px 30px rgba(0,0,0,0.2)" }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
-                  className={`transform transition-transform duration-300 ${darkMode ? "bg-[#081F5C] text-white" : "bg-white text-[#081F5C]"} p-6 rounded-2xl border border-[#081F5C]`}
+                  className={`transform transition-transform duration-300 ${
+                    darkMode ? "bg-[#081F5C] text-white" : "bg-white text-[#081F5C]"
+                  } p-6 rounded-2xl border border-[#081F5C]`}
                 >
                   {article.cover_image && (
                     <LazyImage
@@ -243,6 +247,7 @@ function Articles() {
           </AnimatePresence>
         </div>
 
+        {/* Pagination */}
         <div className="flex justify-center items-center gap-4 mt-6">
           <motion.button
             whileTap={{ scale: 0.95 }}
