@@ -9,10 +9,7 @@ function Header() {
   const { darkMode, setDarkMode } = useContext(DarkModeContext);
   const { isAuthenticated, logout } = useContext(AuthContext);
 
-  const headerBg = darkMode
-    ? "bg-[#0D3B66]" // Dark navy blue
-    : "bg-white/30 backdrop-blur-md";
-
+  const headerBg = "bg-white/30 dark:bg-[#0D3B66]/30 backdrop-blur-md";
   const textColor = darkMode ? "text-white" : "text-[#0D3B66]";
 
   return (

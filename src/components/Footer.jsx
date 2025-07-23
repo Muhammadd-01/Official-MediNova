@@ -5,10 +5,7 @@ import { DarkModeContext } from "../App";
 function Footer() {
   const { darkMode } = useContext(DarkModeContext);
 
-  const bgColor = darkMode
-    ? "bg-[#0D3B66]"
-    : "bg-white/80 backdrop-blur shadow-md";
-
+  const bgColor = "bg-white/30 dark:bg-[#0D3B66]/30 backdrop-blur-md shadow-md";
   const textColor = darkMode ? "text-white" : "text-[#0D3B66]";
   const hoverColor = darkMode ? "hover:text-gray-300" : "hover:text-[#00C2CB]";
   const borderColor = darkMode ? "border-white/20" : "border-[#0D3B66]/20";
