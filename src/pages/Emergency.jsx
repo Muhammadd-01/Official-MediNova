@@ -1,4 +1,3 @@
-// ✅ Customized Emergency.jsx - Google Maps like features
 import { useState, useContext, useEffect } from "react"
 import { Helmet } from "react-helmet-async"
 import { motion } from "framer-motion"
@@ -6,9 +5,6 @@ import {
   Phone,
   Ambulance,
   Hospital,
-  Heart,
-  Wind,
-  Plus,
   ChevronDown,
   ChevronUp,
 } from "lucide-react"
@@ -27,7 +23,6 @@ import "leaflet-geosearch/dist/geosearch.css"
 import L from "leaflet"
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch"
 
-// Fix Leaflet icons
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
   iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
@@ -40,13 +35,13 @@ function EmergencyGuide({ title, steps }) {
     <div className="mb-4">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex justify-between items-center w-full p-4 bg-red-100 dark:bg-blue-800 dark:text-white rounded-lg"
+        className="flex justify-between items-center w-full p-4 bg-red-100 dark:bg-[#1E3A8A] dark:text-white rounded-lg"
       >
         <h3 className="text-lg font-semibold">{title}</h3>
         {isExpanded ? <ChevronUp /> : <ChevronDown />}
       </button>
       {isExpanded && (
-        <ol className="list-decimal list-inside mt-2 p-4 bg-white dark:bg-blue-900 dark:text-white rounded-lg space-y-1 text-sm">
+        <ol className="list-decimal list-inside mt-2 p-4 bg-white dark:bg-[#1E3A8A] dark:text-white rounded-lg space-y-1 text-sm">
           {steps.map((step, i) => (
             <li key={i}>{step}</li>
           ))}
@@ -168,7 +163,7 @@ out body;
         <meta name="description" content="Emergency guides & live map with nearby hospitals/clinics." />
       </Helmet>
 
-      <div className={`max-w-5xl mx-auto px-4 py-8 ${darkMode ? "text-white" : "text-blue-900"}`}>
+      <div className={`max-w-5xl mx-auto px-4 py-8 ${darkMode ? "text-white" : "text-[#1E3A8A]"}`}>
         <motion.h1 className="text-3xl font-bold mb-6 text-center">Emergency Services</motion.h1>
 
         <motion.p className="text-xl mb-8 text-center">
@@ -176,11 +171,15 @@ out body;
         </motion.p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {emergencyServices.map((s, idx) => (
+          {emergencyServices.map((s) => (
             <motion.div key={s.name} className={`p-6 rounded-lg shadow-md text-center ${darkMode ? "bg-gray-800" : "bg-white"}`}>
               <s.icon className="w-12 h-12 mx-auto mb-4" />
               <h2 className="text-xl font-semibold mb-2">{s.name}</h2>
-              <p><a href={`tel:${s.phone}`} className="text-blue-500 hover:underline">{s.phone}</a></p>
+              <p>
+                <a href={`tel:${s.phone}`} className="text-[#1E3A8A] hover:underline">
+                  {s.phone}
+                </a>
+              </p>
             </motion.div>
           ))}
         </div>
@@ -206,7 +205,7 @@ out body;
               <Marker position={[location.lat, location.lng]}>
                 <Popup>You are here</Popup>
               </Marker>
-              <Circle center={[location.lat, location.lng]} radius={500} pathOptions={{ color: "blue" }} />
+              <Circle center={[location.lat, location.lng]} radius={500} pathOptions={{ color: "#1E3A8A" }} />
               <SearchControl location={location} />
               {hospitals.map((h) => (
                 <Marker key={h.id} position={[h.lat, h.lon]}>
@@ -223,4 +222,4 @@ out body;
   )
 }
 
-export default Emergency;
+export default Emergency

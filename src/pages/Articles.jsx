@@ -16,7 +16,7 @@ function SocialShare({ url, title }) {
         href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs hover:bg-blue-700 transition"
+        className="bg-[#081F5C] text-white px-3 py-1 rounded-full text-xs hover:bg-[#061640] transition"
       >
         Facebook
       </a>
@@ -24,7 +24,7 @@ function SocialShare({ url, title }) {
         href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="bg-blue-400 text-white px-3 py-1 rounded-full text-xs hover:bg-blue-500 transition"
+        className="bg-[#081F5C] text-white px-3 py-1 rounded-full text-xs hover:bg-[#061640] transition"
       >
         Twitter
       </a>
@@ -32,7 +32,7 @@ function SocialShare({ url, title }) {
         href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="bg-blue-800 text-white px-3 py-1 rounded-full text-xs hover:bg-blue-900 transition"
+        className="bg-[#081F5C] text-white px-3 py-1 rounded-full text-xs hover:bg-[#061640] transition"
       >
         LinkedIn
       </a>
@@ -126,7 +126,7 @@ function Articles() {
         <meta name="description" content="Explore trending health articles from Dev.to" />
       </Helmet>
 
-      <div className={`${darkMode ? "text-blue-200" : "text-blue-900"}`}>
+      <div className={`${darkMode ? "text-[#B8C4F4]" : "text-[#081F5C]"}`}>
         <h1 className="text-3xl font-bold mb-6">Health Articles</h1>
 
         <div className="flex flex-col md:flex-row flex-wrap gap-4 mb-6">
@@ -180,7 +180,7 @@ function Articles() {
 
           <button
             onClick={resetFilters}
-            className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full md:w-auto"
+            className="p-2 bg-[#081F5C] text-white rounded hover:bg-[#061640] w-full md:w-auto"
           >
             Reset Filters
           </button>
@@ -200,7 +200,7 @@ function Articles() {
                   whileHover={{ scale: 1.05, boxShadow: "0px 15px 30px rgba(0,0,0,0.2)" }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
-                  className={`transform transition-transform duration-300 ${darkMode ? "bg-blue-800 text-white" : "bg-white text-blue-900"} p-6 rounded-2xl border border-blue-200`}
+                  className={`transform transition-transform duration-300 ${darkMode ? "bg-[#081F5C] text-white" : "bg-white text-[#081F5C]"} p-6 rounded-2xl border border-[#081F5C]`}
                 >
                   {article.cover_image && (
                     <LazyImage
@@ -211,14 +211,14 @@ function Articles() {
                   )}
                   <h2 className="text-xl font-semibold mb-2 line-clamp-2">{article.title}</h2>
                   <p className="mb-4 text-sm line-clamp-3">{article.description}</p>
-                  <p className={`text-xs ${darkMode ? "text-blue-300" : "text-blue-600"} mb-2`}>
+                  <p className={`text-xs ${darkMode ? "text-[#B8C4F4]" : "text-[#081F5C]"} mb-2`}>
                     By {article.user?.name || "Unknown Author"} | {article.readable_publish_date}
                   </p>
                   <a
                     href={article.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block mt-2 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 text-sm transition duration-300"
+                    className="inline-block mt-2 bg-[#081F5C] text-white px-4 py-2 rounded-full hover:bg-[#061640] text-sm transition duration-300"
                   >
                     Read More ↗
                   </a>
@@ -230,7 +230,7 @@ function Articles() {
                         <Link
                           key={index}
                           to={`/search?q=${encodeURIComponent(tag)}`}
-                          className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs hover:bg-blue-200"
+                          className="bg-[#E2E8F0] text-[#081F5C] px-2 py-1 rounded-full text-xs hover:bg-[#CBD5E1]"
                         >
                           #{tag}
                         </Link>
@@ -249,7 +249,7 @@ function Articles() {
             whileHover={{ scale: 1.05 }}
             disabled={page <= 1}
             onClick={() => handlePageChange("prev")}
-            className="bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold px-6 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+            className="bg-gradient-to-r from-[#081F5C] to-[#0B285F] text-white font-semibold px-6 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50"
           >
             Previous
           </motion.button>
@@ -263,7 +263,7 @@ function Articles() {
             whileHover={{ scale: 1.05 }}
             disabled={page >= totalPages}
             onClick={() => handlePageChange("next")}
-            className="bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold px-6 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+            className="bg-gradient-to-r from-[#081F5C] to-[#0B285F] text-white font-semibold px-6 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50"
           >
             Next
           </motion.button>
