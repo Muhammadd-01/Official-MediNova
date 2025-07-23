@@ -54,14 +54,14 @@ function Register() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className={`text-center text-3xl font-extrabold ${darkMode ? "text-white" : "text-gray-900"}`}>
+          <h2 className={`text-center text-3xl font-extrabold ${darkMode ? "text-white" : "text-[#003366]"}`}>
             Create Your MediNova Account
           </h2>
 
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             {/* Full Name */}
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="fullName" className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
                 Full Name
               </label>
               <input
@@ -71,7 +71,7 @@ function Register() {
                 required
                 placeholder="John Doe"
                 className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
-                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
+                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-[#003366]"
                 }`}
                 value={formData.fullName}
                 onChange={handleChange}
@@ -80,7 +80,7 @@ function Register() {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="email" className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
                 Email
               </label>
               <input
@@ -90,7 +90,7 @@ function Register() {
                 required
                 placeholder="you@example.com"
                 className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
-                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
+                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-[#003366]"
                 }`}
                 value={formData.email}
                 onChange={handleChange}
@@ -99,7 +99,7 @@ function Register() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="password" className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
                 Password
               </label>
               <input
@@ -109,7 +109,7 @@ function Register() {
                 required
                 placeholder="********"
                 className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
-                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
+                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-[#003366]"
                 }`}
                 value={formData.password}
                 onChange={handleChange}
@@ -118,7 +118,7 @@ function Register() {
 
             {/* Date of Birth */}
             <div>
-              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="dateOfBirth" className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
                 Date of Birth
               </label>
               <input
@@ -127,7 +127,7 @@ function Register() {
                 type="date"
                 required
                 className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
-                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
+                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-[#003366]"
                 }`}
                 value={formData.dateOfBirth}
                 onChange={handleChange}
@@ -136,7 +136,7 @@ function Register() {
 
             {/* Phone Number */}
             <div>
-              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="phoneNumber" className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
                 Phone Number
               </label>
               <input
@@ -145,7 +145,7 @@ function Register() {
                 type="tel"
                 placeholder="+92 300 1234567"
                 className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
-                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
+                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-[#003366]"
                 }`}
                 value={formData.phoneNumber}
                 onChange={handleChange}
@@ -154,7 +154,7 @@ function Register() {
 
             {/* Gender */}
             <div>
-              <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="gender" className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
                 Gender
               </label>
               <select
@@ -162,7 +162,7 @@ function Register() {
                 name="gender"
                 required
                 className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
-                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
+                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-[#003366]"
                 }`}
                 value={formData.gender}
                 onChange={handleChange}
@@ -176,7 +176,7 @@ function Register() {
 
             {/* Country */}
             <div>
-              <label htmlFor="country" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="country" className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
                 Country
               </label>
               <input
@@ -186,7 +186,7 @@ function Register() {
                 required
                 placeholder="Pakistan"
                 className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
-                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-gray-900"
+                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-[#003366]"
                 }`}
                 value={formData.country}
                 onChange={handleChange}
@@ -200,13 +200,13 @@ function Register() {
                 name="termsAccepted"
                 type="checkbox"
                 required
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                className="h-4 w-4 text-[#003366] focus:ring-[#003366] border-gray-300 rounded"
                 checked={formData.termsAccepted}
                 onChange={handleChange}
               />
-              <label htmlFor="termsAccepted" className={`ml-2 text-sm ${darkMode ? "text-gray-300" : "text-gray-900"}`}>
+              <label htmlFor="termsAccepted" className={`ml-2 text-sm ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
                 I agree to the{" "}
-                <a href="#" className="text-indigo-600 hover:text-indigo-500">
+                <a href="#" className="text-[#003366] underline hover:text-[#001933]">
                   Terms and Conditions
                 </a>
               </label>
@@ -216,7 +216,7 @@ function Register() {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="w-full flex justify-center py-2 px-4 text-sm font-medium rounded-md text-white bg-[#003366] hover:bg-[#001933] focus:ring-2 focus:ring-offset-2 focus:ring-[#003366]"
               >
                 Register
               </button>
