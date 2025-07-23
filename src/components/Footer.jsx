@@ -5,10 +5,13 @@ import { DarkModeContext } from "../App";
 function Footer() {
   const { darkMode } = useContext(DarkModeContext);
 
-  const bgColor = "bg-white/30 dark:bg-[#0D3B66]/30 backdrop-blur-md shadow-md";
-  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]";
+  // Exact navbar theme colors
+  const bgColor = darkMode
+    ? "bg-[#0A2A43]/90 backdrop-blur-md"
+    : "bg-white/30 backdrop-blur-md";
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A2A43]";
   const hoverColor = darkMode ? "hover:text-gray-300" : "hover:text-[#00C2CB]";
-  const borderColor = darkMode ? "border-white/20" : "border-[#0D3B66]/20";
+  const borderColor = darkMode ? "border-white/20" : "border-[#0A2A43]/20";
 
   return (
     <footer className={`py-10 transition-all duration-300 mt-auto w-full ${bgColor} ${textColor}`}>

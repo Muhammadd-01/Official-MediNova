@@ -29,21 +29,20 @@ const sponsors = [
 const SponsorSlider = () => {
   const { darkMode } = useContext(DarkModeContext);
 
-  // Reused styles from BMI calculator
-  const primaryText = darkMode ? "text-[#FDFBFB]" : "text-[#0A2A43]";
-  const bgColor = darkMode ? "bg-[#0A2A43]" : "bg-[#FDFBFB]";
-  const borderColor = darkMode
-    ? "border border-[#FDFBFB]/10"
-    : "border border-[#E2E8F0]";
+  const bgColor = darkMode ? "bg-[#0A2A43]" : "bg-white";
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A2A43]";
+  const borderStyle = darkMode ? "border border-[#FDFBFB]/20" : "border border-[#E2E8F0]";
 
   return (
     <div
-      className={`w-full overflow-hidden p-4 rounded-lg shadow-md ${bgColor} ${primaryText} ${borderColor}`}
+      className={`w-full overflow-hidden p-4 rounded-lg shadow-md ${bgColor} ${textColor} ${borderStyle}`}
     >
       <h3 className="text-xl font-semibold mb-4">Our Sponsors</h3>
       <motion.div
         className="flex items-center"
-        animate={{ x: [0, -1920] }}
+        animate={{
+          x: [0, -1920],
+        }}
         transition={{
           x: {
             repeat: Number.POSITIVE_INFINITY,
