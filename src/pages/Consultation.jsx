@@ -169,9 +169,7 @@ function Consultation() {
                   Cancel
                 </button>
                 <button
-                  onClick={() => {
-                    setShowPremiumModal(false)
-                  }}
+                  onClick={() => setShowPremiumModal(false)}
                   className="bg-[#01497C] text-white px-4 py-2 rounded hover:bg-[#023A63] transition duration-300"
                 >
                   Upgrade Now
