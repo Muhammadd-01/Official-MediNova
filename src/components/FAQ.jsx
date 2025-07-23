@@ -1,4 +1,5 @@
-import React from "react"
+import React, { useContext } from "react";
+import { DarkModeContext } from "../App";
 
 const faqs = [
   {
@@ -26,23 +27,27 @@ const faqs = [
     answer:
       "We welcome your feedback! You can use our Feedback page to share your thoughts, suggestions, or concerns about our website and services.",
   },
-]
+];
 
 function FAQ() {
+  const { darkMode } = useContext(DarkModeContext);
+
+  const primaryText = darkMode ? "text-[#FDFBFB]" : "text-[#0A2A43]";
+  const bgColor = darkMode ? "bg-[#0A2A43]" : "bg-[#FDFBFB]";
+  const boxBg = darkMode ? "bg-[#0A2A43]" : "bg-[#FDFBFB]";
+  const boxText = darkMode ? "text-[#FDFBFB]" : "text-[#0A2A43]";
+  const border = darkMode ? "border border-[#FDFBFB]/20" : "border border-[#E5E7EB]";
+
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4 text-[#0A2A43] dark:text-[#FDFBFB]">
+    <div className={`mt-8 ${primaryText}`}>
+      <h2 className={`text-2xl font-bold mb-4 ${primaryText}`}>
         Frequently Asked Questions
       </h2>
       <div className="space-y-4">
         {faqs.map((faq, index) => (
           <div
             key={index}
-            className={`
-              p-4 rounded-lg shadow
-              bg-[#FDFBFB] text-[#0A2A43]
-              dark:bg-[#0A2A43] dark:text-[#FDFBFB]
-            `}
+            className={`p-4 rounded-lg shadow ${boxBg} ${boxText} ${border}`}
           >
             <h3 className="text-lg font-semibold mb-2">{faq.question}</h3>
             <p>{faq.answer}</p>
@@ -50,7 +55,7 @@ function FAQ() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-export default FAQ
+export default FAQ;

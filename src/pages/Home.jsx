@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { useContext } from "react"
-import { Helmet } from "react-helmet-async"
-import { Link } from "react-router-dom"
-import { motion } from "framer-motion"
-import Slider from "../components/Slider"
-import NewsletterSignup from "../components/NewsletterSignup"
-import FAQ from "../components/FAQ"
-import BMICalculator from "../components/BMICalculator"
-import HealthTips from "../components/HealthTips"
-import HorizontalSponsorSlider from "../components/HorizontalSponsorSlider"
-import { DarkModeContext } from "../App"
+import { useContext } from "react";
+import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import Slider from "../components/Slider";
+import NewsletterSignup from "../components/NewsletterSignup";
+import FAQ from "../components/FAQ";
+import BMICalculator from "../components/BMICalculator";
+import HealthTips from "../components/HealthTips";
+import HorizontalSponsorSlider from "../components/HorizontalSponsorSlider";
+import { DarkModeContext } from "../App";
 
 const sponsors = [
   { name: "PharmaCorp", logo: "/sponsor-logos/pharmacorp.png" },
@@ -18,16 +18,16 @@ const sponsors = [
   { name: "HealthPlus", logo: "/sponsor-logos/healthplus.png" },
   { name: "BioLife", logo: "/sponsor-logos/biolife.png" },
   { name: "CureAll", logo: "/sponsor-logos/cureall.png" },
-]
+];
 
 function Home() {
-  const { darkMode } = useContext(DarkModeContext)
+  const { darkMode } = useContext(DarkModeContext);
 
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.6 },
-  }
+  };
 
   return (
     <>
@@ -50,14 +50,21 @@ function Home() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <motion.h1 className="text-5xl font-bold mb-8 text-center text-[#0A3D62]" {...fadeInUp}>
+          <motion.h1
+            className="text-5xl font-bold mb-8 text-center text-[#0A3D62] dark:text-[#FDFBFB]"
+            {...fadeInUp}
+          >
             Welcome to MediNova
           </motion.h1>
 
-          <motion.p className="text-xl mb-12 text-center text-muted-foreground" {...fadeInUp}>
+          <motion.p
+            className="text-xl mb-12 text-center text-muted-foreground dark:text-[#FDFBFB]"
+            {...fadeInUp}
+          >
             Your digital bridge to licensed doctors, evidence-based medicine recommendations, and real-time health guidance — all under one secure platform.
           </motion.p>
 
+          {/* Services Cards */}
           <motion.div
             className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16"
             initial="initial"
@@ -67,38 +74,50 @@ function Home() {
             {[
               {
                 title: "Medicine Suggestions",
-                image: "https://images.unsplash.com/photo-1585435557343-3b092031a831?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-                description: "Receive AI-assisted, guideline-based medicine suggestions — reviewed by certified pharmacists.",
+                image:
+                  "https://images.unsplash.com/photo-1585435557343-3b092031a831?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                description:
+                  "Receive AI-assisted, guideline-based medicine suggestions — reviewed by certified pharmacists.",
                 link: "/medicine-suggestion",
               },
               {
                 title: "Expert Consultations",
-                image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-                description: "Book secure consultations with specialists in cardiology, dermatology, mental health, and more.",
+                image:
+                  "https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                description:
+                  "Book secure consultations with specialists in cardiology, dermatology, mental health, and more.",
                 link: "/consultation",
               },
               {
                 title: "Health Articles",
-                image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-                description: "Explore doctor-reviewed articles on prevention, nutrition, and chronic conditions.",
+                image:
+                  "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                description:
+                  "Explore doctor-reviewed articles on prevention, nutrition, and chronic conditions.",
                 link: "/articles",
               },
             ].map((service, index) => (
               <motion.div
                 key={service.title}
-                className="bg-white dark:bg-[#0A3D62] text-card-foreground rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl"
+                className="bg-white dark:bg-[#0A2A43] text-card-foreground dark:text-[#FDFBFB] rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 {...fadeInUp}
                 transition={{ delay: 0.1 * (index + 1) }}
               >
-                <img src={service.image || "/placeholder.svg"} alt={service.title} className="w-full h-48 object-cover" />
+                <img
+                  src={service.image || "/placeholder.svg"}
+                  alt={service.title}
+                  className="w-full h-48 object-cover"
+                />
                 <div className="p-6">
-                  <h2 className="text-2xl font-semibold mb-4 text-[#0A3D62] dark:text-white">{service.title}</h2>
-                  <p className="text-muted-foreground mb-4">{service.description}</p>
+                  <h2 className="text-2xl font-semibold mb-4 text-[#0A3D62] dark:text-[#FDFBFB]">
+                    {service.title}
+                  </h2>
+                  <p className="text-muted-foreground dark:text-[#FDFBFB] mb-4">{service.description}</p>
                   <Link
                     to={service.link}
-                    className="inline-block bg-[#0A3D62] text-white px-4 py-2 rounded hover:text-gray-300 transition-colors duration-300"
+                    className="inline-block bg-[#0A3D62] text-white px-4 py-2 rounded hover:bg-[#08253A] transition-colors duration-300"
                   >
                     Learn More
                   </Link>
@@ -107,54 +126,86 @@ function Home() {
             ))}
           </motion.div>
 
-          <motion.div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16" {...fadeInUp} transition={{ delay: 0.4 }}>
+          {/* Tools Section */}
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16"
+            {...fadeInUp}
+            transition={{ delay: 0.4 }}
+          >
             <BMICalculator />
             <HealthTips />
           </motion.div>
 
-          <motion.div className="bg-white dark:bg-[#0A3D62] text-card-foreground rounded-lg shadow-lg p-8 mb-16 transition-all duration-300 hover:shadow-xl" {...fadeInUp}>
-            <h2 className="text-3xl font-bold mb-6 text-[#0A3D62] dark:text-white">Why Choose MediNova?</h2>
+          {/* Why MediNova */}
+          <motion.div
+            className="bg-white dark:bg-[#0A2A43] text-card-foreground dark:text-[#FDFBFB] rounded-lg shadow-lg p-8 mb-16 transition-all duration-300 hover:shadow-xl"
+            {...fadeInUp}
+          >
+            <h2 className="text-3xl font-bold mb-6 text-[#0A3D62] dark:text-[#FDFBFB]">
+              Why Choose MediNova?
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[
                 {
                   title: "Expert Medical Advice",
-                  description: "All content is reviewed by qualified healthcare providers following WHO and CDC guidelines.",
+                  description:
+                    "All content is reviewed by qualified healthcare providers following WHO and CDC guidelines.",
                 },
                 {
                   title: "Personalized Care",
-                  description: "Get treatment paths based on AI + doctor-reviewed diagnostics tailored to your symptoms and history.",
+                  description:
+                    "Get treatment paths based on AI + doctor-reviewed diagnostics tailored to your symptoms and history.",
                 },
                 {
                   title: "24/7 Accessibility",
-                  description: "Use MediNova anytime from home or travel — all services are mobile-optimized and secure.",
+                  description:
+                    "Use MediNova anytime from home or travel — all services are mobile-optimized and secure.",
                 },
                 {
                   title: "E-Prescription Support",
-                  description: "Doctors can issue digital prescriptions that can be filled from our verified pharmacy partners.",
+                  description:
+                    "Doctors can issue digital prescriptions that can be filled from our verified pharmacy partners.",
                 },
               ].map((item, index) => (
-                <motion.div key={item.title} {...fadeInUp} transition={{ delay: 0.1 * (index + 1) }}>
-                  <h3 className="text-xl font-semibold mb-4 text-[#0A3D62] dark:text-white">{item.title}</h3>
-                  <p className="text-muted-foreground">{item.description}</p>
+                <motion.div
+                  key={item.title}
+                  {...fadeInUp}
+                  transition={{ delay: 0.1 * (index + 1) }}
+                >
+                  <h3 className="text-xl font-semibold mb-4 text-[#0A3D62] dark:text-[#FDFBFB]">
+                    {item.title}
+                  </h3>
+                  <p className="text-muted-foreground dark:text-[#FDFBFB]">
+                    {item.description}
+                  </p>
                 </motion.div>
               ))}
             </div>
           </motion.div>
 
+          {/* Trust Section */}
           <motion.div className="mb-16" {...fadeInUp}>
-            <h2 className="text-3xl font-bold mb-6 text-center text-[#0A3D62] dark:text-white">
+            <h2 className="text-3xl font-bold mb-6 text-center text-[#0A3D62] dark:text-[#FDFBFB]">
               Trusted by Healthcare Professionals
             </h2>
-            <p className="text-lg text-center mb-4 text-muted-foreground">
+            <p className="text-lg text-center mb-4 text-muted-foreground dark:text-[#FDFBFB]">
               Used by 1,200+ licensed practitioners and recommended by 40+ clinics nationwide.
             </p>
-            <p className="text-md text-center text-muted-foreground">
+            <p className="text-md text-center text-muted-foreground dark:text-[#FDFBFB]">
               MediNova complies with HIPAA, HIMS-Pakistan, and ICD-11 medical data standards.
             </p>
           </motion.div>
 
-          <motion.div className="mb-16" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.6 }}>
-            <h2 className="text-3xl font-bold mb-6 text-center text-[#0A3D62] dark:text-white">Our Sponsors</h2>
+          {/* Sponsors */}
+          <motion.div
+            className="mb-16"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            <h2 className="text-3xl font-bold mb-6 text-center text-[#0A3D62] dark:text-[#FDFBFB]">
+              Our Sponsors
+            </h2>
             <HorizontalSponsorSlider />
           </motion.div>
 
@@ -163,7 +214,7 @@ function Home() {
         </motion.div>
       </div>
     </>
-  )
+  );
 }
 
-export default Home
+export default Home;
