@@ -25,7 +25,7 @@ function DoctorProfile({ doctor, onBookAppointment }) {
 
   return (
     <motion.div
-      className={`${darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"} p-6 rounded-lg shadow-md`}
+      className={`${darkMode ? "bg-gray-800 text-[#01497C]" : "bg-white text-[#01497C]"} p-6 rounded-lg shadow-md`}
       whileHover={{ scale: 1.05, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}
       whileTap={{ scale: 0.95 }}
       initial={{ opacity: 0, y: 20 }}
@@ -35,6 +35,7 @@ function DoctorProfile({ doctor, onBookAppointment }) {
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(schemaData)}</script>
       </Helmet>
+
       <motion.img
         src={doctor.image || "/placeholder.svg"}
         alt={doctor.name}
@@ -42,6 +43,7 @@ function DoctorProfile({ doctor, onBookAppointment }) {
         whileHover={{ scale: 1.1, rotate: 360 }}
         transition={{ duration: 0.5 }}
       />
+
       <motion.h2
         className="text-2xl font-semibold mb-2 text-center"
         initial={{ opacity: 0 }}
@@ -50,6 +52,7 @@ function DoctorProfile({ doctor, onBookAppointment }) {
       >
         {doctor.name}
       </motion.h2>
+
       <motion.p
         className="mb-2 text-center"
         initial={{ opacity: 0 }}
@@ -58,6 +61,7 @@ function DoctorProfile({ doctor, onBookAppointment }) {
       >
         <strong>Specialization:</strong> {doctor.specialization}
       </motion.p>
+
       <motion.p
         className="mb-2 text-center"
         initial={{ opacity: 0 }}
@@ -66,6 +70,7 @@ function DoctorProfile({ doctor, onBookAppointment }) {
       >
         <strong>Availability:</strong> {doctor.availability}
       </motion.p>
+
       <motion.p
         className="mb-4 text-center"
         initial={{ opacity: 0 }}
@@ -74,8 +79,9 @@ function DoctorProfile({ doctor, onBookAppointment }) {
       >
         <strong>Phone:</strong> {doctor.phone}
       </motion.p>
+
       <motion.button
-        className={`w-full ${darkMode ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-600 hover:bg-blue-700"} text-white px-4 py-2 rounded transition duration-300`}
+        className={`w-full bg-[#01497C] hover:bg-[#013760] text-white px-4 py-2 rounded transition duration-300`}
         whileHover={{ scale: 1.05, boxShadow: "0 5px 10px rgba(0,0,0,0.2)" }}
         whileTap={{ scale: 0.95 }}
         onClick={onBookAppointment}
@@ -87,4 +93,3 @@ function DoctorProfile({ doctor, onBookAppointment }) {
 }
 
 export default DoctorProfile
-
