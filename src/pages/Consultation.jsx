@@ -164,7 +164,7 @@ function Consultation() {
               <div className="flex justify-between">
                 <button
                   onClick={() => setShowPremiumModal(false)}
-                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition duration-300"
+                  className="bg-[#01497C] text-white px-4 py-2 rounded hover:bg-[#023A63] transition duration-300"
                 >
                   Cancel
                 </button>
