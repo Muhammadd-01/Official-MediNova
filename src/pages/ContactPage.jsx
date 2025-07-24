@@ -1,17 +1,16 @@
-import React, { useState, useContext } from "react"
-import { Helmet } from "react-helmet-async"
-import { DarkModeContext } from "../App"
+import React, { useState, useContext } from "react";
+import { Helmet } from "react-helmet-async";
+import { DarkModeContext } from "../App";
 
 function ContactPage() {
-  const [feedback, setFeedback] = useState("")
-  const { darkMode } = useContext(DarkModeContext)
+  const [feedback, setFeedback] = useState("");
+  const { darkMode } = useContext(DarkModeContext);
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    console.log("Feedback submitted:", feedback)
-    alert("Thank you for your feedback!")
-    setFeedback("")
-  }
+    e.preventDefault();
+    alert("Thank you for your feedback!");
+    setFeedback("");
+  };
 
   return (
     <>
@@ -23,20 +22,23 @@ function ContactPage() {
         />
         <link rel="canonical" href="https://www.MediNova.com/contact" />
         <meta property="og:title" content="Contact Us - MediNova" />
-        <meta property="og:description" content="Get in touch with MediNova. We'd love to hear from you." />
+        <meta
+          property="og:description"
+          content="Get in touch with MediNova. We'd love to hear from you."
+        />
         <meta property="og:url" content="https://www.MediNova.com/contact" />
         <meta property="og:type" content="website" />
       </Helmet>
 
-      <div className="min-h-screen flex items-center justify-center py-20 px-4">
+      <div className="min-h-screen flex items-center justify-center py-16 px-4">
         <div
-          className={`w-full max-w-3xl p-10 rounded-3xl shadow-2xl backdrop-blur-md transition-all duration-300 ${
-            darkMode ? "bg-[#0D3B66]" : "bg-white/60"
+          className={`w-full max-w-2xl rounded-3xl shadow-lg p-10 transition duration-300 ease-in-out ${
+            darkMode ? "bg-white" : "bg-[#0A2A43]"
           }`}
         >
           <h1
-            className={`text-4xl font-bold mb-6 text-center ${
-              darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]"
+            className={`text-3xl font-bold mb-6 text-center ${
+              darkMode ? "text-[#0D3B66]" : "text-[#FDFBFB]"
             }`}
           >
             Contact Us
@@ -46,8 +48,8 @@ function ContactPage() {
             <div>
               <label
                 htmlFor="feedback"
-                className={`block mb-2 font-medium ${
-                  darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]"
+                className={`block mb-2 font-semibold ${
+                  darkMode ? "text-[#0D3B66]" : "text-[#FDFBFB]"
                 }`}
               >
                 Your Feedback:
@@ -56,20 +58,20 @@ function ContactPage() {
                 id="feedback"
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
-                className={`w-full p-4 rounded-xl border text-sm resize-none focus:outline-none focus:ring-2 transition-all duration-200 ${
-                  darkMode
-                    ? "bg-[#0D3B66] border-gray-600 text-[#FDFBFB] placeholder-gray-300 focus:ring-[#00C2CB]"
-                    : "bg-white border-gray-300 text-[#0D3B66] placeholder-gray-500 focus:ring-[#0D3B66]"
-                }`}
-                placeholder="Share your thoughts..."
                 rows="6"
+                placeholder="Write your feedback here..."
+                className={`w-full p-4 rounded-2xl text-sm resize-none focus:outline-none focus:ring-2 ${
+                  darkMode
+                    ? "bg-white border border-gray-300 text-gray-800 placeholder-gray-500 focus:ring-[#0D3B66]"
+                    : "bg-[#0A2A43] border border-[#274f6d] text-[#FDFBFB] placeholder-gray-400 focus:ring-[#00C2CB]"
+                }`}
                 required
-              ></textarea>
+              />
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 px-4 bg-[#00C2CB] text-white rounded-xl font-semibold hover:bg-[#00b3ba] transition-colors"
+              className="w-full py-3 px-4 bg-[#00C2CB] text-white font-semibold rounded-xl hover:bg-[#00b3ba] transition-all"
             >
               Submit Feedback
             </button>
@@ -77,7 +79,7 @@ function ContactPage() {
         </div>
       </div>
     </>
-  )
+  );
 }
 
-export default ContactPage
+export default ContactPage;
