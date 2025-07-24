@@ -31,17 +31,29 @@ L.Icon.Default.mergeOptions({
 
 function EmergencyGuide({ title, steps }) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const { darkMode } = useContext(DarkModeContext)
+
   return (
     <div className="mb-4">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex justify-between items-center w-full p-4 bg-red-100 dark:bg-[#1E3A8A] dark:text-white rounded-lg"
+        className={`flex justify-between items-center w-full p-4 rounded-lg ${
+          darkMode
+            ? "bg-[#0A2A43] text-[#FDFBFB]"
+            : "bg-red-100 text-[#1E3A8A]"
+        }`}
       >
         <h3 className="text-lg font-semibold">{title}</h3>
         {isExpanded ? <ChevronUp /> : <ChevronDown />}
       </button>
       {isExpanded && (
-        <ol className="list-decimal list-inside mt-2 p-4 bg-white dark:bg-[#1E3A8A] dark:text-white rounded-lg space-y-1 text-sm">
+        <ol
+          className={`list-decimal list-inside mt-2 p-4 rounded-lg space-y-1 text-sm ${
+            darkMode
+              ? "bg-[#0A2A43] text-[#FDFBFB]"
+              : "bg-white text-[#1E3A8A]"
+          }`}
+        >
           {steps.map((step, i) => (
             <li key={i}>{step}</li>
           ))}
@@ -163,7 +175,7 @@ out body;
         <meta name="description" content="Emergency guides & live map with nearby hospitals/clinics." />
       </Helmet>
 
-      <div className={`max-w-5xl mx-auto px-4 py-8 ${darkMode ? "text-white" : "text-[#1E3A8A]"}`}>
+      <div className={`max-w-5xl mx-auto px-4 py-8 ${darkMode ? "text-[#FDFBFB]" : "text-[#1E3A8A]"}`}>
         <motion.h1 className="text-3xl font-bold mb-6 text-center">Emergency Services</motion.h1>
 
         <motion.p className="text-xl mb-8 text-center">
@@ -172,11 +184,16 @@ out body;
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {emergencyServices.map((s) => (
-            <motion.div key={s.name} className={`p-6 rounded-lg shadow-md text-center ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+            <motion.div
+              key={s.name}
+              className={`p-6 rounded-lg shadow-md text-center ${
+                darkMode ? "bg-[#0A2A43] text-[#FDFBFB]" : "bg-white text-[#1E3A8A]"
+              }`}
+            >
               <s.icon className="w-12 h-12 mx-auto mb-4" />
               <h2 className="text-xl font-semibold mb-2">{s.name}</h2>
               <p>
-                <a href={`tel:${s.phone}`} className="text-[#1E3A8A] hover:underline">
+                <a href={`tel:${s.phone}`} className="hover:underline">
                   {s.phone}
                 </a>
               </p>
