@@ -59,8 +59,8 @@ function Articles() {
       setLoading(true);
       const devtoTags = ["health", "medical", "science", "lifestyle"];
       const requests = devtoTags.map((tag) =>
-        fetch(`https://dev.to/api/articles?tag=${tag}&per_page=100`).then((res) =>
-          res.json()
+        fetch(`https://dev.to/api/articles?tag=${tag}&per_page=100`).then(
+          (res) => res.json()
         )
       );
       const results = await Promise.all(requests);
@@ -76,14 +76,17 @@ function Articles() {
       const matchAuthor = authorFilter
         ? article.user?.name?.toLowerCase() === authorFilter.toLowerCase()
         : true;
-      const matchDate = dateFilter ? article.readable_publish_date === dateFilter : true;
+      const matchDate = dateFilter
+        ? article.readable_publish_date === dateFilter
+        : true;
       const matchTag = tagFilter ? article.tag_list.includes(tagFilter) : true;
       return matchAuthor && matchDate && matchTag;
     });
 
     if (sortBy === "popularity") {
       filtered = [...filtered].sort(
-        (a, b) => (b.public_reactions_count || 0) - (a.public_reactions_count || 0)
+        (a, b) =>
+          (b.public_reactions_count || 0) - (a.public_reactions_count || 0)
       );
     }
 
@@ -91,8 +94,12 @@ function Articles() {
     setPage(1);
   }, [authorFilter, dateFilter, tagFilter, sortBy, allArticles]);
 
-  const uniqueAuthors = [...new Set(allArticles.map((a) => a.user?.name).filter(Boolean))];
-  const uniqueDates = [...new Set(allArticles.map((a) => a.readable_publish_date).filter(Boolean))];
+  const uniqueAuthors = [
+    ...new Set(allArticles.map((a) => a.user?.name).filter(Boolean)),
+  ];
+  const uniqueDates = [
+    ...new Set(allArticles.map((a) => a.readable_publish_date).filter(Boolean)),
+  ];
   const uniqueTags = [...new Set(allArticles.flatMap((a) => a.tag_list))];
 
   const indexOfLast = page * articlesPerPage;
@@ -122,21 +129,43 @@ function Articles() {
     <>
       <Helmet>
         <title>Health Articles - MediNova</title>
-        <meta name="description" content="Explore trending health articles from Dev.to" />
+        <meta
+          name="description"
+          content="Explore trending health articles from Dev.to"
+        />
       </Helmet>
 
-      <div className={`px-4 md:px-10 pt-6 ${darkMode ? "bg-transparent text-[#B8C4F4]" : "bg-gray-50 text-[#081F5C]"}`}>
+      <div
+        className={`px-4 md:px-10 pt-6 ${
+          darkMode
+            ? "bg-transparent text-[#B8C4F4]"
+            : "bg-gray-50 text-[#081F5C]"
+        }`}
+      >
         <h1 className="text-3xl font-bold mb-6">Health Articles</h1>
 
         {/* Filters */}
         <div className="flex flex-col md:flex-row flex-wrap gap-4 mb-6">
-          {[{
-            value: authorFilter, setter: setAuthorFilter, placeholder: "Filter by Author", options: uniqueAuthors
-          }, {
-            value: dateFilter, setter: setDateFilter, placeholder: "Filter by Date", options: uniqueDates
-          }, {
-            value: tagFilter, setter: setTagFilter, placeholder: "Filter by Tag", options: uniqueTags
-          }].map((filter, idx) => (
+          {[
+            {
+              value: authorFilter,
+              setter: setAuthorFilter,
+              placeholder: "Filter by Author",
+              options: uniqueAuthors,
+            },
+            {
+              value: dateFilter,
+              setter: setDateFilter,
+              placeholder: "Filter by Date",
+              options: uniqueDates,
+            },
+            {
+              value: tagFilter,
+              setter: setTagFilter,
+              placeholder: "Filter by Tag",
+              options: uniqueTags,
+            },
+          ].map((filter, idx) => (
             <select
               key={idx}
               className={`p-2 border rounded w-full md:w-1/3 ${
@@ -149,7 +178,9 @@ function Articles() {
             >
               <option value="">{filter.placeholder}</option>
               {filter.options.map((item, index) => (
-                <option key={index} value={item}>{item}</option>
+                <option key={index} value={item}>
+                  {item}
+                </option>
               ))}
             </select>
           ))}
@@ -191,7 +222,9 @@ function Articles() {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
                   className={`transition-transform duration-300 ${
-                    darkMode ? "bg-[#081F5C] text-white" : "bg-white text-[#081F5C]"
+                    darkMode
+                      ? "bg-[#081F5C] text-white"
+                      : "bg-white text-[#081F5C]"
                   } p-6 rounded-2xl border ${
                     darkMode ? "border-[#B8C4F4]" : "border-[#081F5C]"
                   }`}
@@ -203,10 +236,19 @@ function Articles() {
                       className="w-full h-48 object-cover mb-4 rounded-xl"
                     />
                   )}
-                  <h2 className="text-xl font-semibold mb-2 line-clamp-2">{article.title}</h2>
-                  <p className="mb-4 text-sm line-clamp-3">{article.description}</p>
-                  <p className={`text-xs ${darkMode ? "text-[#B8C4F4]" : "text-[#081F5C]"} mb-2`}>
-                    By {article.user?.name || "Unknown Author"} | {article.readable_publish_date}
+                  <h2 className="text-xl font-semibold mb-2 line-clamp-2">
+                    {article.title}
+                  </h2>
+                  <p className="mb-4 text-sm line-clamp-3">
+                    {article.description}
+                  </p>
+                  <p
+                    className={`text-xs ${
+                      darkMode ? "text-[#B8C4F4]" : "text-[#081F5C]"
+                    } mb-2`}
+                  >
+                    By {article.user?.name || "Unknown Author"} |{" "}
+                    {article.readable_publish_date}
                   </p>
                   <a
                     href={article.url}
@@ -220,7 +262,10 @@ function Articles() {
                   <div className="mt-4">
                     <h3 className="font-semibold mb-1 text-sm">Tags:</h3>
                     <div className="flex flex-wrap gap-2">
-                      {(Array.isArray(article.tag_list) ? article.tag_list : []).map((tag, index) => (
+                      {(Array.isArray(article.tag_list)
+                        ? article.tag_list
+                        : []
+                      ).map((tag, index) => (
                         <Link
                           key={index}
                           to={`/search?q=${encodeURIComponent(tag)}`}
@@ -264,7 +309,11 @@ function Articles() {
           </motion.button>
         </div>
 
-        <NewsletterSignup />
+        <div className="mt-16">
+          {" "}
+          {/* You can adjust mt-16 to mt-20 if needed */}
+          <NewsletterSignup />
+        </div>
       </div>
     </>
   );
