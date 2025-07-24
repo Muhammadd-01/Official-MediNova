@@ -12,6 +12,17 @@ function Header() {
   const headerBg = "bg-white/30 dark:bg-[#0D3B66]/30 backdrop-blur-md";
   const textColor = darkMode ? "text-white" : "text-[#0D3B66]";
 
+  const navItems = [
+    "Home",
+    "About",
+    "Medicine Suggestion",
+    "Consultation",
+    "Articles",
+    "News",
+    "Emergency",
+    "Contact",
+  ];
+
   return (
     <>
       <header
@@ -22,26 +33,18 @@ function Header() {
             {/* Logo */}
             <Link
               to="/"
-              className={`text-3xl font-extrabold tracking-wide hover:text-[#00C2CB] transition-all duration-300 ${textColor}`}
+              className={`text-2xl font-extrabold tracking-wide hover:text-[#00C2CB] transition-all duration-300 ${textColor}`}
             >
               MediNova
             </Link>
 
             {/* Nav Links */}
-            <nav className="hidden md:flex space-x-3 items-center">
-              {[
-                "Home",
-                "About",
-                "Medicine Suggestion",
-                "Consultation",
-                "Articles",
-                "News",
-                "Emergency",
-              ].map((item) => (
+            <nav className="hidden md:flex flex-wrap items-center gap-2 ml-6">
+              {navItems.map((item) => (
                 <motion.div key={item} whileHover={{ scale: 1.07 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
-                    className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:bg-opacity-20 ${
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:bg-opacity-20 ${
                       darkMode
                         ? "text-white hover:bg-white"
                         : "text-[#0D3B66] hover:bg-[#0D3B66] hover:text-white"
@@ -53,9 +56,9 @@ function Header() {
               ))}
             </nav>
 
-            {/* Buttons */}
-            <div className="flex items-center space-x-3">
-              {/* 🌙 Dark Mode Toggle Button */}
+            {/* Right-side Buttons */}
+            <div className="flex items-center gap-2 ml-6">
+              {/* Dark Mode Toggle */}
               <motion.button
                 onClick={() => setDarkMode(!darkMode)}
                 className="h-10 w-10 flex items-center justify-center rounded-full shadow-md bg-[#0D3B66] text-white hover:text-gray-300 transition-all duration-300"
@@ -69,7 +72,7 @@ function Header() {
               {isAuthenticated ? (
                 <motion.button
                   onClick={logout}
-                  className="h-10 px-5 font-semibold rounded-full shadow-md bg-red-600 text-white hover:bg-red-700 transition-all duration-300"
+                  className="h-10 px-4 text-sm font-semibold rounded-full shadow-md bg-red-600 text-white hover:bg-red-700 transition-all duration-300"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -77,21 +80,18 @@ function Header() {
                 </motion.button>
               ) : (
                 <>
-                  {/* 🔐 Login Button */}
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Link
                       to="/login"
-                      className="h-10 px-5 font-semibold rounded-full shadow-md bg-[#0D3B66] text-white hover:text-gray-300 transition-all duration-300 flex items-center"
+                      className="h-10 px-4 text-sm font-semibold rounded-full shadow-md bg-[#0D3B66] text-white hover:text-gray-300 transition-all duration-300 flex items-center"
                     >
                       Login
                     </Link>
                   </motion.div>
-
-                  {/* 📝 Register Button */}
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Link
                       to="/register"
-                      className="h-10 px-5 font-semibold rounded-full shadow-md bg-[#0D3B66] text-white hover:text-gray-300 transition-all duration-300 flex items-center"
+                      className="h-10 px-4 text-sm font-semibold rounded-full shadow-md bg-[#0D3B66] text-white hover:text-gray-300 transition-all duration-300 flex items-center"
                     >
                       Register
                     </Link>
@@ -100,7 +100,7 @@ function Header() {
               )}
             </div>
 
-            {/* 📱 Mobile Menu Icon */}
+            {/* 📱 Mobile Menu Button */}
             <div className="md:hidden">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -112,21 +112,11 @@ function Header() {
           </div>
         </div>
 
-        {/* 📱 Mobile Nav */}
+        {/* 📱 Mobile Navigation */}
         {isMenuOpen && (
-          <div
-            className={`md:hidden ${headerBg} ${textColor} backdrop-blur-lg transition-all duration-300`}
-          >
+          <div className={`md:hidden ${headerBg} ${textColor} backdrop-blur-lg transition-all duration-300`}>
             <div className="px-4 py-4 space-y-2">
-              {[
-                "Home",
-                "About",
-                "Medicine Suggestion",
-                "Consultation",
-                "Articles",
-                "News",
-                "Emergency",
-              ].map((item) => (
+              {navItems.map((item) => (
                 <Link
                   key={item}
                   to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
