@@ -1,23 +1,28 @@
-"use client"
+"use client";
 
-import { useState, useContext } from "react"
-import { Helmet } from "react-helmet-async"
-import { useNavigate } from "react-router-dom"
-import { motion } from "framer-motion"
-import { AuthContext, DarkModeContext } from "../App"
+import { useState, useContext } from "react";
+import { Helmet } from "react-helmet-async";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { AuthContext, DarkModeContext } from "../App";
 
 function Login() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const { login } = useContext(AuthContext)
-  const { darkMode } = useContext(DarkModeContext)
-  const navigate = useNavigate()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const { login } = useContext(AuthContext);
+  const { darkMode } = useContext(DarkModeContext);
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    login({ email })
-    navigate("/")
-  }
+    e.preventDefault();
+    login({ email });
+    navigate("/");
+  };
+
+  const bgColor = darkMode ? "bg-[#0A2A43]" : "bg-white bg-opacity-90 backdrop-blur-md";
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]";
+  const inputDark = "border-[#395B75] bg-[#0D3B66] text-[#FDFBFB] placeholder-gray-300";
+  const inputLight = "border-gray-300 bg-white text-[#0D3B66] placeholder-gray-500";
 
   return (
     <>
@@ -26,15 +31,15 @@ function Login() {
         <meta name="description" content="Log in to your MediNova account" />
       </Helmet>
 
-      <div className={`min-h-screen flex items-center justify-center ${darkMode ? "bg-gray-900" : "bg-gray-100"}`}>
+      <div className="min-h-screen flex items-center justify-center">
         <motion.div
-          className={`max-w-md w-full space-y-8 p-10 ${darkMode ? "bg-gray-800" : "bg-white"} rounded-xl shadow-lg`}
+          className={`max-w-md w-full space-y-8 p-10 rounded-xl shadow-lg transition-all duration-300 ${bgColor} ${textColor}`}
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           <div>
-            <h2 className={`mt-6 text-center text-3xl font-extrabold ${darkMode ? "text-white" : "text-[#0D3B66]"}`}>
+            <h2 className="mt-6 text-center text-3xl font-extrabold">
               Sign in to your account
             </h2>
           </div>
@@ -51,11 +56,7 @@ function Login() {
                   type="email"
                   autoComplete="email"
                   required
-                  className={`appearance-none relative block w-full px-3 py-2 border ${
-                    darkMode
-                      ? "border-gray-700 bg-gray-700 text-white"
-                      : "border-gray-300 text-[#0D3B66]"
-                  } placeholder-gray-500 rounded-md focus:outline-none focus:ring-[#0D3B66] focus:border-[#0D3B66] focus:z-10 sm:text-sm`}
+                  className={`appearance-none relative block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-[#00C2CB] focus:border-[#00C2CB] focus:z-10 sm:text-sm ${darkMode ? inputDark : inputLight}`}
                   placeholder="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -71,11 +72,7 @@ function Login() {
                   type="password"
                   autoComplete="current-password"
                   required
-                  className={`appearance-none relative block w-full px-3 py-2 border ${
-                    darkMode
-                      ? "border-gray-700 bg-gray-700 text-white"
-                      : "border-gray-300 text-[#0D3B66]"
-                  } placeholder-gray-500 rounded-md focus:outline-none focus:ring-[#0D3B66] focus:border-[#0D3B66] focus:z-10 sm:text-sm`}
+                  className={`appearance-none relative block w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-[#00C2CB] focus:border-[#00C2CB] focus:z-10 sm:text-sm ${darkMode ? inputDark : inputLight}`}
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -118,7 +115,7 @@ function Login() {
         </motion.div>
       </div>
     </>
-  )
+  );
 }
 
-export default Login
+export default Login;

@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useState, useContext } from "react"
-import { Helmet } from "react-helmet-async"
-import { useNavigate } from "react-router-dom"
-import { motion } from "framer-motion"
-import { AuthContext, DarkModeContext } from "../App"
+import { useState, useContext } from "react";
+import { Helmet } from "react-helmet-async";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { AuthContext, DarkModeContext } from "../App";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -16,29 +16,29 @@ function Register() {
     gender: "",
     country: "",
     termsAccepted: false,
-  })
+  });
 
-  const { login } = useContext(AuthContext)
-  const { darkMode } = useContext(DarkModeContext)
-  const navigate = useNavigate()
+  const { login } = useContext(AuthContext);
+  const { darkMode } = useContext(DarkModeContext);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!formData.termsAccepted) {
-      alert("Please accept the terms and conditions.")
-      return
+      alert("Please accept the terms and conditions.");
+      return;
     }
-    login({ email: formData.email })
-    navigate("/")
-  }
+    login({ email: formData.email });
+    navigate("/");
+  };
 
   return (
     <>
@@ -47,21 +47,23 @@ function Register() {
         <meta name="description" content="Create a new MediNova account" />
       </Helmet>
 
-      <div className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${darkMode ? "bg-gray-900" : "bg-gray-100"}`}>
+      <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <motion.div
-          className={`max-w-md w-full space-y-8 p-10 ${darkMode ? "bg-gray-800" : "bg-white"} rounded-xl shadow-lg`}
+          className={`max-w-md w-full space-y-8 p-10 rounded-xl shadow-lg ${
+            darkMode ? "bg-[#0A2A43] text-[#FDFBFB]" : "bg-white text-[#003366]"
+          }`}
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className={`text-center text-3xl font-extrabold ${darkMode ? "text-white" : "text-[#003366]"}`}>
+          <h2 className="text-center text-3xl font-extrabold">
             Create Your MediNova Account
           </h2>
 
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             {/* Full Name */}
             <div>
-              <label htmlFor="fullName" className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
+              <label className="block text-sm font-medium mb-1">
                 Full Name
               </label>
               <input
@@ -71,7 +73,9 @@ function Register() {
                 required
                 placeholder="John Doe"
                 className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
-                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-[#003366]"
+                  darkMode
+                    ? "bg-[#0A2A43] text-[#FDFBFB] border-gray-500"
+                    : "border-gray-300 text-[#003366]"
                 }`}
                 value={formData.fullName}
                 onChange={handleChange}
@@ -80,9 +84,7 @@ function Register() {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
-                Email
-              </label>
+              <label className="block text-sm font-medium mb-1">Email</label>
               <input
                 id="email"
                 name="email"
@@ -90,7 +92,9 @@ function Register() {
                 required
                 placeholder="you@example.com"
                 className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
-                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-[#003366]"
+                  darkMode
+                    ? "bg-[#0A2A43] text-[#FDFBFB] border-gray-500"
+                    : "border-gray-300 text-[#003366]"
                 }`}
                 value={formData.email}
                 onChange={handleChange}
@@ -99,7 +103,7 @@ function Register() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
+              <label className="block text-sm font-medium mb-1">
                 Password
               </label>
               <input
@@ -109,7 +113,9 @@ function Register() {
                 required
                 placeholder="********"
                 className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
-                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-[#003366]"
+                  darkMode
+                    ? "bg-[#0A2A43] text-[#FDFBFB] border-gray-500"
+                    : "border-gray-300 text-[#003366]"
                 }`}
                 value={formData.password}
                 onChange={handleChange}
@@ -118,7 +124,7 @@ function Register() {
 
             {/* Date of Birth */}
             <div>
-              <label htmlFor="dateOfBirth" className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
+              <label className="block text-sm font-medium mb-1">
                 Date of Birth
               </label>
               <input
@@ -127,7 +133,9 @@ function Register() {
                 type="date"
                 required
                 className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
-                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-[#003366]"
+                  darkMode
+                    ? "bg-[#0A2A43] text-[#FDFBFB] border-gray-500"
+                    : "border-gray-300 text-[#003366]"
                 }`}
                 value={formData.dateOfBirth}
                 onChange={handleChange}
@@ -136,7 +144,7 @@ function Register() {
 
             {/* Phone Number */}
             <div>
-              <label htmlFor="phoneNumber" className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
+              <label className="block text-sm font-medium mb-1">
                 Phone Number
               </label>
               <input
@@ -145,7 +153,9 @@ function Register() {
                 type="tel"
                 placeholder="+92 300 1234567"
                 className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
-                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-[#003366]"
+                  darkMode
+                    ? "bg-[#0A2A43] text-[#FDFBFB] border-gray-500"
+                    : "border-gray-300 text-[#003366]"
                 }`}
                 value={formData.phoneNumber}
                 onChange={handleChange}
@@ -154,15 +164,15 @@ function Register() {
 
             {/* Gender */}
             <div>
-              <label htmlFor="gender" className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
-                Gender
-              </label>
+              <label className="block text-sm font-medium mb-1">Gender</label>
               <select
                 id="gender"
                 name="gender"
                 required
                 className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
-                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-[#003366]"
+                  darkMode
+                    ? "bg-[#0A2A43] text-[#FDFBFB] border-gray-500"
+                    : "border-gray-300 text-[#003366]"
                 }`}
                 value={formData.gender}
                 onChange={handleChange}
@@ -176,9 +186,7 @@ function Register() {
 
             {/* Country */}
             <div>
-              <label htmlFor="country" className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
-                Country
-              </label>
+              <label className="block text-sm font-medium mb-1">Country</label>
               <input
                 id="country"
                 name="country"
@@ -186,7 +194,9 @@ function Register() {
                 required
                 placeholder="Pakistan"
                 className={`w-full px-3 py-2 border rounded-md sm:text-sm focus:outline-none ${
-                  darkMode ? "bg-gray-700 text-white border-gray-600" : "border-gray-300 text-[#003366]"
+                  darkMode
+                    ? "bg-[#0A2A43] text-[#FDFBFB] border-gray-500"
+                    : "border-gray-300 text-[#003366]"
                 }`}
                 value={formData.country}
                 onChange={handleChange}
@@ -204,9 +214,12 @@ function Register() {
                 checked={formData.termsAccepted}
                 onChange={handleChange}
               />
-              <label htmlFor="termsAccepted" className={`ml-2 text-sm ${darkMode ? "text-gray-300" : "text-[#003366]"}`}>
+              <label className="ml-2 text-sm">
                 I agree to the{" "}
-                <a href="#" className="text-[#003366] underline hover:text-[#001933]">
+                <a
+                  href="#"
+                  className="text-[#003366] underline hover:text-[#001933]"
+                >
                   Terms and Conditions
                 </a>
               </label>
@@ -225,7 +238,7 @@ function Register() {
         </motion.div>
       </div>
     </>
-  )
+  );
 }
 
-export default Register
+export default Register;

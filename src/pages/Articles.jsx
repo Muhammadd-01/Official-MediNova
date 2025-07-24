@@ -125,7 +125,7 @@ function Articles() {
         <meta name="description" content="Explore trending health articles from Dev.to" />
       </Helmet>
 
-      <div className={`px-4 md:px-10 pt-6 ${darkMode ? "text-[#B8C4F4]" : "text-[#081F5C]"}`}>
+      <div className={`px-4 md:px-10 pt-6 ${darkMode ? "bg-transparent text-[#B8C4F4]" : "bg-gray-50 text-[#081F5C]"}`}>
         <h1 className="text-3xl font-bold mb-6">Health Articles</h1>
 
         {/* Filters */}
@@ -187,12 +187,14 @@ function Articles() {
                   layout
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ scale: 1.05, boxShadow: "0px 15px 30px rgba(0,0,0,0.2)" }}
+                  whileHover={{ scale: 1.05 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
-                  className={`transform transition-transform duration-300 ${
+                  className={`transition-transform duration-300 ${
                     darkMode ? "bg-[#081F5C] text-white" : "bg-white text-[#081F5C]"
-                  } p-6 rounded-2xl border border-[#081F5C]`}
+                  } p-6 rounded-2xl border ${
+                    darkMode ? "border-[#B8C4F4]" : "border-[#081F5C]"
+                  }`}
                 >
                   {article.cover_image && (
                     <LazyImage
