@@ -28,10 +28,10 @@ function ContactPage() {
         <meta property="og:type" content="website" />
       </Helmet>
 
-      <div className="min-h-screen flex items-center justify-center py-16 px-4">
+      <div className="min-h-screen flex items-center justify-center py-20 px-4">
         <div
-          className={`w-full max-w-3xl p-8 rounded-lg shadow-xl backdrop-blur-md ${
-            darkMode ? "bg-[#0A2A43]" : "bg-white/50"
+          className={`w-full max-w-3xl p-10 rounded-3xl shadow-2xl backdrop-blur-md transition-all duration-300 ${
+            darkMode ? "bg-[#0D3B66]" : "bg-white/60"
           }`}
         >
           <h1
@@ -46,7 +46,9 @@ function ContactPage() {
             <div>
               <label
                 htmlFor="feedback"
-                className={`block mb-2 font-medium ${darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]"}`}
+                className={`block mb-2 font-medium ${
+                  darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]"
+                }`}
               >
                 Your Feedback:
               </label>
@@ -54,9 +56,9 @@ function ContactPage() {
                 id="feedback"
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
-                className={`w-full p-4 rounded-md border text-sm resize-none focus:outline-none focus:ring-2 ${
+                className={`w-full p-4 rounded-xl border text-sm resize-none focus:outline-none focus:ring-2 transition-all duration-200 ${
                   darkMode
-                    ? "bg-[#0A2A43] border-gray-600 text-[#FDFBFB] placeholder-gray-400 focus:ring-[#00C2CB]"
+                    ? "bg-[#0D3B66] border-gray-600 text-[#FDFBFB] placeholder-gray-300 focus:ring-[#00C2CB]"
                     : "bg-white border-gray-300 text-[#0D3B66] placeholder-gray-500 focus:ring-[#0D3B66]"
                 }`}
                 placeholder="Share your thoughts..."
@@ -67,7 +69,7 @@ function ContactPage() {
 
             <button
               type="submit"
-              className="w-full py-3 px-4 bg-[#00C2CB] text-white rounded-md font-semibold hover:bg-[#00b3ba] transition-colors"
+              className="w-full py-3 px-4 bg-[#00C2CB] text-white rounded-xl font-semibold hover:bg-[#00b3ba] transition-colors"
             >
               Submit Feedback
             </button>
