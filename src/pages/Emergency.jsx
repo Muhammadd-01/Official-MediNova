@@ -17,6 +17,7 @@ import {
   Popup,
   useMap,
   Circle,
+  Polyline,
 } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 import "leaflet-geosearch/dist/geosearch.css"
@@ -28,6 +29,20 @@ L.Icon.Default.mergeOptions({
   iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 })
+
+// 🔸 Distance Function
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLon = ((lon2 - lon1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return (R * c).toFixed(2)
+}
 
 function EmergencyGuide({ title, steps }) {
   const [isExpanded, setIsExpanded] = useState(false)
@@ -86,6 +101,7 @@ function Emergency() {
   const [location, setLocation] = useState(null)
   const [error, setError] = useState(null)
   const [hospitals, setHospitals] = useState([])
+  const [selectedHospital, setSelectedHospital] = useState(null)
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -216,7 +232,10 @@ out body;
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 </LayersControl.BaseLayer>
                 <LayersControl.BaseLayer name="Satellite">
-                  <TileLayer url="https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" subdomains={["mt0", "mt1", "mt2", "mt3"]} />
+                  <TileLayer
+                    url="https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+                    subdomains={["mt0", "mt1", "mt2", "mt3"]}
+                  />
                 </LayersControl.BaseLayer>
               </LayersControl>
               <Marker position={[location.lat, location.lng]}>
@@ -224,11 +243,51 @@ out body;
               </Marker>
               <Circle center={[location.lat, location.lng]} radius={500} pathOptions={{ color: "#1E3A8A" }} />
               <SearchControl location={location} />
-              {hospitals.map((h) => (
-                <Marker key={h.id} position={[h.lat, h.lon]}>
-                  <Popup>{h.tags.name || "Hospital/Clinic"}</Popup>
-                </Marker>
-              ))}
+              {hospitals.map((h) => {
+                const distance = location
+                  ? calculateDistance(location.lat, location.lng, h.lat, h.lon)
+                  : null
+                return (
+                  <Marker
+                    key={h.id}
+                    position={[h.lat, h.lon]}
+                    eventHandlers={{
+                      dblclick: () => setSelectedHospital(h),
+                    }}
+                  >
+                    <Popup>
+                      <strong>{h.tags.name || "Hospital/Clinic"}</strong><br />
+                      {distance && <>Distance: {distance} km<br /></>}
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&origin=${location.lat},${location.lng}&destination=${h.lat},${h.lon}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 underline"
+                      >
+                        Open in Google Maps
+                      </a>
+                    </Popup>
+                  </Marker>
+                )
+              })}
+              {selectedHospital && (
+                <>
+                  <Polyline
+                    positions={[
+                      [location.lat, location.lng],
+                      [selectedHospital.lat, selectedHospital.lon],
+                    ]}
+                    pathOptions={{ color: "red" }}
+                  />
+                  <Marker
+                    position={[selectedHospital.lat, selectedHospital.lon]}
+                    icon={L.divIcon({
+                      className: "custom-selected-marker",
+                      html: `<div style="color: white; background-color: red; border-radius: 8px; padding: 4px">Locked</div>`,
+                    })}
+                  />
+                </>
+              )}
             </MapContainer>
           ) : (
             <p className="text-center text-gray-500">Locating you...</p>

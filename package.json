@@ -25,6 +25,7 @@
     "leaflet-geosearch": "^4.2.0",
     "leaflet-routing-machine": "^3.2.12",
     "lucide-react": "^0.474.0",
+    "mapbox-gl": "^3.13.0",
     "match-sorter": "^8.0.3",
     "mongoose": "^8.10.0",
     "noisejs": "^2.1.0",
