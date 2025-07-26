@@ -53,7 +53,7 @@ function Emergency() {
   const [hospitals, setHospitals] = useState([])
   const [routeGeoJSON, setRouteGeoJSON] = useState(null)
   const [routeInfo, setRouteInfo] = useState(null)
-  const [mapStyle, setMapStyle] = useState("https://tiles.stadiamaps.com/styles/alidade_smooth.json")
+  const [mapStyle, setMapStyle] = useState("https://api.maptiler.com/maps/basic-v2/style.json?key=YOUR_MAPTILER_KEY")
   const [destination, setDestination] = useState(null)
   const lastLocationRef = useRef(null)
 
@@ -100,7 +100,6 @@ function Emergency() {
     },
   }
 
-  // Calculate distance between two coordinates (Haversine formula)
   const getDistance = (loc1, loc2) => {
     const toRad = (x) => (x * Math.PI) / 180
     const R = 6371e3 // Earth's radius in meters
@@ -119,12 +118,15 @@ function Emergency() {
       (pos) => {
         const { latitude, longitude } = pos.coords
         const newLocation = [longitude, latitude]
-        if (!lastLocationRef.current || getDistance(lastLocationRef.current, newLocation) > 50) {
+        if (!lastLocationRef.current || getDistance(lastLocationRef.current, newLocation) > 100) {
           setLocation(newLocation)
           lastLocationRef.current = newLocation
         }
       },
-      () => alert("Location access denied."),
+      (err) => {
+        console.error("Geolocation error:", err)
+        alert("Location access denied.")
+      },
       { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
     )
     return () => navigator.geolocation.clearWatch(watchId)
@@ -136,7 +138,7 @@ function Emergency() {
     const pitch = mapStyle.includes("satellite") ? 0 : mapStyle.includes("2d") ? 0 : 60
     const map = new maplibregl.Map({
       container: mapRef.current,
-      style: mapStyle,
+      style: mapStyle.replace("?key=YOUR_MAPTILER_KEY", ""), // Replace with actual key in production
       center: location,
       zoom: 15,
       pitch,
@@ -155,14 +157,11 @@ function Emergency() {
     const styleToggle = document.createElement("select")
     styleToggle.className = "absolute top-2 left-2 p-2 bg-white rounded shadow z-10"
     styleToggle.innerHTML = `
-      <option value="https://tiles.stadiamaps.com/styles/alidade_smooth.json?2d=true">2D View</option>
-      <option value="https://tiles.stadiamaps.com/styles/alidade_smooth.json">3D View</option>
-      <option value="https://tiles.stadiamaps.com/styles/alidade_satellite.json">Satellite View</option>
+      <option value="https://api.maptiler.com/maps/basic-v2/style.json?key=YOUR_MAPTILER_KEY&2d=true">2D View</option>
+      <option value="https://api.maptiler.com/maps/basic-v2/style.json?key=YOUR_MAPTILER_KEY">3D View</option>
+      <option value="https://api.maptiler.com/maps/satellite/style.json?key=YOUR_MAPTILER_KEY">Satellite View</option>
     `
-    styleToggle.onchange = (e) => {
-      const newStyle = e.target.value
-      setMapStyle(newStyle)
-    }
+    styleToggle.onchange = (e) => setMapStyle(e.target.value)
     map.getContainer().appendChild(styleToggle)
 
     new maplibregl.Marker({ color: "blue" })
@@ -179,60 +178,68 @@ function Emergency() {
   node["amenity"="clinic"](around:5000,${lat},${lon});
 );
 out body;`
-      const res = await fetch("https://overpass-api.de/api/interpreter", {
-        method: "POST",
-        body: query,
-      })
-      const json = await res.json()
-      setHospitals(json.elements)
-
-      json.elements.forEach((h) => {
-        const el = document.createElement("div")
-        el.className = "hospital-marker"
-        el.style.backgroundColor = "red"
-        el.style.width = "12px"
-        el.style.height = "12px"
-        el.style.borderRadius = "50%"
-
-        new maplibregl.Marker(el)
-          .setLngLat([h.lon, h.lat])
-          .setPopup(
-            new maplibregl.Popup().setHTML(`
-              <strong>${h.tags.name || "Hospital/Clinic"}</strong><br/>
-              <button onclick="window.getRoute(${h.lon}, ${h.lat}, '${h.tags.name || "Hospital/Clinic"}')">Lock & Route</button>
-            `)
-          )
-          .addTo(map)
-      })
-
-      window.getRoute = async (lon, lat, name) => {
-        setDestination([lon, lat])
-        const modes = ["driving-car", "cycling-regular", "foot-walking"]
-        const routeData = {}
-        for (const mode of modes) {
-          try {
-            const response = await axios.post(
-              `https://api.openrouteservice.org/v2/directions/${mode}/geojson`,
-              { coordinates: [location, [lon, lat]] },
-              {
-                headers: {
-                  Authorization: orsApiKey,
-                  "Content-Type": "application/json",
-                },
-              }
-            )
-            routeData[mode] = response.data
-          } catch (error) {
-            console.error(`Error fetching ${mode} route:`, error)
-          }
-        }
-        setRouteGeoJSON(routeData["driving-car"])
-        setRouteInfo({
-          name,
-          car: routeData["driving-car"]?.features[0]?.properties.segments[0],
-          bike: routeData["cycling-regular"]?.features[0]?.properties.segments[0],
-          foot: routeData["foot-walking"]?.features[0]?.properties.segments[0],
+      try {
+        const res = await fetch("https://overpass-api.de/api/interpreter", {
+          method: "POST",
+          body: query,
         })
+        const json = await res.json()
+        setHospitals(json.elements)
+
+        json.elements.forEach((h) => {
+          const el = document.createElement("div")
+          el.className = "hospital-marker"
+          el.style.backgroundColor = "red"
+          el.style.width = "12px"
+          el.style.height = "12px"
+          el.style.borderRadius = "50%"
+
+          new maplibregl.Marker(el)
+            .setLngLat([h.lon, h.lat])
+            .setPopup(
+              new maplibregl.Popup().setHTML(`
+                <strong>${h.tags.name || "Hospital/Clinic"}</strong><br/>
+                <button onclick="window.getRoute(${h.lon}, ${h.lat}, '${h.tags.name || "Hospital/Clinic"}')">Lock & Route</button>
+              `)
+            )
+            .addTo(map)
+        })
+
+        window.getRoute = async (lon, lat, name) => {
+          setDestination([lon, lat])
+          const modes = ["driving-car", "cycling-regular", "foot-walking"]
+          const routeData = {}
+          const directions = {}
+          for (const mode of modes) {
+            try {
+              const response = await axios.post(
+                `https://api.openrouteservice.org/v2/directions/${mode}/geojson`,
+                { coordinates: [location, [lon, lat]] },
+                {
+                  headers: {
+                    Authorization: orsApiKey,
+                    "Content-Type": "application/json",
+                  },
+                }
+              )
+              routeData[mode] = response.data
+              directions[mode] = response.data.features[0]?.properties.segments[0]?.steps || []
+            } catch (error) {
+              console.error(`Error fetching ${mode} route:`, error.message)
+            }
+          }
+          setRouteGeoJSON(routeData["driving-car"])
+          setRouteInfo({
+            name,
+            car: routeData["driving-car"]?.features[0]?.properties.segments[0],
+            bike: routeData["cycling-regular"]?.features[0]?.properties.segments[0],
+            foot: routeData["foot-walking"]?.features[0]?.properties.segments[0],
+            directions,
+          })
+        }
+      } catch (error) {
+        console.error("Error fetching hospitals:", error)
+        alert("Failed to load hospitals. Please try again.")
       }
     }
 
@@ -241,7 +248,7 @@ out body;`
     map.on("load", () => {
       map.addLayer({
         id: "3d-buildings",
-        source: "composite",
+        source: "openmaptiles",
         "source-layer": "building",
         type: "fill-extrusion",
         minzoom: 14,
@@ -256,8 +263,8 @@ out body;`
           "fill-extrusion-height": ["get", "height"],
           "fill-extrusion-base": ["get", "min_height"],
           "fill-extrusion-opacity": 0.8,
-          "fill-extrusion-ambient-occlusion-intensity": 0.3,
-          "fill-extrusion-ambient-occlusion-radius": 3
+          "fill-extrusion-ambient-occlusion-intensity": 0.4,
+          "fill-extrusion-ambient-occlusion-radius": 4
         },
       })
 
@@ -285,11 +292,15 @@ out body;`
           const popup = new maplibregl.Popup()
             .setLngLat(location)
             .setHTML(`
-              <div style="font-family: Arial; padding: 10px;">
+              <div style="font-family: Arial; padding: 10px; max-height: 200px; overflow-y: auto;">
                 <strong>Route to ${routeInfo.name}</strong><br/>
                 <strong>Car:</strong> ${routeInfo.car?.distance / 1000} km, ${Math.round(routeInfo.car?.duration / 60)} min<br/>
                 <strong>Bike:</strong> ${routeInfo.bike?.distance / 1000} km, ${Math.round(routeInfo.bike?.duration / 60)} min<br/>
-                <strong>Foot:</strong> ${routeInfo.foot?.distance / 1000} km, ${Math.round(routeInfo.foot?.duration / 60)} min
+                <strong>Foot:</strong> ${routeInfo.foot?.distance / 1000} km, ${Math.round(routeInfo.foot?.duration / 60)} min<br/>
+                <strong>Directions (Car):</strong><br/>
+                <ol style="list-style: decimal; margin-left: 15px;">
+                  ${routeInfo.directions?.["driving-car"]?.map(step => `<li>${step.instruction}</li>`).join('') || "No directions available"}
+                </ol>
               </div>
             `)
             .addTo(map)
@@ -306,7 +317,7 @@ out body;`
   useEffect(() => {
     if (!location || !destination || !mapInstanceRef.current) return
     window.getRoute(destination[0], destination[1], routeInfo?.name || "Hospital/Clinic")
-  }, [location, destination])
+  }, [location])
 
   return (
     <>
@@ -355,6 +366,14 @@ out body;`
               <p>Car: {routeInfo.car?.distance / 1000} km, {Math.round(routeInfo.car?.duration / 60)} min</p>
               <p>Bike: {routeInfo.bike?.distance / 1000} km, {Math.round(routeInfo.bike?.duration / 60)} min</p>
               <p>Foot: {routeInfo.foot?.distance / 1000} km, {Math.round(routeInfo.foot?.duration / 60)} min</p>
+              <div className="mt-2">
+                <strong>Directions (Car):</strong>
+                <ol className="list-decimal list-inside">
+                  {routeInfo.directions?.["driving-car"]?.map((step, i) => (
+                    <li key={i}>{step.instruction}</li>
+                  )) || <li>No directions available</li>}
+                </ol>
+              </div>
             </div>
           )}
         </motion.div>
