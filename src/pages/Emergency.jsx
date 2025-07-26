@@ -53,7 +53,7 @@ function Emergency() {
   const [hospitals, setHospitals] = useState([])
   const [routeGeoJSON, setRouteGeoJSON] = useState(null)
   const [routeInfo, setRouteInfo] = useState(null)
-  const [mapStyle, setMapStyle] = useState("https://api.maptiler.com/maps/basic-v2/style.json?key=YOUR_MAPTILER_KEY")
+  const [mapStyle, setMapStyle] = useState("https://tiles.stadiamaps.com/styles/alidade_smooth.json")
   const [destination, setDestination] = useState(null)
   const lastLocationRef = useRef(null)
 
@@ -138,7 +138,7 @@ function Emergency() {
     const pitch = mapStyle.includes("satellite") ? 0 : mapStyle.includes("2d") ? 0 : 60
     const map = new maplibregl.Map({
       container: mapRef.current,
-      style: mapStyle.replace("?key=YOUR_MAPTILER_KEY", ""), // Replace with actual key in production
+      style: mapStyle,
       center: location,
       zoom: 15,
       pitch,
@@ -157,11 +157,14 @@ function Emergency() {
     const styleToggle = document.createElement("select")
     styleToggle.className = "absolute top-2 left-2 p-2 bg-white rounded shadow z-10"
     styleToggle.innerHTML = `
-      <option value="https://api.maptiler.com/maps/basic-v2/style.json?key=YOUR_MAPTILER_KEY&2d=true">2D View</option>
-      <option value="https://api.maptiler.com/maps/basic-v2/style.json?key=YOUR_MAPTILER_KEY">3D View</option>
-      <option value="https://api.maptiler.com/maps/satellite/style.json?key=YOUR_MAPTILER_KEY">Satellite View</option>
+      <option value="https://tiles.stadiamaps.com/styles/alidade_smooth.json?2d=true">2D View</option>
+      <option value="https://tiles.stadiamaps.com/styles/alidade_smooth.json">3D View</option>
+      <option value="https://tiles.stadiamaps.com/styles/alidade_satellite.json">Satellite View</option>
     `
-    styleToggle.onchange = (e) => setMapStyle(e.target.value)
+    styleToggle.onchange = (e) => {
+      setMapStyle(e.target.value)
+      setTimeout(() => map.resize(), 100) // Force resize to fix rendering
+    }
     map.getContainer().appendChild(styleToggle)
 
     new maplibregl.Marker({ color: "blue" })
@@ -359,7 +362,7 @@ out body;`
 
         <motion.div className="mt-12">
           <h2 className="text-2xl mb-4 text-center">Nearby Hospitals & Clinics</h2>
-          <div ref={mapRef} className="h-[500px] rounded-lg shadow-lg" />
+          <div ref={mapRef} className="h-[500px] rounded-lg shadow-lg bg-gray-200 dark:bg-gray-800" />
           {routeInfo && (
             <div className="mt-4 text-center">
               <p><strong>Route to {routeInfo.name}</strong></p>
