@@ -49,7 +49,7 @@ function Footer() {
               {[
                 { path: "/medicine-suggestion", label: "Medicine Suggestion" },
                 { path: "/consultation", label: "Expert Consultation" },
-                { path: "/feedback", label: "Feedback" },
+                // { path: "/feedback", label: "Feedback" },
                 { path: "/emergency", label: "Emergency Services" },
               ].map(({ path, label }) => (
                 <li key={path}>
