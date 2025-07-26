@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, useRef } from "react"
+import { useState, useContext, useEffect, useLayoutEffect, useRef } from "react"
 import { Helmet } from "react-helmet-async"
 import { motion } from "framer-motion"
 import {
@@ -55,10 +55,11 @@ function Emergency() {
   const [hospitals, setHospitals] = useState([])
   const [routeGeoJSON, setRouteGeoJSON] = useState(null)
   const [routeInfo, setRouteInfo] = useState(null)
-  const [mapStyle, setMapStyle] = useState("https://tile.openstreetmap.org/{z}/{x}/{y}.png")
+  const [mapStyle, setMapStyle] = useState("https://tiles.stadiamaps.com/styles/alidade_smooth.json")
   const [destination, setDestination] = useState(null)
   const [isTracking, setIsTracking] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
+  const [isMapLoaded, setIsMapLoaded] = useState(false)
   const lastLocationRef = useRef(null)
   const lastSpokenStepRef = useRef(-1)
   const lastUpdateTimeRef = useRef(0)
@@ -142,41 +143,22 @@ function Emergency() {
       },
       (err) => {
         console.error("Geolocation error:", err)
-        alert("Location access denied.")
+        alert("Location access denied. Please enable location services.")
       },
       { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
     )
     return () => navigator.geolocation.clearWatch(watchId)
   }, [])
 
-  useEffect(() => {
-    if (!location) return
+  useLayoutEffect(() => {
+    if (!location || !mapRef.current) return
 
     const pitch = mapStyle.includes("satellite") ? 0 : mapStyle.includes("2d") ? 0 : 60
     let map
     try {
       map = new maplibregl.Map({
         container: mapRef.current,
-        style: {
-          version: 8,
-          sources: {
-            osm: {
-              type: "raster",
-              tiles: [mapStyle],
-              tileSize: 256,
-              attribution: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
-            },
-          },
-          layers: [
-            {
-              id: "osm-tiles",
-              type: "raster",
-              source: "osm",
-              minzoom: 0,
-              maxzoom: 22,
-            },
-          ],
-        },
+        style: mapStyle,
         center: location,
         zoom: 15,
         pitch,
@@ -185,11 +167,12 @@ function Emergency() {
       mapInstanceRef.current = map
 
       map.on("error", (e) => {
-        console.error("Map error:", e)
+        console.error("Map tile error:", e)
         alert("Failed to load map tiles. Please check your internet connection.")
       })
 
       map.on("load", () => {
+        setIsMapLoaded(true)
         map.resize()
         map.triggerRepaint()
       })
@@ -210,16 +193,21 @@ function Emergency() {
     const styleToggle = document.createElement("select")
     styleToggle.className = "absolute top-2 left-2 p-2 bg-white rounded shadow z-10"
     styleToggle.innerHTML = `
-      <option value="https://tile.openstreetmap.org/{z}/{x}/{y}.png?2d=true">2D View</option>
-      <option value="https://tile.openstreetmap.org/{z}/{x}/{y}.png">3D View</option>
+      <option value="https://tiles.stadiamaps.com/styles/alidade_smooth.json?2d=true">2D View</option>
+      <option value="https://tiles.stadiamaps.com/styles/alidade_smooth.json">3D View</option>
       <option value="https://tiles.stadiamaps.com/styles/alidade_satellite.json">Satellite View</option>
     `
     styleToggle.onchange = (e) => {
       setMapStyle(e.target.value)
+      setIsMapLoaded(false)
       setTimeout(() => {
         if (mapInstanceRef.current) {
-          mapInstanceRef.current.resize()
-          mapInstanceRef.current.triggerRepaint()
+          mapInstanceRef.current.setStyle(e.target.value)
+          mapInstanceRef.current.once("style.load", () => {
+            mapInstanceRef.current.resize()
+            mapInstanceRef.current.triggerRepaint()
+            setIsMapLoaded(true)
+          })
         }
       }, 100)
     }
@@ -268,6 +256,7 @@ out body;`
 
         window.getRoute = async (lon, lat, name) => {
           setDestination([lon, lat])
+          setIsTracking(false) // Pause tracking when new route is selected
           const modes = ["driving-car", "cycling-regular", "foot-walking"]
           const routeData = {}
           const directions = {}
@@ -375,6 +364,7 @@ out body;`
         mapInstanceRef.current.remove()
         mapInstanceRef.current = null
       }
+      setIsMapLoaded(false)
     }
   }, [location, routeGeoJSON, routeInfo, mapStyle])
 
@@ -385,13 +375,8 @@ out body;`
 
   useEffect(() => {
     if (!location || !mapInstanceRef.current || !isTracking) return
-    mapInstanceRef.current.flyTo({
-      center: location,
-      zoom: 16,
-      pitch: mapStyle.includes("satellite") ? 0 : mapStyle.includes("2d") ? 0 : 60,
-      bearing: 0,
-    })
-  }, [location, isTracking, mapStyle])
+    mapInstanceRef.current.panTo(location, { duration: 500 })
+  }, [location, isTracking])
 
   useEffect(() => {
     if (!location || !routeInfo?.directions?.["driving-car"] || !isTracking || isMuted) return
@@ -449,8 +434,14 @@ out body;`
           <h2 className="text-2xl mb-4 text-center">Nearby Hospitals & Clinics</h2>
           <div
             ref={mapRef}
-            className="h-[500px] rounded-lg shadow-lg bg-gray-200 dark:bg-gray-800 relative z-0"
-          />
+            className="h-[500px] w-full rounded-lg shadow-lg bg-gray-200 dark:bg-gray-800 relative z-0 overflow-hidden"
+          >
+            {!isMapLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-800">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#1E3A8A]"></div>
+              </div>
+            )}
+          </div>
           {routeInfo && (
             <div className="mt-4 text-center">
               <p><strong>Route to {routeInfo.name}</strong></p>
