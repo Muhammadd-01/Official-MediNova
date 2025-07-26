@@ -1,4 +1,5 @@
-import { useState, useContext, useEffect } from "react"
+// Emergency.jsx
+import { useState, useContext, useEffect, useRef } from "react"
 import { Helmet } from "react-helmet-async"
 import { motion } from "framer-motion"
 import {
@@ -9,40 +10,11 @@ import {
   ChevronUp,
 } from "lucide-react"
 import { DarkModeContext } from "../App"
-import {
-  MapContainer,
-  LayersControl,
-  TileLayer,
-  Marker,
-  Popup,
-  useMap,
-  Circle,
-  Polyline,
-} from "react-leaflet"
-import "leaflet/dist/leaflet.css"
-import "leaflet-geosearch/dist/geosearch.css"
-import L from "leaflet"
-import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch"
+import maplibregl from "maplibre-gl"
+import axios from "axios"
+import "maplibre-gl/dist/maplibre-gl.css"
 
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-})
-
-// 🔸 Distance Function
-function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371
-  const dLat = ((lat2 - lat1) * Math.PI) / 180
-  const dLon = ((lon2 - lon1) * Math.PI) / 180
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) ** 2
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  return (R * c).toFixed(2)
-}
+const orsApiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjgyNGUwMDBmYzBiNTQxODRiNDczYTIwY2Q3YjIxYWQ2IiwiaCI6Im11cm11cjY0In0="
 
 function EmergencyGuide({ title, steps }) {
   const [isExpanded, setIsExpanded] = useState(false)
@@ -53,9 +25,7 @@ function EmergencyGuide({ title, steps }) {
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className={`flex justify-between items-center w-full p-4 rounded-lg ${
-          darkMode
-            ? "bg-[#0A2A43] text-[#FDFBFB]"
-            : "bg-red-100 text-[#1E3A8A]"
+          darkMode ? "bg-[#0A2A43] text-[#FDFBFB]" : "bg-red-100 text-[#1E3A8A]"
         }`}
       >
         <h3 className="text-lg font-semibold">{title}</h3>
@@ -64,9 +34,7 @@ function EmergencyGuide({ title, steps }) {
       {isExpanded && (
         <ol
           className={`list-decimal list-inside mt-2 p-4 rounded-lg space-y-1 text-sm ${
-            darkMode
-              ? "bg-[#0A2A43] text-[#FDFBFB]"
-              : "bg-white text-[#1E3A8A]"
+            darkMode ? "bg-[#0A2A43] text-[#FDFBFB]" : "bg-white text-[#1E3A8A]"
           }`}
         >
           {steps.map((step, i) => (
@@ -78,68 +46,12 @@ function EmergencyGuide({ title, steps }) {
   )
 }
 
-function SearchControl({ location }) {
-  const map = useMap()
-  useEffect(() => {
-    if (!location) return
-    const provider = new OpenStreetMapProvider({ params: { countrycodes: "pk" } })
-    const control = new GeoSearchControl({
-      provider,
-      style: "bar",
-      searchLabel: "Search hospitals...",
-      autoClose: true,
-      showMarker: false,
-    })
-    map.addControl(control)
-    return () => map.removeControl(control)
-  }, [map, location])
-  return null
-}
-
 function Emergency() {
   const { darkMode } = useContext(DarkModeContext)
+  const mapRef = useRef(null)
   const [location, setLocation] = useState(null)
-  const [error, setError] = useState(null)
   const [hospitals, setHospitals] = useState([])
-  const [selectedHospital, setSelectedHospital] = useState(null)
-
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      setError("Geolocation not supported.")
-      return
-    }
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
-        setLocation(loc)
-        fetchHospitals(loc)
-      },
-      () => setError("Location access denied."),
-      { enableHighAccuracy: true }
-    )
-    return () => navigator.geolocation.clearWatch(watchId)
-  }, [])
-
-  const fetchHospitals = async (loc) => {
-    const query = `
-[out:json][timeout:25];
-(
-  node["amenity"="hospital"](around:5000,${loc.lat},${loc.lng});
-  node["amenity"="clinic"](around:5000,${loc.lat},${loc.lng});
-);
-out body;
-`
-    try {
-      const res = await fetch("https://overpass-api.de/api/interpreter", {
-        method: "POST",
-        body: query,
-      })
-      const json = await res.json()
-      setHospitals(json.elements)
-    } catch {
-      setError("Failed to fetch nearby hospitals.")
-    }
-  }
+  const [routeGeoJSON, setRouteGeoJSON] = useState(null)
 
   const emergencyServices = [
     { name: "Edhi Ambulance", phone: "115", icon: Ambulance },
@@ -184,6 +96,117 @@ out body;
     },
   }
 
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords
+        setLocation([longitude, latitude])
+      },
+      () => alert("Location access denied."),
+      { enableHighAccuracy: true }
+    )
+  }, [])
+
+  useEffect(() => {
+    if (!location) return
+
+    const map = new maplibregl.Map({
+      container: mapRef.current,
+      style: "https://demotiles.maplibre.org/style.json",
+      center: location,
+      zoom: 14,
+      pitch: 45,
+    })
+
+    map.addControl(new maplibregl.NavigationControl(), "top-right")
+    map.addControl(
+      new maplibregl.GeolocateControl({
+        positionOptions: { enableHighAccuracy: true },
+        trackUserLocation: true,
+      })
+    )
+
+    new maplibregl.Marker({ color: "blue" })
+      .setLngLat(location)
+      .setPopup(new maplibregl.Popup().setText("You are here"))
+      .addTo(map)
+
+    const fetchHospitals = async () => {
+      const [lon, lat] = location
+      const query = `
+[out:json][timeout:25];
+(
+  node["amenity"="hospital"](around:5000,${lat},${lon});
+  node["amenity"="clinic"](around:5000,${lat},${lon});
+);
+out body;`
+      const res = await fetch("https://overpass-api.de/api/interpreter", {
+        method: "POST",
+        body: query,
+      })
+      const json = await res.json()
+      setHospitals(json.elements)
+
+      json.elements.forEach((h) => {
+        const el = document.createElement("div")
+        el.className = "hospital-marker"
+        el.style.backgroundColor = "red"
+        el.style.width = "12px"
+        el.style.height = "12px"
+        el.style.borderRadius = "50%"
+
+        new maplibregl.Marker(el)
+          .setLngLat([h.lon, h.lat])
+          .setPopup(
+            new maplibregl.Popup().setHTML(`
+              <strong>${h.tags.name || "Hospital/Clinic"}</strong><br/>
+              <button onclick="window.getRoute(${h.lon}, ${h.lat})">Lock & Route</button>
+            `)
+          )
+          .addTo(map)
+      })
+
+      window.getRoute = async (lon, lat) => {
+        const response = await axios.post(
+          `https://api.openrouteservice.org/v2/directions/driving-car/geojson`,
+          {
+            coordinates: [location, [lon, lat]],
+          },
+          {
+            headers: {
+              Authorization: orsApiKey,
+              "Content-Type": "application/json",
+            },
+          }
+        )
+        setRouteGeoJSON(response.data)
+      }
+    }
+
+    fetchHospitals()
+
+    map.on("load", () => {
+      if (routeGeoJSON) {
+        map.addSource("route", {
+          type: "geojson",
+          data: routeGeoJSON,
+        })
+
+        map.addLayer({
+          id: "route-line",
+          type: "line",
+          source: "route",
+          paint: {
+            "line-color": "#FF0000",
+            "line-width": 4,
+          },
+        })
+      }
+    })
+
+    return () => map.remove()
+  }, [location, routeGeoJSON])
+
   return (
     <>
       <Helmet>
@@ -224,74 +247,7 @@ out body;
 
         <motion.div className="mt-12">
           <h2 className="text-2xl mb-4 text-center">Nearby Hospitals & Clinics</h2>
-          {error && <p className="text-red-500 text-center">{error}</p>}
-          {location ? (
-            <MapContainer center={[location.lat, location.lng]} zoom={15} className="h-[450px] rounded-lg shadow-lg">
-              <LayersControl position="topright">
-                <LayersControl.BaseLayer checked name="Standard">
-                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                </LayersControl.BaseLayer>
-                <LayersControl.BaseLayer name="Satellite">
-                  <TileLayer
-                    url="https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
-                    subdomains={["mt0", "mt1", "mt2", "mt3"]}
-                  />
-                </LayersControl.BaseLayer>
-              </LayersControl>
-              <Marker position={[location.lat, location.lng]}>
-                <Popup>You are here</Popup>
-              </Marker>
-              <Circle center={[location.lat, location.lng]} radius={500} pathOptions={{ color: "#1E3A8A" }} />
-              <SearchControl location={location} />
-              {hospitals.map((h) => {
-                const distance = location
-                  ? calculateDistance(location.lat, location.lng, h.lat, h.lon)
-                  : null
-                return (
-                  <Marker
-                    key={h.id}
-                    position={[h.lat, h.lon]}
-                    eventHandlers={{
-                      dblclick: () => setSelectedHospital(h),
-                    }}
-                  >
-                    <Popup>
-                      <strong>{h.tags.name || "Hospital/Clinic"}</strong><br />
-                      {distance && <>Distance: {distance} km<br /></>}
-                      <a
-                        href={`https://www.google.com/maps/dir/?api=1&origin=${location.lat},${location.lng}&destination=${h.lat},${h.lon}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 underline"
-                      >
-                        Open in Google Maps
-                      </a>
-                    </Popup>
-                  </Marker>
-                )
-              })}
-              {selectedHospital && (
-                <>
-                  <Polyline
-                    positions={[
-                      [location.lat, location.lng],
-                      [selectedHospital.lat, selectedHospital.lon],
-                    ]}
-                    pathOptions={{ color: "red" }}
-                  />
-                  <Marker
-                    position={[selectedHospital.lat, selectedHospital.lon]}
-                    icon={L.divIcon({
-                      className: "custom-selected-marker",
-                      html: `<div style="color: white; background-color: red; border-radius: 8px; padding: 4px">Locked</div>`,
-                    })}
-                  />
-                </>
-              )}
-            </MapContainer>
-          ) : (
-            <p className="text-center text-gray-500">Locating you...</p>
-          )}
+          <div ref={mapRef} className="h-[500px] rounded-lg shadow-lg" />
         </motion.div>
       </div>
     </>
