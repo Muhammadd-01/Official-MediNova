@@ -48,10 +48,14 @@ function EmergencyGuide({ title, steps }) {
 function Emergency() {
   const { darkMode } = useContext(DarkModeContext)
   const mapRef = useRef(null)
+  const mapInstanceRef = useRef(null)
   const [location, setLocation] = useState(null)
   const [hospitals, setHospitals] = useState([])
   const [routeGeoJSON, setRouteGeoJSON] = useState(null)
-  const [routeInfo, setRouteInfo] = useState(null) // State for distance and time
+  const [routeInfo, setRouteInfo] = useState(null)
+  const [mapStyle, setMapStyle] = useState("https://tiles.stadiamaps.com/styles/alidade_smooth.json")
+  const [destination, setDestination] = useState(null)
+  const lastLocationRef = useRef(null)
 
   const emergencyServices = [
     { name: "Edhi Ambulance", phone: "115", icon: Ambulance },
@@ -96,29 +100,49 @@ function Emergency() {
     },
   }
 
+  // Calculate distance between two coordinates (Haversine formula)
+  const getDistance = (loc1, loc2) => {
+    const toRad = (x) => (x * Math.PI) / 180
+    const R = 6371e3 // Earth's radius in meters
+    const lat1 = loc1[1], lon1 = loc1[0], lat2 = loc2[1], lon2 = loc2[0]
+    const dLat = toRad(lat2 - lat1)
+    const dLon = toRad(lon2 - lon1)
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c
+  }
+
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
+    const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords
-        setLocation([longitude, latitude])
+        const newLocation = [longitude, latitude]
+        if (!lastLocationRef.current || getDistance(lastLocationRef.current, newLocation) > 50) {
+          setLocation(newLocation)
+          lastLocationRef.current = newLocation
+        }
       },
       () => alert("Location access denied."),
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
     )
+    return () => navigator.geolocation.clearWatch(watchId)
   }, [])
 
   useEffect(() => {
     if (!location) return
 
-    // Initialize map with Google Maps-like style
+    const pitch = mapStyle.includes("satellite") ? 0 : mapStyle.includes("2d") ? 0 : 60
     const map = new maplibregl.Map({
       container: mapRef.current,
-      style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json", // Google Maps-like style
+      style: mapStyle,
       center: location,
-      zoom: 15, // Increased zoom for building details
-      pitch: 60, // 3D perspective for buildings
+      zoom: 15,
+      pitch,
       bearing: 0,
     })
+    mapInstanceRef.current = map
 
     map.addControl(new maplibregl.NavigationControl(), "top-right")
     map.addControl(
@@ -128,13 +152,24 @@ function Emergency() {
       })
     )
 
-    // Add user location marker
+    const styleToggle = document.createElement("select")
+    styleToggle.className = "absolute top-2 left-2 p-2 bg-white rounded shadow z-10"
+    styleToggle.innerHTML = `
+      <option value="https://tiles.stadiamaps.com/styles/alidade_smooth.json?2d=true">2D View</option>
+      <option value="https://tiles.stadiamaps.com/styles/alidade_smooth.json">3D View</option>
+      <option value="https://tiles.stadiamaps.com/styles/alidade_satellite.json">Satellite View</option>
+    `
+    styleToggle.onchange = (e) => {
+      const newStyle = e.target.value
+      setMapStyle(newStyle)
+    }
+    map.getContainer().appendChild(styleToggle)
+
     new maplibregl.Marker({ color: "blue" })
       .setLngLat(location)
       .setPopup(new maplibregl.Popup().setText("You are here"))
       .addTo(map)
 
-    // Fetch nearby hospitals and clinics
     const fetchHospitals = async () => {
       const [lon, lat] = location
       const query = `
@@ -164,87 +199,45 @@ out body;`
           .setPopup(
             new maplibregl.Popup().setHTML(`
               <strong>${h.tags.name || "Hospital/Clinic"}</strong><br/>
-              <button onclick="window.getRoute(${h.lon}, ${h.lat})">Lock & Route</button>
+              <button onclick="window.getRoute(${h.lon}, ${h.lat}, '${h.tags.name || "Hospital/Clinic"}')">Lock & Route</button>
             `)
           )
           .addTo(map)
       })
+
+      window.getRoute = async (lon, lat, name) => {
+        setDestination([lon, lat])
+        const modes = ["driving-car", "cycling-regular", "foot-walking"]
+        const routeData = {}
+        for (const mode of modes) {
+          try {
+            const response = await axios.post(
+              `https://api.openrouteservice.org/v2/directions/${mode}/geojson`,
+              { coordinates: [location, [lon, lat]] },
+              {
+                headers: {
+                  Authorization: orsApiKey,
+                  "Content-Type": "application/json",
+                },
+              }
+            )
+            routeData[mode] = response.data
+          } catch (error) {
+            console.error(`Error fetching ${mode} route:`, error)
+          }
+        }
+        setRouteGeoJSON(routeData["driving-car"])
+        setRouteInfo({
+          name,
+          car: routeData["driving-car"]?.features[0]?.properties.segments[0],
+          bike: routeData["cycling-regular"]?.features[0]?.properties.segments[0],
+          foot: routeData["foot-walking"]?.features[0]?.properties.segments[0],
+        })
+      }
     }
 
     fetchHospitals()
 
-    // Handle double-click to lock distance and show route
-    map.on("dblclick", async (e) => {
-      const { lng, lat } = e.lngLat
-      try {
-        const response = await axios.post(
-          `https://api.openrouteservice.org/v2/directions/driving-car/geojson`,
-          {
-            coordinates: [location, [lng, lat]],
-          },
-          {
-            headers: {
-              Authorization: orsApiKey,
-              "Content-Type": "application/json",
-            },
-          }
-        )
-        const routeData = response.data
-        setRouteGeoJSON(routeData)
-
-        // Extract distance (in meters) and duration (in seconds)
-        const distance = routeData.features[0].properties.segments[0].distance / 1000 // Convert to km
-        const duration = routeData.features[0].properties.segments[0].duration / 60 // Convert to minutes
-        setRouteInfo({
-          distance: distance.toFixed(2),
-          duration: duration.toFixed(1),
-        })
-      } catch (error) {
-        console.error("Error fetching route:", error)
-        alert("Unable to calculate route. Please try again.")
-      }
-    })
-
-    // Add route layer when routeGeoJSON updates
-    map.on("load", () => {
-      if (routeGeoJSON) {
-        if (map.getSource("route")) {
-          map.getSource("route").setData(routeGeoJSON)
-        } else {
-          map.addSource("route", {
-            type: "geojson",
-            data: routeGeoJSON,
-          })
-
-          map.addLayer({
-            id: "route-line",
-            type: "line",
-            source: "route",
-            paint: {
-              "line-color": "#1E90FF", // Google Maps-like blue route
-              "line-width": 5,
-              "line-opacity": 0.8,
-            },
-          })
-        }
-
-        // Add popup or update UI with route info
-        if (routeInfo) {
-          const popup = new maplibregl.Popup()
-            .setLngLat(location) // Display at user location
-            .setHTML(`
-              <div style="font-family: Arial; padding: 10px;">
-                <strong>Route Info</strong><br/>
-                Distance: ${routeInfo.distance} km<br/>
-                Est. Time: ${routeInfo.duration} min
-              </div>
-            `)
-            .addTo(map)
-        }
-      }
-    })
-
-    // Add 3D buildings layer
     map.on("load", () => {
       map.addLayer({
         id: "3d-buildings",
@@ -253,16 +246,67 @@ out body;`
         type: "fill-extrusion",
         minzoom: 14,
         paint: {
-          "fill-extrusion-color": "#aaa",
+          "fill-extrusion-color": [
+            "case",
+            ["==", ["get", "building"], "commercial"], "#FFD700",
+            ["==", ["get", "building"], "residential"], "#D3D3D3",
+            ["==", ["get", "building"], "hospital"], "#FF6347",
+            "#A9A9A9"
+          ],
           "fill-extrusion-height": ["get", "height"],
           "fill-extrusion-base": ["get", "min_height"],
-          "fill-extrusion-opacity": 0.6,
+          "fill-extrusion-opacity": 0.8,
+          "fill-extrusion-ambient-occlusion-intensity": 0.3,
+          "fill-extrusion-ambient-occlusion-radius": 3
         },
       })
+
+      if (routeGeoJSON) {
+        if (map.getSource("route")) {
+          map.getSource("route").setData(routeGeoJSON)
+        } else {
+          map.addSource("route", {
+            type: "geojson",
+            data: routeGeoJSON,
+          })
+          map.addLayer({
+            id: "route-line",
+            type: "line",
+            source: "route",
+            paint: {
+              "line-color": "#1E90FF",
+              "line-width": 5,
+              "line-opacity": 0.8,
+            },
+          })
+        }
+
+        if (routeInfo) {
+          const popup = new maplibregl.Popup()
+            .setLngLat(location)
+            .setHTML(`
+              <div style="font-family: Arial; padding: 10px;">
+                <strong>Route to ${routeInfo.name}</strong><br/>
+                <strong>Car:</strong> ${routeInfo.car?.distance / 1000} km, ${Math.round(routeInfo.car?.duration / 60)} min<br/>
+                <strong>Bike:</strong> ${routeInfo.bike?.distance / 1000} km, ${Math.round(routeInfo.bike?.duration / 60)} min<br/>
+                <strong>Foot:</strong> ${routeInfo.foot?.distance / 1000} km, ${Math.round(routeInfo.foot?.duration / 60)} min
+              </div>
+            `)
+            .addTo(map)
+        }
+      }
     })
 
-    return () => map.remove()
-  }, [location, routeGeoJSON, routeInfo])
+    return () => {
+      map.remove()
+      mapInstanceRef.current = null
+    }
+  }, [location, routeGeoJSON, routeInfo, mapStyle])
+
+  useEffect(() => {
+    if (!location || !destination || !mapInstanceRef.current) return
+    window.getRoute(destination[0], destination[1], routeInfo?.name || "Hospital/Clinic")
+  }, [location, destination])
 
   return (
     <>
@@ -307,8 +351,10 @@ out body;`
           <div ref={mapRef} className="h-[500px] rounded-lg shadow-lg" />
           {routeInfo && (
             <div className="mt-4 text-center">
-              <p>Distance: {routeInfo.distance} km</p>
-              <p>Estimated Time: {routeInfo.duration} min</p>
+              <p><strong>Route to {routeInfo.name}</strong></p>
+              <p>Car: {routeInfo.car?.distance / 1000} km, {Math.round(routeInfo.car?.duration / 60)} min</p>
+              <p>Bike: {routeInfo.bike?.distance / 1000} km, {Math.round(routeInfo.bike?.duration / 60)} min</p>
+              <p>Foot: {routeInfo.foot?.distance / 1000} km, {Math.round(routeInfo.foot?.duration / 60)} min</p>
             </div>
           )}
         </motion.div>
