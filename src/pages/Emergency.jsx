@@ -7,6 +7,8 @@ import {
   Hospital,
   ChevronDown,
   ChevronUp,
+  Volume2,
+  VolumeX,
 } from "lucide-react"
 import { DarkModeContext } from "../App"
 import maplibregl from "maplibre-gl"
@@ -53,9 +55,13 @@ function Emergency() {
   const [hospitals, setHospitals] = useState([])
   const [routeGeoJSON, setRouteGeoJSON] = useState(null)
   const [routeInfo, setRouteInfo] = useState(null)
-  const [mapStyle, setMapStyle] = useState("https://tiles.stadiamaps.com/styles/alidade_smooth.json")
+  const [mapStyle, setMapStyle] = useState("https://tile.openstreetmap.org/{z}/{x}/{y}.png")
   const [destination, setDestination] = useState(null)
+  const [isTracking, setIsTracking] = useState(false)
+  const [isMuted, setIsMuted] = useState(false)
   const lastLocationRef = useRef(null)
+  const lastSpokenStepRef = useRef(-1)
+  const lastUpdateTimeRef = useRef(0)
 
   const emergencyServices = [
     { name: "Edhi Ambulance", phone: "115", icon: Ambulance },
@@ -113,14 +119,25 @@ function Emergency() {
     return R * c
   }
 
+  const speakDirection = (text) => {
+    if (isMuted) return
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.lang = "en-US"
+    utterance.volume = 1.0
+    window.speechSynthesis.speak(utterance)
+  }
+
   useEffect(() => {
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
+        const now = Date.now()
+        if (now - lastUpdateTimeRef.current < 5000) return // Throttle to 5 seconds
         const { latitude, longitude } = pos.coords
         const newLocation = [longitude, latitude]
         if (!lastLocationRef.current || getDistance(lastLocationRef.current, newLocation) > 100) {
           setLocation(newLocation)
           lastLocationRef.current = newLocation
+          lastUpdateTimeRef.current = now
         }
       },
       (err) => {
@@ -136,15 +153,51 @@ function Emergency() {
     if (!location) return
 
     const pitch = mapStyle.includes("satellite") ? 0 : mapStyle.includes("2d") ? 0 : 60
-    const map = new maplibregl.Map({
-      container: mapRef.current,
-      style: mapStyle,
-      center: location,
-      zoom: 15,
-      pitch,
-      bearing: 0,
-    })
-    mapInstanceRef.current = map
+    let map
+    try {
+      map = new maplibregl.Map({
+        container: mapRef.current,
+        style: {
+          version: 8,
+          sources: {
+            osm: {
+              type: "raster",
+              tiles: [mapStyle],
+              tileSize: 256,
+              attribution: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+            },
+          },
+          layers: [
+            {
+              id: "osm-tiles",
+              type: "raster",
+              source: "osm",
+              minzoom: 0,
+              maxzoom: 22,
+            },
+          ],
+        },
+        center: location,
+        zoom: 15,
+        pitch,
+        bearing: 0,
+      })
+      mapInstanceRef.current = map
+
+      map.on("error", (e) => {
+        console.error("Map error:", e)
+        alert("Failed to load map tiles. Please check your internet connection.")
+      })
+
+      map.on("load", () => {
+        map.resize()
+        map.triggerRepaint()
+      })
+    } catch (error) {
+      console.error("Map initialization error:", error)
+      alert("Failed to initialize map. Please refresh the page.")
+      return
+    }
 
     map.addControl(new maplibregl.NavigationControl(), "top-right")
     map.addControl(
@@ -157,13 +210,18 @@ function Emergency() {
     const styleToggle = document.createElement("select")
     styleToggle.className = "absolute top-2 left-2 p-2 bg-white rounded shadow z-10"
     styleToggle.innerHTML = `
-      <option value="https://tiles.stadiamaps.com/styles/alidade_smooth.json?2d=true">2D View</option>
-      <option value="https://tiles.stadiamaps.com/styles/alidade_smooth.json">3D View</option>
+      <option value="https://tile.openstreetmap.org/{z}/{x}/{y}.png?2d=true">2D View</option>
+      <option value="https://tile.openstreetmap.org/{z}/{x}/{y}.png">3D View</option>
       <option value="https://tiles.stadiamaps.com/styles/alidade_satellite.json">Satellite View</option>
     `
     styleToggle.onchange = (e) => {
       setMapStyle(e.target.value)
-      setTimeout(() => map.resize(), 100) // Force resize to fix rendering
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.resize()
+          mapInstanceRef.current.triggerRepaint()
+        }
+      }, 100)
     }
     map.getContainer().appendChild(styleToggle)
 
@@ -239,6 +297,7 @@ out body;`
             foot: routeData["foot-walking"]?.features[0]?.properties.segments[0],
             directions,
           })
+          lastSpokenStepRef.current = -1 // Reset spoken step on new route
         }
       } catch (error) {
         console.error("Error fetching hospitals:", error)
@@ -312,15 +371,41 @@ out body;`
     })
 
     return () => {
-      map.remove()
-      mapInstanceRef.current = null
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove()
+        mapInstanceRef.current = null
+      }
     }
   }, [location, routeGeoJSON, routeInfo, mapStyle])
 
   useEffect(() => {
-    if (!location || !destination || !mapInstanceRef.current) return
+    if (!location || !destination || !mapInstanceRef.current || !isTracking) return
     window.getRoute(destination[0], destination[1], routeInfo?.name || "Hospital/Clinic")
-  }, [location])
+  }, [location, destination, isTracking])
+
+  useEffect(() => {
+    if (!location || !mapInstanceRef.current || !isTracking) return
+    mapInstanceRef.current.flyTo({
+      center: location,
+      zoom: 16,
+      pitch: mapStyle.includes("satellite") ? 0 : mapStyle.includes("2d") ? 0 : 60,
+      bearing: 0,
+    })
+  }, [location, isTracking, mapStyle])
+
+  useEffect(() => {
+    if (!location || !routeInfo?.directions?.["driving-car"] || !isTracking || isMuted) return
+    const steps = routeInfo.directions["driving-car"]
+    steps.forEach((step, index) => {
+      if (index <= lastSpokenStepRef.current) return
+      const stepCoord = routeGeoJSON.features[0].geometry.coordinates[step.way_points[0]]
+      const distance = getDistance(location, stepCoord)
+      if (distance < 100) {
+        speakDirection(step.instruction)
+        lastSpokenStepRef.current = index
+      }
+    })
+  }, [location, routeInfo, routeGeoJSON, isTracking, isMuted])
 
   return (
     <>
@@ -362,13 +447,35 @@ out body;`
 
         <motion.div className="mt-12">
           <h2 className="text-2xl mb-4 text-center">Nearby Hospitals & Clinics</h2>
-          <div ref={mapRef} className="h-[500px] rounded-lg shadow-lg bg-gray-200 dark:bg-gray-800" />
+          <div
+            ref={mapRef}
+            className="h-[500px] rounded-lg shadow-lg bg-gray-200 dark:bg-gray-800 relative z-0"
+          />
           {routeInfo && (
             <div className="mt-4 text-center">
               <p><strong>Route to {routeInfo.name}</strong></p>
               <p>Car: {routeInfo.car?.distance / 1000} km, {Math.round(routeInfo.car?.duration / 60)} min</p>
               <p>Bike: {routeInfo.bike?.distance / 1000} km, {Math.round(routeInfo.bike?.duration / 60)} min</p>
               <p>Foot: {routeInfo.foot?.distance / 1000} km, {Math.round(routeInfo.foot?.duration / 60)} min</p>
+              <div className="mt-2 flex justify-center space-x-4">
+                <button
+                  onClick={() => setIsTracking(!isTracking)}
+                  className={`px-4 py-2 rounded-lg ${
+                    darkMode ? "bg-[#1E3A8A] text-[#FDFBFB]" : "bg-[#1E3A8A] text-white"
+                  } hover:bg-opacity-80`}
+                >
+                  {isTracking ? "Stop Tracking" : "Start Tracking"}
+                </button>
+                <button
+                  onClick={() => setIsMuted(!isMuted)}
+                  className={`px-4 py-2 rounded-lg ${
+                    darkMode ? "bg-[#1E3A8A] text-[#FDFBFB]" : "bg-[#1E3A8A] text-white"
+                  } hover:bg-opacity-80`}
+                >
+                  {isMuted ? <VolumeX className="inline mr-2" /> : <Volume2 className="inline mr-2" />}
+                  {isMuted ? "Unmute Voice" : "Mute Voice"}
+                </button>
+              </div>
               <div className="mt-2">
                 <strong>Directions (Car):</strong>
                 <ol className="list-decimal list-inside">
