@@ -1,4 +1,3 @@
-// Emergency.jsx
 import { useState, useContext, useEffect, useRef } from "react"
 import { Helmet } from "react-helmet-async"
 import { motion } from "framer-motion"
@@ -52,6 +51,7 @@ function Emergency() {
   const [location, setLocation] = useState(null)
   const [hospitals, setHospitals] = useState([])
   const [routeGeoJSON, setRouteGeoJSON] = useState(null)
+  const [routeInfo, setRouteInfo] = useState(null) // State for distance and time
 
   const emergencyServices = [
     { name: "Edhi Ambulance", phone: "115", icon: Ambulance },
@@ -110,12 +110,14 @@ function Emergency() {
   useEffect(() => {
     if (!location) return
 
+    // Initialize map with Google Maps-like style
     const map = new maplibregl.Map({
       container: mapRef.current,
-      style: "https://demotiles.maplibre.org/style.json",
+      style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json", // Google Maps-like style
       center: location,
-      zoom: 14,
-      pitch: 45,
+      zoom: 15, // Increased zoom for building details
+      pitch: 60, // 3D perspective for buildings
+      bearing: 0,
     })
 
     map.addControl(new maplibregl.NavigationControl(), "top-right")
@@ -126,11 +128,13 @@ function Emergency() {
       })
     )
 
+    // Add user location marker
     new maplibregl.Marker({ color: "blue" })
       .setLngLat(location)
       .setPopup(new maplibregl.Popup().setText("You are here"))
       .addTo(map)
 
+    // Fetch nearby hospitals and clinics
     const fetchHospitals = async () => {
       const [lon, lat] = location
       const query = `
@@ -165,12 +169,18 @@ out body;`
           )
           .addTo(map)
       })
+    }
 
-      window.getRoute = async (lon, lat) => {
+    fetchHospitals()
+
+    // Handle double-click to lock distance and show route
+    map.on("dblclick", async (e) => {
+      const { lng, lat } = e.lngLat
+      try {
         const response = await axios.post(
           `https://api.openrouteservice.org/v2/directions/driving-car/geojson`,
           {
-            coordinates: [location, [lon, lat]],
+            coordinates: [location, [lng, lat]],
           },
           {
             headers: {
@@ -179,33 +189,80 @@ out body;`
             },
           }
         )
-        setRouteGeoJSON(response.data)
-      }
-    }
+        const routeData = response.data
+        setRouteGeoJSON(routeData)
 
-    fetchHospitals()
-
-    map.on("load", () => {
-      if (routeGeoJSON) {
-        map.addSource("route", {
-          type: "geojson",
-          data: routeGeoJSON,
+        // Extract distance (in meters) and duration (in seconds)
+        const distance = routeData.features[0].properties.segments[0].distance / 1000 // Convert to km
+        const duration = routeData.features[0].properties.segments[0].duration / 60 // Convert to minutes
+        setRouteInfo({
+          distance: distance.toFixed(2),
+          duration: duration.toFixed(1),
         })
-
-        map.addLayer({
-          id: "route-line",
-          type: "line",
-          source: "route",
-          paint: {
-            "line-color": "#FF0000",
-            "line-width": 4,
-          },
-        })
+      } catch (error) {
+        console.error("Error fetching route:", error)
+        alert("Unable to calculate route. Please try again.")
       }
     })
 
+    // Add route layer when routeGeoJSON updates
+    map.on("load", () => {
+      if (routeGeoJSON) {
+        if (map.getSource("route")) {
+          map.getSource("route").setData(routeGeoJSON)
+        } else {
+          map.addSource("route", {
+            type: "geojson",
+            data: routeGeoJSON,
+          })
+
+          map.addLayer({
+            id: "route-line",
+            type: "line",
+            source: "route",
+            paint: {
+              "line-color": "#1E90FF", // Google Maps-like blue route
+              "line-width": 5,
+              "line-opacity": 0.8,
+            },
+          })
+        }
+
+        // Add popup or update UI with route info
+        if (routeInfo) {
+          const popup = new maplibregl.Popup()
+            .setLngLat(location) // Display at user location
+            .setHTML(`
+              <div style="font-family: Arial; padding: 10px;">
+                <strong>Route Info</strong><br/>
+                Distance: ${routeInfo.distance} km<br/>
+                Est. Time: ${routeInfo.duration} min
+              </div>
+            `)
+            .addTo(map)
+        }
+      }
+    })
+
+    // Add 3D buildings layer
+    map.on("load", () => {
+      map.addLayer({
+        id: "3d-buildings",
+        source: "composite",
+        "source-layer": "building",
+        type: "fill-extrusion",
+        minzoom: 14,
+        paint: {
+          "fill-extrusion-color": "#aaa",
+          "fill-extrusion-height": ["get", "height"],
+          "fill-extrusion-base": ["get", "min_height"],
+          "fill-extrusion-opacity": 0.6,
+        },
+      })
+    })
+
     return () => map.remove()
-  }, [location, routeGeoJSON])
+  }, [location, routeGeoJSON, routeInfo])
 
   return (
     <>
@@ -248,6 +305,12 @@ out body;`
         <motion.div className="mt-12">
           <h2 className="text-2xl mb-4 text-center">Nearby Hospitals & Clinics</h2>
           <div ref={mapRef} className="h-[500px] rounded-lg shadow-lg" />
+          {routeInfo && (
+            <div className="mt-4 text-center">
+              <p>Distance: {routeInfo.distance} km</p>
+              <p>Estimated Time: {routeInfo.duration} min</p>
+            </div>
+          )}
         </motion.div>
       </div>
     </>
