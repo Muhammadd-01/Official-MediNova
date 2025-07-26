@@ -6,15 +6,22 @@ function Contact() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [message, setMessage] = useState("")
+  const [feedback, setFeedback] = useState("")
 
-  const handleSubmit = (e) => {
+  const handleContactSubmit = (e) => {
     e.preventDefault()
-    // Here you would typically send the contact form data to your server
     console.log("Contact form submitted:", { name, email, message })
     alert("Thank you for contacting us. We will get back to you soon!")
     setName("")
     setEmail("")
     setMessage("")
+  }
+
+  const handleFeedbackSubmit = (e) => {
+    e.preventDefault()
+    console.log("Feedback submitted:", feedback)
+    alert("Thank you for your feedback!")
+    setFeedback("")
   }
 
   return (
@@ -37,14 +44,16 @@ function Contact() {
 
       <div className="container mx-auto px-4 py-16">
         <motion.h1
-          className="text-5xl font-bold mb-8 text-center text-white"
+          className="text-5xl font-bold mb-12 text-center text-white"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           Contact Us
         </motion.h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+          {/* Contact Form */}
           <motion.div
             className="bg-white rounded-lg shadow-lg p-8"
             initial={{ opacity: 0, x: -20 }}
@@ -52,7 +61,7 @@ function Contact() {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <h2 className="text-3xl font-bold mb-6 text-blue-900">Get in Touch</h2>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleContactSubmit}>
               <div className="mb-4">
                 <label htmlFor="name" className="block text-gray-700 font-bold mb-2">
                   Name:
@@ -100,6 +109,8 @@ function Contact() {
               </button>
             </form>
           </motion.div>
+
+          {/* Location Info */}
           <motion.div
             className="bg-white rounded-lg shadow-lg p-8"
             initial={{ opacity: 0, x: 20 }}
@@ -125,10 +136,38 @@ function Contact() {
             </div>
           </motion.div>
         </div>
+
+        {/* Feedback Form */}
+        <motion.div
+          className="bg-white rounded-lg shadow-lg p-8 max-w-3xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
+          <h2 className="text-3xl font-bold mb-6 text-blue-900">Provide Feedback</h2>
+          <form onSubmit={handleFeedbackSubmit}>
+            <label htmlFor="feedback" className="block text-gray-700 font-bold mb-2">
+              Your Feedback:
+            </label>
+            <textarea
+              id="feedback"
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              className="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-blue-500"
+              rows="6"
+              required
+            ></textarea>
+            <button
+              type="submit"
+              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300"
+            >
+              Submit Feedback
+            </button>
+          </form>
+        </motion.div>
       </div>
     </>
   )
 }
 
 export default Contact
-
