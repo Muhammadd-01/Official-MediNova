@@ -68,6 +68,8 @@ function Emergency() {
   const lastLocationRef = useRef(null)
   const lastSpokenStepRef = useRef(-1)
   const lastUpdateTimeRef = useRef(0)
+  const lastDistanceUpdateRef = useRef(0)
+  const lastClosestIndexRef = useRef(0)
 
   const emergencyServices = [
     { name: "Edhi Ambulance", phone: "115", icon: Ambulance },
@@ -123,6 +125,17 @@ function Emergency() {
       Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     return R * c
+  }
+
+  const getBearing = (loc1, loc2) => {
+    const toRad = (x) => (x * Math.PI) / 180
+    const toDeg = (x) => (x * 180) / Math.PI
+    const lat1 = toRad(loc1[1]), lon1 = toRad(loc1[0])
+    const lat2 = toRad(loc2[1]), lon2 = toRad(loc2[0])
+    const dLon = lon2 - lon1
+    const y = Math.sin(dLon) * Math.cos(lat2)
+    const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon)
+    return (toDeg(Math.atan2(y, x)) + 360) % 360
   }
 
   const speakDirection = (text) => {
@@ -379,6 +392,7 @@ out body;`
               directions,
             })
             lastSpokenStepRef.current = -1
+            lastDistanceUpdateRef.current = 0
 
             // Add route layer immediately
             if (mapInstanceRef.current && routeData["driving-car"]) {
@@ -428,15 +442,24 @@ out body;`
     // Update user marker
     if (userMarkerRef.current) {
       userMarkerRef.current.setLngLat(location)
-      if (isTracking && heading !== null) {
+      if (isTracking) {
         // Switch to arrow marker
         userMarkerRef.current.remove()
         const arrowEl = document.createElement("div")
-        arrowEl.style.width = "20px"
-        arrowEl.style.height = "20px"
+        arrowEl.style.width = "24px"
+        arrowEl.style.height = "24px"
         arrowEl.style.backgroundColor = "blue"
         arrowEl.style.clipPath = "polygon(50% 0%, 100% 100%, 0% 100%)"
-        arrowEl.style.transform = `rotate(${heading}deg)`
+        arrowEl.style.border = "1px solid white"
+        let arrowHeading = heading
+        if (arrowHeading === null && routeGeoJSON && routeGeoJSON.features[0].geometry.coordinates.length > 1) {
+          // Use route direction if heading is unavailable
+          const nextPoint = routeGeoJSON.features[0].geometry.coordinates[1]
+          arrowHeading = getBearing(location, nextPoint)
+        }
+        if (arrowHeading !== null) {
+          arrowEl.style.transform = `rotate(${arrowHeading}deg)`
+        }
         userMarkerRef.current = new maplibregl.Marker(arrowEl)
           .setLngLat(location)
           .addTo(mapInstanceRef.current)
@@ -470,11 +493,20 @@ out body;`
     if (isTracking) {
       mapInstanceRef.current.easeTo({
         center: location,
+        zoom: 16, // Closer zoom for navigation
         duration: 1000,
       })
 
       // Update route dynamically
       window.getRoute(destination[0], destination[1], routeInfo?.name || "Hospital/Clinic")
+
+      // Periodic distance update (every 30 seconds)
+      const now = Date.now()
+      if (now - lastDistanceUpdateRef.current > 30000) {
+        const distanceKm = (distanceToDest / 1000).toFixed(2)
+        speakDirection(`${distanceKm} kilometers to your destination.`)
+        lastDistanceUpdateRef.current = now
+      }
 
       // Trim route line to show only remaining path
       if (routeGeoJSON && routeGeoJSON.features[0].geometry.coordinates.length > 1) {
@@ -488,37 +520,41 @@ out body;`
             closestIndex = i
           }
         }
-        // Slice coordinates from the closest point onward
-        const trimmedCoords = coords.slice(closestIndex)
-        const trimmedGeoJSON = {
-          ...routeGeoJSON,
-          features: [
-            {
-              ...routeGeoJSON.features[0],
-              geometry: {
-                ...routeGeoJSON.features[0].geometry,
-                coordinates: trimmedCoords,
+        // Only update if closest point has changed significantly
+        if (Math.abs(closestIndex - lastClosestIndexRef.current) > 2) {
+          const trimmedCoords = coords.slice(closestIndex)
+          const trimmedGeoJSON = {
+            ...routeGeoJSON,
+            features: [
+              {
+                ...routeGeoJSON.features[0],
+                geometry: {
+                  ...routeGeoJSON.features[0].geometry,
+                  coordinates: trimmedCoords,
+                },
               },
-            },
-          ],
-        }
-        if (mapInstanceRef.current.getSource("route")) {
-          mapInstanceRef.current.getSource("route").setData(trimmedGeoJSON)
+            ],
+          }
+          if (mapInstanceRef.current.getSource("route")) {
+            mapInstanceRef.current.getSource("route").setData(trimmedGeoJSON)
+          }
+          lastClosestIndexRef.current = closestIndex
         }
       }
-    }
 
-    if (routeInfo?.directions?.["driving-car"] && isTracking && !isMuted) {
-      const steps = routeInfo.directions["driving-car"]
-      steps.forEach((step, index) => {
-        if (index <= lastSpokenStepRef.current) return
-        const stepCoord = routeGeoJSON.features[0].geometry.coordinates[step.way_points[0]]
-        const distance = getDistance(location, stepCoord)
-        if (distance < 100) {
-          speakDirection(step.instruction)
-          lastSpokenStepRef.current = index
-        }
-      })
+      // Voice guidance for navigation steps
+      if (routeInfo?.directions?.["driving-car"] && !isMuted) {
+        const steps = routeInfo.directions["driving-car"]
+        steps.forEach((step, index) => {
+          if (index <= lastSpokenStepRef.current) return
+          const stepCoord = routeGeoJSON.features[0].geometry.coordinates[step.way_points[0]]
+          const distance = getDistance(location, stepCoord)
+          if (distance < 150) {
+            speakDirection(step.instruction)
+            lastSpokenStepRef.current = index
+          }
+        })
+      }
     }
   }, [location, heading, isTracking, destination, routeInfo, routeGeoJSON])
 
