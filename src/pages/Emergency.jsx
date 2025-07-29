@@ -52,7 +52,9 @@ function Emergency() {
   const { darkMode } = useContext(DarkModeContext)
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
+  const userMarkerRef = useRef(null)
   const [location, setLocation] = useState(null)
+  const [heading, setHeading] = useState(null)
   const [hospitals, setHospitals] = useState([])
   const [routeGeoJSON, setRouteGeoJSON] = useState(null)
   const [routeInfo, setRouteInfo] = useState(null)
@@ -136,10 +138,11 @@ function Emergency() {
       (pos) => {
         const now = Date.now()
         if (now - lastUpdateTimeRef.current < 15000) return // Throttle to 15 seconds
-        const { latitude, longitude } = pos.coords
+        const { latitude, longitude, heading } = pos.coords
         const newLocation = [longitude, latitude]
         if (!lastLocationRef.current || getDistance(lastLocationRef.current, newLocation) > 150) {
           setLocation(newLocation)
+          if (heading !== null) setHeading(heading)
           lastLocationRef.current = newLocation
           lastUpdateTimeRef.current = now
         }
@@ -278,12 +281,17 @@ function Emergency() {
                 },
               })
             }
+            // Re-add user marker
+            if (userMarkerRef.current) {
+              userMarkerRef.current.addTo(mapInstanceRef.current)
+            }
           })
         }
       }
       map.getContainer().appendChild(styleToggle)
 
-      new maplibregl.Marker({ color: "blue" })
+      // Initialize user marker
+      userMarkerRef.current = new maplibregl.Marker({ color: "blue" })
         .setLngLat(location)
         .setPopup(new maplibregl.Popup().setText("You are here"))
         .addTo(map)
@@ -333,6 +341,14 @@ out body;`
           window.getRoute = async (lon, lat, name) => {
             setDestination([lon, lat])
             setIsTracking(false)
+            // Center map on selected hospital/clinic
+            if (mapInstanceRef.current) {
+              mapInstanceRef.current.easeTo({
+                center: [lon, lat],
+                zoom: 15,
+                duration: 1000,
+              })
+            }
             const modes = ["driving-car", "cycling-regular", "foot-walking"]
             const routeData = {}
             const directions = {}
@@ -407,7 +423,49 @@ out body;`
   }, [location, mapStyle])
 
   useEffect(() => {
-    if (!location || !mapInstanceRef.current || !destination) return
+    if (!location || !mapInstanceRef.current) return
+
+    // Update user marker
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setLngLat(location)
+      if (isTracking && heading !== null) {
+        // Switch to arrow marker
+        userMarkerRef.current.remove()
+        const arrowEl = document.createElement("div")
+        arrowEl.style.width = "20px"
+        arrowEl.style.height = "20px"
+        arrowEl.style.backgroundColor = "blue"
+        arrowEl.style.clipPath = "polygon(50% 0%, 100% 100%, 0% 100%)"
+        arrowEl.style.transform = `rotate(${heading}deg)`
+        userMarkerRef.current = new maplibregl.Marker(arrowEl)
+          .setLngLat(location)
+          .addTo(mapInstanceRef.current)
+      } else if (!isTracking && userMarkerRef.current.getElement().style.clipPath) {
+        // Switch back to blue marker
+        userMarkerRef.current.remove()
+        userMarkerRef.current = new maplibregl.Marker({ color: "blue" })
+          .setLngLat(location)
+          .setPopup(new maplibregl.Popup().setText("You are here"))
+          .addTo(mapInstanceRef.current)
+      }
+    }
+
+    if (!destination) return
+
+    // Check if arrived at destination
+    const distanceToDest = getDistance(location, destination)
+    if (distanceToDest < 50) {
+      speakDirection("You have arrived at your destination.")
+      setDestination(null)
+      setRouteGeoJSON(null)
+      setRouteInfo(null)
+      setIsTracking(false)
+      if (mapInstanceRef.current.getSource("route")) {
+        mapInstanceRef.current.removeLayer("route-line")
+        mapInstanceRef.current.removeSource("route")
+      }
+      return
+    }
 
     if (isTracking) {
       mapInstanceRef.current.easeTo({
@@ -417,6 +475,37 @@ out body;`
 
       // Update route dynamically
       window.getRoute(destination[0], destination[1], routeInfo?.name || "Hospital/Clinic")
+
+      // Trim route line to show only remaining path
+      if (routeGeoJSON && routeGeoJSON.features[0].geometry.coordinates.length > 1) {
+        const coords = routeGeoJSON.features[0].geometry.coordinates
+        let closestIndex = 0
+        let minDistance = getDistance(location, coords[0])
+        for (let i = 1; i < coords.length; i++) {
+          const dist = getDistance(location, coords[i])
+          if (dist < minDistance) {
+            minDistance = dist
+            closestIndex = i
+          }
+        }
+        // Slice coordinates from the closest point onward
+        const trimmedCoords = coords.slice(closestIndex)
+        const trimmedGeoJSON = {
+          ...routeGeoJSON,
+          features: [
+            {
+              ...routeGeoJSON.features[0],
+              geometry: {
+                ...routeGeoJSON.features[0].geometry,
+                coordinates: trimmedCoords,
+              },
+            },
+          ],
+        }
+        if (mapInstanceRef.current.getSource("route")) {
+          mapInstanceRef.current.getSource("route").setData(trimmedGeoJSON)
+        }
+      }
     }
 
     if (routeInfo?.directions?.["driving-car"] && isTracking && !isMuted) {
@@ -431,7 +520,7 @@ out body;`
         }
       })
     }
-  }, [location, isTracking, destination, routeInfo])
+  }, [location, heading, isTracking, destination, routeInfo, routeGeoJSON])
 
   // Handle search suggestions
   useEffect(() => {
@@ -450,6 +539,14 @@ out body;`
   const handleSearchSelect = (lon, lat, name) => {
     setSearchQuery("")
     setSearchSuggestions([])
+    // Center map on selected hospital/clinic
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.easeTo({
+        center: [lon, lat],
+        zoom: 15,
+        duration: 1000,
+      })
+    }
     window.getRoute(lon, lat, name)
   }
 
