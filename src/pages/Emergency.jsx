@@ -196,7 +196,9 @@ function Emergency() {
                 type: "raster",
                 tiles: [getMapTileUrl(mapStyle)],
                 tileSize: 256,
-                attribution: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+                // Remove default attribution to hide watermark
+                // Note: Ensure compliance with tile provider terms (e.g., OpenStreetMap, ArcGIS)
+                attribution: "",
               },
             },
             layers: [
@@ -213,8 +215,14 @@ function Emergency() {
           zoom: 15,
           pitch: mapStyle === "3d" ? 60 : 0,
           bearing: 0,
+          attributionControl: false // Disable default watermark
         })
         mapInstanceRef.current = map
+
+        // Optional: Add custom attribution if required by tile provider
+        // map.addControl(new maplibregl.AttributionControl({
+        //   customAttribution: 'Map data © OpenStreetMap contributors'
+        // }), 'bottom-right')
 
         map.on("error", (e) => {
           console.error("Map error:", e.error)
@@ -259,7 +267,7 @@ function Emergency() {
                 type: "raster",
                 tiles: [getMapTileUrl(newStyle)],
                 tileSize: 256,
-                attribution: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+                attribution: "",
               },
             },
             layers: [
