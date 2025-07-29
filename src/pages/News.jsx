@@ -17,7 +17,6 @@ export default function News() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [country, setCountry] = useState("")
-  const [sort, setSort] = useState("recent")
 
   const API_KEY = "pub_c23217c4872549139b929f791ca977d8"
 
@@ -28,24 +27,28 @@ export default function News() {
 
       try {
         const url = `https://newsdata.io/api/1/news`
-        const res = await axios.get(url, {
-          params: {
-            apikey: API_KEY,
-            category: "health",
-            language: "en",
-            country: country || undefined,
-            page_size: 20,
-          },
-        })
+        const params = {
+          apikey: API_KEY,
+          category: "health",
+          language: "en",
+          page_size: 20,
+        }
+        if (country) params.country = country // Only include country if not empty
 
-        if (res.data && res.data.results) {
+        const res = await axios.get(url, { params })
+
+        if (res.data.status === "success" && res.data.results?.length) {
           setNews(res.data.results)
         } else {
-          throw new Error("No news found")
+          throw new Error(res.data.message || "No news found")
         }
       } catch (err) {
-        console.error(err)
-        setError("⚠️ Failed to fetch medical news. Please check your API key or try again later.")
+        console.error("Error details:", {
+          message: err.message,
+          status: err.response?.status,
+          data: err.response?.data,
+        })
+        setError("⚠️ Failed to fetch medical news. Please check your API key, network, or try again later.")
       } finally {
         setLoading(false)
       }
@@ -56,13 +59,9 @@ export default function News() {
 
   const resetFilters = () => {
     setCountry("")
-    setSort("recent")
   }
 
-  const sortedNews =
-    sort === "popularity"
-      ? [...news].sort((a, b) => b.popularity - a.popularity)
-      : [...news].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
+  const sortedNews = [...news].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
 
   const darkMode = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
   const mainColor = "#06294D"
@@ -78,11 +77,6 @@ export default function News() {
       <Helmet><title>Medical News | MediNova</title></Helmet>
 
       <div className="flex gap-4 items-center mb-4">
-        <select value={sort} onChange={e => setSort(e.target.value)} className="p-2 border rounded">
-          <option value="recent">Recent</option>
-          <option value="popularity">Popularity</option>
-        </select>
-
         <select value={country} onChange={e => setCountry(e.target.value)} className="p-2 border rounded">
           {countries.map(c => (
             <option key={c.code} value={c.code}>{c.name}</option>
