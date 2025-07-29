@@ -26,7 +26,7 @@ export default function News() {
       setError(null)
 
       try {
-        const url = `https://newsdata.io/api/1/news`
+        const url = "/api/1/news" // Use proxy to bypass CORS
         const params = {
           apikey: API_KEY,
           category: "health",
@@ -36,6 +36,12 @@ export default function News() {
         if (country) params.country = country // Only include country if not empty
 
         const res = await axios.get(url, { params })
+        console.log("API Response:", res.data) // Log full response for debugging
+
+        // Check if response is HTML (indicating proxy misconfiguration)
+        if (typeof res.data === "string" && res.data.includes("<!DOCTYPE html>")) {
+          throw new Error("Received HTML instead of JSON. Check Vite proxy configuration in vite.config.js.")
+        }
 
         if (res.data.status === "success" && res.data.results?.length) {
           setNews(res.data.results)
@@ -47,8 +53,23 @@ export default function News() {
           message: err.message,
           status: err.response?.status,
           data: err.response?.data,
+          code: err.code, // Log network/CORS error code
         })
-        setError("⚠️ Failed to fetch medical news. Please check your API key, network, or try again later.")
+        let errorMessage = "⚠️ Failed to fetch medical news. "
+        if (err.message.includes("HTML instead of JSON")) {
+          errorMessage += "Proxy misconfigured. Ensure vite.config.js has correct proxy settings for /api."
+        } else if (err.code === "ERR_NETWORK" || err.message.includes("Network Error")) {
+          errorMessage += "Network issue or CORS restriction. Check your internet or proxy settings."
+        } else if (err.response?.status === 401) {
+          errorMessage += "Invalid API key. Please verify your key at newsdata.io."
+        } else if (err.response?.status === 429) {
+          errorMessage += "API rate limit exceeded. Try again later or upgrade your plan."
+        } else if (err.response?.status === 400) {
+          errorMessage += "Invalid request parameters. Check category or country settings."
+        } else {
+          errorMessage += "Please check your network or try again later."
+        }
+        setError(errorMessage)
       } finally {
         setLoading(false)
       }
