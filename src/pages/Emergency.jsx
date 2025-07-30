@@ -196,8 +196,6 @@ function Emergency() {
                 type: "raster",
                 tiles: [getMapTileUrl(mapStyle)],
                 tileSize: 256,
-                // Remove default attribution to hide watermark
-                // Note: Ensure compliance with tile provider terms (e.g., OpenStreetMap, ArcGIS)
                 attribution: "",
               },
             },
@@ -215,14 +213,9 @@ function Emergency() {
           zoom: 15,
           pitch: mapStyle === "3d" ? 60 : 0,
           bearing: 0,
-          attributionControl: false // Disable default watermark
+          attributionControl: false
         })
         mapInstanceRef.current = map
-
-        // Optional: Add custom attribution if required by tile provider
-        // map.addControl(new maplibregl.AttributionControl({
-        //   customAttribution: 'Map data © OpenStreetMap contributors'
-        // }), 'bottom-right')
 
         map.on("error", (e) => {
           console.error("Map error:", e.error)
@@ -285,7 +278,6 @@ function Emergency() {
             mapInstanceRef.current.resize()
             mapInstanceRef.current.triggerRepaint()
             setIsMapLoaded(true)
-            // Re-add route layer if exists
             if (routeGeoJSON) {
               mapInstanceRef.current.addSource("route", {
                 type: "geojson",
@@ -302,7 +294,6 @@ function Emergency() {
                 },
               })
             }
-            // Re-add user marker
             if (userMarkerRef.current) {
               userMarkerRef.current.addTo(mapInstanceRef.current)
             }
@@ -311,7 +302,6 @@ function Emergency() {
       }
       map.getContainer().appendChild(styleToggle)
 
-      // Initialize user marker
       userMarkerRef.current = new maplibregl.Marker({ color: "blue" })
         .setLngLat(location)
         .setPopup(new maplibregl.Popup().setText("You are here"))
@@ -322,8 +312,8 @@ function Emergency() {
         const query = `
 [out:json][timeout:25];
 (
-  node["amenity"="hospital"](around:5000,${lat},${lon});
-  node["amenity"="clinic"](around:5000,${lat},${lon});
+  node["amenity"="hospital"](around:10000,${lat},${lon});
+  node["amenity"="clinic"](around:10000,${lat},${lon});
 );
 out body;`
         try {
@@ -362,7 +352,6 @@ out body;`
           window.getRoute = async (lon, lat, name) => {
             setDestination([lon, lat])
             setIsTracking(false)
-            // Center map on selected hospital/clinic
             if (mapInstanceRef.current) {
               mapInstanceRef.current.easeTo({
                 center: [lon, lat],
@@ -402,7 +391,6 @@ out body;`
             lastSpokenStepRef.current = -1
             lastDistanceUpdateRef.current = 0
 
-            // Add route layer immediately
             if (mapInstanceRef.current && routeData["driving-car"]) {
               if (mapInstanceRef.current.getSource("route")) {
                 mapInstanceRef.current.getSource("route").setData(routeData["driving-car"])
@@ -447,11 +435,9 @@ out body;`
   useEffect(() => {
     if (!location || !mapInstanceRef.current) return
 
-    // Update user marker
     if (userMarkerRef.current) {
       userMarkerRef.current.setLngLat(location)
       if (isTracking) {
-        // Switch to arrow marker
         userMarkerRef.current.remove()
         const arrowEl = document.createElement("div")
         arrowEl.style.width = "24px"
@@ -461,7 +447,6 @@ out body;`
         arrowEl.style.border = "1px solid white"
         let arrowHeading = heading
         if (arrowHeading === null && routeGeoJSON && routeGeoJSON.features[0].geometry.coordinates.length > 1) {
-          // Use route direction if heading is unavailable
           const nextPoint = routeGeoJSON.features[0].geometry.coordinates[1]
           arrowHeading = getBearing(location, nextPoint)
         }
@@ -472,7 +457,6 @@ out body;`
           .setLngLat(location)
           .addTo(mapInstanceRef.current)
       } else if (!isTracking && userMarkerRef.current.getElement().style.clipPath) {
-        // Switch back to blue marker
         userMarkerRef.current.remove()
         userMarkerRef.current = new maplibregl.Marker({ color: "blue" })
           .setLngLat(location)
@@ -483,7 +467,6 @@ out body;`
 
     if (!destination) return
 
-    // Check if arrived at destination
     const distanceToDest = getDistance(location, destination)
     if (distanceToDest < 50) {
       speakDirection("You have arrived at your destination.")
@@ -501,14 +484,12 @@ out body;`
     if (isTracking) {
       mapInstanceRef.current.easeTo({
         center: location,
-        zoom: 16, // Closer zoom for navigation
+        zoom: 16,
         duration: 1000,
       })
 
-      // Update route dynamically
       window.getRoute(destination[0], destination[1], routeInfo?.name || "Hospital/Clinic")
 
-      // Periodic distance update (every 30 seconds)
       const now = Date.now()
       if (now - lastDistanceUpdateRef.current > 30000) {
         const distanceKm = (distanceToDest / 1000).toFixed(2)
@@ -516,7 +497,6 @@ out body;`
         lastDistanceUpdateRef.current = now
       }
 
-      // Trim route line to show only remaining path
       if (routeGeoJSON && routeGeoJSON.features[0].geometry.coordinates.length > 1) {
         const coords = routeGeoJSON.features[0].geometry.coordinates
         let closestIndex = 0
@@ -528,7 +508,6 @@ out body;`
             closestIndex = i
           }
         }
-        // Only update if closest point has changed significantly
         if (Math.abs(closestIndex - lastClosestIndexRef.current) > 2) {
           const trimmedCoords = coords.slice(closestIndex)
           const trimmedGeoJSON = {
@@ -550,7 +529,6 @@ out body;`
         }
       }
 
-      // Voice guidance for navigation steps
       if (routeInfo?.directions?.["driving-car"] && !isMuted) {
         const steps = routeInfo.directions["driving-car"]
         steps.forEach((step, index) => {
@@ -566,7 +544,6 @@ out body;`
     }
   }, [location, heading, isTracking, destination, routeInfo, routeGeoJSON])
 
-  // Handle search suggestions
   useEffect(() => {
     if (!searchQuery) {
       setSearchSuggestions([])
@@ -576,14 +553,13 @@ out body;`
       .filter(h => 
         (h.tags.name || "Hospital/Clinic").toLowerCase().includes(searchQuery.toLowerCase())
       )
-      .slice(0, 5) // Limit to 5 suggestions
+      .slice(0, 5)
     setSearchSuggestions(filtered)
   }, [searchQuery, hospitals])
 
   const handleSearchSelect = (lon, lat, name) => {
     setSearchQuery("")
     setSearchSuggestions([])
-    // Center map on selected hospital/clinic
     if (mapInstanceRef.current) {
       mapInstanceRef.current.easeTo({
         center: [lon, lat],
