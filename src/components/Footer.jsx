@@ -35,7 +35,7 @@ function Footer() {
                     to={path}
                     className={`transition duration-300 ${hoverColor}`}
                   >
-                    {["Home", "About Us", "Articles", "News"][i]}
+                    {["Home", "About Us", "Articles"][i]}
                   </Link>
                 </li>
               ))}

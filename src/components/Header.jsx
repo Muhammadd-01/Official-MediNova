@@ -18,7 +18,7 @@ function Header() {
     "Medicine Suggestion",
     "Consultation",
     "Articles",
-    "News",
+    // "News",
     "Emergency",
     "Contact",
   ];
