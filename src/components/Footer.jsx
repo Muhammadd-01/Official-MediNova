@@ -14,14 +14,17 @@ function Footer() {
   const borderColor = darkMode ? "border-white/20" : "border-[#0A2A43]/20";
 
   return (
-    <footer className={`py-10 transition-all duration-300 mt-auto w-full ${bgColor} ${textColor}`}>
+    <footer
+      className={`py-10 transition-all duration-300 mt-auto w-full ${bgColor} ${textColor}`}
+    >
       <div className="px-4 max-w-screen-xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About */}
           <div>
             <h3 className="text-lg font-semibold mb-4">About MediNova</h3>
             <p className="text-sm">
-              MediNova is your trusted source for medical information, expert consultations, and health-related services.
+              MediNova is your trusted source for medical information, expert
+              consultations, and health-related services.
             </p>
           </div>
 
@@ -29,13 +32,13 @@ function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              {["/", "/about", "/articles", "/news"].map((path, i) => (
+              {["/", "/about", "/articles", "/consultation"].map((path, i) => (
                 <li key={i}>
                   <Link
                     to={path}
                     className={`transition duration-300 ${hoverColor}`}
                   >
-                    {["Home", "About Us", "Articles"][i]}
+                    {["Home", "About Us", "Articles", "Consultation"][i]}
                   </Link>
                 </li>
               ))}
@@ -51,7 +54,6 @@ function Footer() {
                 { path: "/consultation", label: "Expert Consultation" },
                 { path: "/emergency", label: "Emergency Services" },
                 { path: "/contact", label: "Contact Us" },
-
               ].map(({ path, label }) => (
                 <li key={path}>
                   <Link
