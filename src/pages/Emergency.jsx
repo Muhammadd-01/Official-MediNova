@@ -19,7 +19,7 @@ import axios from "axios"
 import "maplibre-gl/dist/maplibre-gl.css"
 
 const orsApiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjgyNGUwMDBmYzBiNTQxODRiNDczYTIwY2Q3YjIxYWQ2IiwiaCI6Im11cm11cjY0In0="
-const mapTilerKey = process.env.REACT_APP_MAPTILER_KEY || "" // Set in .env or replace with your MapTiler API key
+const mapboxKey = process.env.REACT_APP_MAPBOX_KEY || "" // Set in .env or replace with your Mapbox API key
 
 function EmergencyGuide({ title, steps }) {
   const [isExpanded, setIsExpanded] = useState(false)
@@ -57,13 +57,13 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
 
   const getMapStyle = (style) => {
     if (style === "satellite") {
-      if (mapTilerKey) {
+      if (mapboxKey) {
         return {
           version: 8,
           sources: {
             satellite: {
               type: "raster",
-              tiles: [`https://api.maptiler.com/tiles/satellite/{z}/{x}/{y}.jpg?key=${mapTilerKey}`],
+              tiles: [`https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg?access_token=${mapboxKey}`],
               tileSize: 256,
               attribution: "",
             },
@@ -84,7 +84,7 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
         sources: {
           satellite: {
             type: "raster",
-            tiles: ["https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}.jpg"],
+            tiles: ["https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default//GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg"],
             tileSize: 256,
             attribution: "",
           },
@@ -100,8 +100,8 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
         ],
       }
     }
-    if (mapTilerKey) {
-      return `https://api.maptiler.com/maps/streets-v2/style.json?key=${mapTilerKey}`
+    if (mapboxKey) {
+      return `https://api.mapbox.com/styles/v1/mapbox/streets-v11?access_token=${mapboxKey}`
     }
     return {
       version: 8,
@@ -183,7 +183,7 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
                 sources: {
                   satellite: {
                     type: "raster",
-                    tiles: ["https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}.jpg"],
+                    tiles: ["https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default//GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg"],
                     tileSize: 256,
                     attribution: "",
                   },
@@ -256,10 +256,10 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
             className={`absolute top-16 left-4 w-32 rounded-lg shadow-lg overflow-hidden ${
               darkMode ? "bg-[#0A2A43] border-gray-600" : "bg-white border-gray-300"
             }`}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, scaleY: 0, transformOrigin: "top" }}
+            animate={{ opacity: 1, scaleY: 1, transformOrigin: "top" }}
+            exit={{ opacity: 0, scaleY: 0, transformOrigin: "top" }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             {["2d", "3d", "satellite"].map((style) => (
               <motion.li
@@ -271,7 +271,7 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
                       ? "bg-[#1E3A8A] text-white"
                       : "bg-[#1E3A8A] text-white"
                     : darkMode
-                    ? "text-[#0A2A43] hover:bg-[#1E3A8A]/50 hover:text-white"
+                    ? "text-[#0A2A43] hoveSystem: r:bg-[#1E3A8A]/50 hover:text-white"
                     : "text-[#1E3A8A] hover:bg-[#1E3A8A]/50 hover:text-white"
                 }`}
                 whileHover={{ backgroundColor: darkMode ? "#1E3A8A" : "#F3F4F6" }}
@@ -444,8 +444,8 @@ function Emergency() {
       try {
         map = new maplibregl.Map({
           container: mapRef.current,
-          style: mapTilerKey
-            ? `https://api.maptiler.com/maps/streets-v2/style.json?key=${mapTilerKey}`
+          style: mapboxKey
+            ? `https://api.mapbox.com/styles/v1/mapbox/streets-v11?access_token=${mapboxKey}`
             : {
                 version: 8,
                 sources: {
@@ -484,7 +484,7 @@ function Emergency() {
                 sources: {
                   satellite: {
                     type: "raster",
-                    tiles: ["https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}.jpg"],
+                    tiles: ["https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default//GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg"],
                     tileSize: 256,
                     attribution: "",
                   },
