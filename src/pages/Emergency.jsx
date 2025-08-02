@@ -19,6 +19,7 @@ import axios from "axios"
 import "maplibre-gl/dist/maplibre-gl.css"
 
 const orsApiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjgyNGUwMDBmYzBiNTQxODRiNDczYTIwY2Q3YjIxYWQ2IiwiaCI6Im11cm11cjY0In0="
+const mapTilerKey = process.env.REACT_APP_MAPTILER_KEY || "" // Set in .env or replace with your MapTiler API key
 
 function EmergencyGuide({ title, steps }) {
   const [isExpanded, setIsExpanded] = useState(false)
@@ -50,24 +51,55 @@ function EmergencyGuide({ title, steps }) {
   )
 }
 
-const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON, userMarkerRef, setIsMapLoaded }) => {
+const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON, userMarkerRef, setIsMapLoaded, destination, routeInfo }) => {
   const { darkMode } = useContext(DarkModeContext)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-  const getMapTileUrl = (style) => {
-    switch (style) {
-      case "3d":
-      case "2d":
-        return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-      case "satellite":
-        try {
-          return "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-        } catch (e) {
-          console.warn("Satellite tile URL failed, falling back to OpenStreetMap", e)
-          return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        }
-      default:
-        return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+  const getMapStyle = (style) => {
+    if (style === "satellite") {
+      return {
+        version: 8,
+        sources: {
+          satellite: {
+            type: "raster",
+            tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+            tileSize: 256,
+            attribution: "",
+          },
+        },
+        layers: [
+          {
+            id: "satellite-tiles",
+            type: "raster",
+            source: "satellite",
+            minzoom: 0,
+            maxzoom: 22,
+          },
+        ],
+      }
+    }
+    if (mapTilerKey) {
+      return `https://api.maptiler.com/maps/streets-v2/style.json?key=${mapTilerKey}`
+    }
+    return {
+      version: 8,
+      sources: {
+        osm: {
+          type: "raster",
+          tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+          tileSize: 256,
+          attribution: "",
+        },
+      },
+      layers: [
+        {
+          id: "osm-tiles",
+          type: "raster",
+          source: "osm",
+          minzoom: 0,
+          maxzoom: 22,
+        },
+      ],
     }
   }
 
@@ -77,28 +109,17 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
     setIsMenuOpen(false)
     if (mapInstanceRef.current) {
       try {
-        mapInstanceRef.current.setStyle({
-          version: 8,
-          sources: {
-            osm: {
-              type: "raster",
-              tiles: [getMapTileUrl(newStyle)],
-              tileSize: 256,
-              attribution: "",
-            },
-          },
-          layers: [
-            {
-              id: "osm-tiles",
-              type: "raster",
-              source: "osm",
-              minzoom: 0,
-              maxzoom: 22,
-            },
-          ],
-        })
+        mapInstanceRef.current.setStyle(getMapStyle(newStyle))
         mapInstanceRef.current.once("style.load", () => {
           mapInstanceRef.current.setPitch(newStyle === "3d" ? 60 : 0)
+          if (newStyle === "3d") {
+            mapInstanceRef.current.addSource("maplibre-terrain", {
+              type: "raster-dem",
+              tiles: ["https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.png"],
+              tileSize: 256,
+            })
+            mapInstanceRef.current.setTerrain({ source: "maplibre-terrain", exaggeration: 1.5 })
+          }
           mapInstanceRef.current.resize()
           mapInstanceRef.current.triggerRepaint()
           setIsMapLoaded(true)
@@ -121,11 +142,37 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
           if (userMarkerRef.current) {
             userMarkerRef.current.addTo(mapInstanceRef.current)
           }
+          if (destination && routeInfo) {
+            mapInstanceRef.current.easeTo({
+              center: destination,
+              zoom: 15,
+              duration: 1000,
+            })
+          }
         })
       } catch (error) {
         console.error("Error switching map style:", error)
-        alert("Failed to switch map style. Please try again.")
-        setIsMapLoaded(false)
+        mapInstanceRef.current.setStyle({
+          version: 8,
+          sources: {
+            osm: {
+              type: "raster",
+              tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+              tileSize: 256,
+              attribution: "",
+            },
+          },
+          layers: [
+            {
+              id: "osm-tiles",
+              type: "raster",
+              source: "osm",
+              minzoom: 0,
+              maxzoom: 22,
+            },
+          ],
+        })
+        setIsMapLoaded(true)
       }
     }
   }
@@ -288,20 +335,21 @@ function Emergency() {
     window.speechSynthesis.speak(utterance)
   }
 
-  const getMapTileUrl = (style) => {
-    switch (style) {
-      case "3d":
-      case "2d":
-        return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-      case "satellite":
-        try {
-          return "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-        } catch (e) {
-          console.warn("Satellite tile URL failed, falling back to OpenStreetMap", e)
-          return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        }
-      default:
-        return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+  const cancelRoute = () => {
+    setDestination(null)
+    setRouteGeoJSON(null)
+    setRouteInfo(null)
+    setIsTracking(false)
+    if (mapInstanceRef.current && mapInstanceRef.current.getSource("route")) {
+      mapInstanceRef.current.removeLayer("route-line")
+      mapInstanceRef.current.removeSource("route")
+    }
+    if (mapInstanceRef.current && location) {
+      mapInstanceRef.current.easeTo({
+        center: location,
+        zoom: 15,
+        duration: 1000,
+      })
     }
   }
 
@@ -332,69 +380,74 @@ function Emergency() {
     if (!location || !mapRef.current) return
 
     const initializeMap = () => {
-      if (!mapRef.current) {
-        console.error("Map container is not available")
-        alert("Map container not found. Please refresh the page.")
+      // Ensure map container is ready
+      if (!mapRef.current || !document.body.contains(mapRef.current)) {
+        console.error("Map container is not available or not in DOM")
         setIsMapLoaded(false)
         return
       }
 
+      // Initialize map with fallback style
       let map
       try {
         map = new maplibregl.Map({
           container: mapRef.current,
-          style: {
-            version: 8,
-            sources: {
-              osm: {
-                type: "raster",
-                tiles: [getMapTileUrl(mapStyle)],
-                tileSize: 256,
-                attribution: "",
+          style: mapTilerKey
+            ? `https://api.maptiler.com/maps/streets-v2/style.json?key=${mapTilerKey}`
+            : {
+                version: 8,
+                sources: {
+                  osm: {
+                    type: "raster",
+                    tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+                    tileSize: 256,
+                    attribution: "",
+                  },
+                },
+                layers: [
+                  {
+                    id: "osm-tiles",
+                    type: "raster",
+                    source: "osm",
+                    minzoom: 0,
+                    maxzoom: 22,
+                  },
+                ],
               },
-            },
-            layers: [
-              {
-                id: "osm-tiles",
-                type: "raster",
-                source: "osm",
-                minzoom: 0,
-                maxzoom: 22,
-              },
-            ],
-          },
           center: location,
           zoom: 15,
           pitch: mapStyle === "3d" ? 60 : 0,
           bearing: 0,
-          attributionControl: false
+          attributionControl: false,
         })
         mapInstanceRef.current = map
 
         map.on("error", (e) => {
           console.error("Map error:", e.error)
-          alert(`Failed to load map tiles for ${mapStyle} mode: ${e.error.message}. Falling back to default tiles.`)
-          setIsMapLoaded(false)
-          map.setStyle({
-            version: 8,
-            sources: {
-              osm: {
-                type: "raster",
-                tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-                tileSize: 256,
-                attribution: "",
+          if (e.error.message.includes("403") || e.error.message.includes("openmaptiles")) {
+            console.warn("Tile source error, falling back to OpenStreetMap")
+            map.setStyle({
+              version: 8,
+              sources: {
+                osm: {
+                  type: "raster",
+                  tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+                  tileSize: 256,
+                  attribution: "",
+                },
               },
-            },
-            layers: [
-              {
-                id: "osm-tiles",
-                type: "raster",
-                source: "osm",
-                minzoom: 0,
-                maxzoom: 22,
-              },
-            ],
-          })
+              layers: [
+                {
+                  id: "osm-tiles",
+                  type: "raster",
+                  source: "osm",
+                  minzoom: 0,
+                  maxzoom: 22,
+                },
+              ],
+            })
+            setIsMapLoaded(true)
+          }
         })
 
         map.on("load", () => {
@@ -402,7 +455,15 @@ function Emergency() {
           map.resize()
           map.triggerRepaint()
 
-          // Add controls and markers after map load to avoid errors
+          if (mapStyle === "3d") {
+            map.addSource("maplibre-terrain", {
+              type: "raster-dem",
+              tiles: ["https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.png"],
+              tileSize: 256,
+            })
+            map.setTerrain({ source: "maplibre-terrain", exaggeration: 1.5 })
+          }
+
           map.addControl(new maplibregl.NavigationControl(), "top-right")
           map.addControl(
             new maplibregl.GeolocateControl({
@@ -529,23 +590,77 @@ out body;`
           }
 
           fetchHospitals()
+          if (destination && routeInfo && routeGeoJSON) {
+            map.easeTo({
+              center: destination,
+              zoom: 15,
+              duration: 1000,
+            })
+            map.addSource("route", {
+              type: "geojson",
+              data: routeGeoJSON,
+            })
+            map.addLayer({
+              id: "route-line",
+              type: "line",
+              source: "route",
+              paint: {
+                "line-color": "#1E90FF",
+                "line-width": 5,
+                "line-opacity": 0.8,
+              },
+            })
+          }
         })
       } catch (error) {
         console.error("Map initialization error:", error)
-        alert("Failed to initialize map: " + error.message + ". Please check your network and refresh the page.")
-        setIsMapLoaded(false)
-        return
+        setIsMapLoaded(true) // Force spinner to hide, use fallback
+        mapInstanceRef.current = new maplibregl.Map({
+          container: mapRef.current,
+          style: {
+            version: 8,
+            sources: {
+              osm: {
+                type: "raster",
+                tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+                tileSize: 256,
+                attribution: "",
+              },
+            },
+            layers: [
+              {
+                id: "osm-tiles",
+                type: "raster",
+                source: "osm",
+                minzoom: 0,
+                maxzoom: 22,
+              },
+            ],
+          },
+          center: location,
+          zoom: 15,
+          attributionControl: false,
+        })
       }
     }
 
-    const timeout = setTimeout(initializeMap, 500)
+    // Use MutationObserver to ensure container is ready
+    const observer = new MutationObserver(() => {
+      if (mapRef.current && document.body.contains(mapRef.current)) {
+        const timeout = setTimeout(initializeMap, 500)
+        observer.disconnect()
+        return () => clearTimeout(timeout)
+      }
+    })
+    observer.observe(document.body, { childList: true, subtree: true })
+
     return () => {
-      clearTimeout(timeout)
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove()
         mapInstanceRef.current = null
       }
       setIsMapLoaded(false)
+      observer.disconnect()
     }
   }, [location, mapStyle])
 
@@ -814,6 +929,8 @@ out body;`
               routeGeoJSON={routeGeoJSON}
               userMarkerRef={userMarkerRef}
               setIsMapLoaded={setIsMapLoaded}
+              destination={destination}
+              routeInfo={routeInfo}
             />
           </div>
           {routeInfo && (
@@ -839,6 +956,14 @@ out body;`
                 >
                   {isMuted ? <VolumeX className="inline mr-2" /> : <Volume2 className="inline mr-2" />}
                   {isMuted ? "Unmute Voice" : "Mute Voice"}
+                </button>
+                <button
+                  onClick={cancelRoute}
+                  className={`px-4 py-2 rounded-lg ${
+                    darkMode ? "bg-red-600 text-[#FDFBFB]" : "bg-red-600 text-white"
+                  } hover:bg-opacity-80`}
+                >
+                  Cancel Route
                 </button>
               </div>
               <div className="mt-2">
