@@ -11,7 +11,7 @@ import {
   VolumeX,
   Search,
   X,
-  MoreVertical,
+  Satellite,
 } from "lucide-react"
 import { DarkModeContext } from "../App"
 import maplibregl from "maplibre-gl"
@@ -84,7 +84,7 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
         sources: {
           satellite: {
             type: "raster",
-            tiles: ["https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"],
+            tiles: ["https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}.jpg"],
             tileSize: 256,
             attribution: "",
           },
@@ -176,26 +176,49 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
         })
       } catch (error) {
         console.error("Error switching map style:", error)
-        mapInstanceRef.current.setStyle({
-          version: 8,
-          sources: {
-            osm: {
-              type: "raster",
-              tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-              tileSize: 256,
-              attribution: "",
-            },
-          },
-          layers: [
-            {
-              id: "osm-tiles",
-              type: "raster",
-              source: "osm",
-              minzoom: 0,
-              maxzoom: 22,
-            },
-          ],
-        })
+        mapInstanceRef.current.setStyle(
+          newStyle === "satellite"
+            ? {
+                version: 8,
+                sources: {
+                  satellite: {
+                    type: "raster",
+                    tiles: ["https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}.jpg"],
+                    tileSize: 256,
+                    attribution: "",
+                  },
+                },
+                layers: [
+                  {
+                    id: "satellite-tiles",
+                    type: "raster",
+                    source: "satellite",
+                    minzoom: 0,
+                    maxzoom: 22,
+                  },
+                ],
+              }
+            : {
+                version: 8,
+                sources: {
+                  osm: {
+                    type: "raster",
+                    tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+                    tileSize: 256,
+                    attribution: "",
+                  },
+                },
+                layers: [
+                  {
+                    id: "osm-tiles",
+                    type: "raster",
+                    source: "osm",
+                    minzoom: 0,
+                    maxzoom: 22,
+                  },
+                ],
+              }
+        )
         setIsMapLoaded(true)
         setStyleLoading(false)
       }
@@ -213,15 +236,19 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
     >
       <motion.button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className={`p-2 rounded-full ${
+        className={`px-3 py-2 rounded-full flex items-center justify-center text-sm font-medium ${
           darkMode ? "text-[#0A2A43] hover:bg-[#1E3A8A]/50" : "text-[#1E3A8A] hover:bg-[#1E3A8A]/50"
         }`}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         aria-expanded={isMenuOpen}
-        aria-label="Toggle map style menu"
+        aria-label={`Current map style: ${mapStyle === "2d" ? "2D" : mapStyle === "3d" ? "3D" : "Satellite"}`}
       >
-        <MoreVertical className="w-5 h-5" />
+        {mapStyle === "satellite" ? (
+          <Satellite className="w-5 h-5" />
+        ) : (
+          mapStyle.toUpperCase()
+        )}
       </motion.button>
       <AnimatePresence>
         {isMenuOpen && (
@@ -362,7 +389,7 @@ function Emergency() {
   }
 
   const cancelRoute = () => {
-    window.speechSynthesis.cancel() // Stop any active speech
+    window.speechSynthesis.cancel()
     setDestination(null)
     setRouteGeoJSON(null)
     setRouteInfo(null)
@@ -457,7 +484,7 @@ function Emergency() {
                 sources: {
                   satellite: {
                     type: "raster",
-                    tiles: ["https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"],
+                    tiles: ["https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}.jpg"],
                     tileSize: 256,
                     attribution: "",
                   },
