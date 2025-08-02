@@ -51,18 +51,40 @@ function EmergencyGuide({ title, steps }) {
   )
 }
 
-const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON, userMarkerRef, setIsMapLoaded, destination, routeInfo }) => {
+const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON, userMarkerRef, setIsMapLoaded, setStyleLoading, destination, routeInfo }) => {
   const { darkMode } = useContext(DarkModeContext)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const getMapStyle = (style) => {
     if (style === "satellite") {
+      if (mapTilerKey) {
+        return {
+          version: 8,
+          sources: {
+            satellite: {
+              type: "raster",
+              tiles: [`https://api.maptiler.com/tiles/satellite/{z}/{x}/{y}.jpg?key=${mapTilerKey}`],
+              tileSize: 256,
+              attribution: "",
+            },
+          },
+          layers: [
+            {
+              id: "satellite-tiles",
+              type: "raster",
+              source: "satellite",
+              minzoom: 0,
+              maxzoom: 22,
+            },
+          ],
+        }
+      }
       return {
         version: 8,
         sources: {
           satellite: {
             type: "raster",
-            tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+            tiles: ["https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"],
             tileSize: 256,
             attribution: "",
           },
@@ -106,6 +128,7 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
   const handleStyleChange = (newStyle) => {
     setMapStyle(newStyle)
     setIsMapLoaded(false)
+    setStyleLoading(true)
     setIsMenuOpen(false)
     if (mapInstanceRef.current) {
       try {
@@ -123,6 +146,7 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
           mapInstanceRef.current.resize()
           mapInstanceRef.current.triggerRepaint()
           setIsMapLoaded(true)
+          setStyleLoading(false)
           if (routeGeoJSON) {
             mapInstanceRef.current.addSource("route", {
               type: "geojson",
@@ -173,6 +197,7 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
           ],
         })
         setIsMapLoaded(true)
+        setStyleLoading(false)
       }
     }
   }
@@ -251,6 +276,7 @@ function Emergency() {
   const [isTracking, setIsTracking] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [isMapLoaded, setIsMapLoaded] = useState(false)
+  const [styleLoading, setStyleLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [searchSuggestions, setSearchSuggestions] = useState([])
   const [isSearchActive, setIsSearchActive] = useState(false)
@@ -336,6 +362,7 @@ function Emergency() {
   }
 
   const cancelRoute = () => {
+    window.speechSynthesis.cancel() // Stop any active speech
     setDestination(null)
     setRouteGeoJSON(null)
     setRouteInfo(null)
@@ -380,14 +407,12 @@ function Emergency() {
     if (!location || !mapRef.current) return
 
     const initializeMap = () => {
-      // Ensure map container is ready
       if (!mapRef.current || !document.body.contains(mapRef.current)) {
         console.error("Map container is not available or not in DOM")
         setIsMapLoaded(false)
         return
       }
 
-      // Initialize map with fallback style
       let map
       try {
         map = new maplibregl.Map({
@@ -425,33 +450,58 @@ function Emergency() {
         map.on("error", (e) => {
           console.error("Map error:", e.error)
           if (e.error.message.includes("403") || e.error.message.includes("openmaptiles")) {
-            console.warn("Tile source error, falling back to OpenStreetMap")
-            map.setStyle({
-              version: 8,
-              sources: {
-                osm: {
-                  type: "raster",
-                  tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-                  tileSize: 256,
-                  attribution: "",
+            console.warn("Tile source error, attempting fallback")
+            if (mapStyle === "satellite") {
+              map.setStyle({
+                version: 8,
+                sources: {
+                  satellite: {
+                    type: "raster",
+                    tiles: ["https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"],
+                    tileSize: 256,
+                    attribution: "",
+                  },
                 },
-              },
-              layers: [
-                {
-                  id: "osm-tiles",
-                  type: "raster",
-                  source: "osm",
-                  minzoom: 0,
-                  maxzoom: 22,
+                layers: [
+                  {
+                    id: "satellite-tiles",
+                    type: "raster",
+                    source: "satellite",
+                    minzoom: 0,
+                    maxzoom: 22,
+                  },
+                ],
+              })
+            } else {
+              map.setStyle({
+                version: 8,
+                sources: {
+                  osm: {
+                    type: "raster",
+                    tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+                    tileSize: 256,
+                    attribution: "",
+                  },
                 },
-              ],
-            })
+                layers: [
+                  {
+                    id: "osm-tiles",
+                    type: "raster",
+                    source: "osm",
+                    minzoom: 0,
+                    maxzoom: 22,
+                  },
+                ],
+              })
+            }
             setIsMapLoaded(true)
+            setStyleLoading(false)
           }
         })
 
         map.on("load", () => {
           setIsMapLoaded(true)
+          setStyleLoading(false)
           map.resize()
           map.triggerRepaint()
 
@@ -614,7 +664,8 @@ out body;`
         })
       } catch (error) {
         console.error("Map initialization error:", error)
-        setIsMapLoaded(true) // Force spinner to hide, use fallback
+        setIsMapLoaded(true)
+        setStyleLoading(false)
         mapInstanceRef.current = new maplibregl.Map({
           container: mapRef.current,
           style: {
@@ -644,7 +695,6 @@ out body;`
       }
     }
 
-    // Use MutationObserver to ensure container is ready
     const observer = new MutationObserver(() => {
       if (mapRef.current && document.body.contains(mapRef.current)) {
         const timeout = setTimeout(initializeMap, 500)
@@ -660,6 +710,7 @@ out body;`
         mapInstanceRef.current = null
       }
       setIsMapLoaded(false)
+      setStyleLoading(false)
       observer.disconnect()
     }
   }, [location, mapStyle])
@@ -702,6 +753,7 @@ out body;`
     const distanceToDest = getDistance(location, destination)
     if (distanceToDest < 50) {
       speakDirection("You have arrived at your destination.")
+      window.speechSynthesis.cancel()
       setDestination(null)
       setRouteGeoJSON(null)
       setRouteInfo(null)
@@ -920,6 +972,9 @@ out body;`
             {!isMapLoaded && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-800">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#1E3A8A]"></div>
+                {styleLoading && (
+                  <p className={`mt-4 ${darkMode ? "text-[#FDFBFB]" : "text-[#1E3A8A]"}`}>Switching style...</p>
+                )}
               </div>
             )}
             <MapStyleSwitcher
@@ -929,6 +984,7 @@ out body;`
               routeGeoJSON={routeGeoJSON}
               userMarkerRef={userMarkerRef}
               setIsMapLoaded={setIsMapLoaded}
+              setStyleLoading={setStyleLoading}
               destination={destination}
               routeInfo={routeInfo}
             />
