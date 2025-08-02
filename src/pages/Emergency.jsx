@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect, useRef } from "react"
 import { Helmet } from "react-helmet-async"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   Phone,
   Ambulance,
@@ -10,6 +10,8 @@ import {
   Volume2,
   VolumeX,
   Search,
+  X,
+  MoreVertical,
 } from "lucide-react"
 import { DarkModeContext } from "../App"
 import maplibregl from "maplibre-gl"
@@ -48,6 +50,145 @@ function EmergencyGuide({ title, steps }) {
   )
 }
 
+const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON, userMarkerRef, setIsMapLoaded }) => {
+  const { darkMode } = useContext(DarkModeContext)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  const getMapTileUrl = (style) => {
+    switch (style) {
+      case "3d":
+      case "2d":
+        return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+      case "satellite":
+        try {
+          return "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        } catch (e) {
+          console.warn("Satellite tile URL failed, falling back to OpenStreetMap", e)
+          return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        }
+      default:
+        return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+    }
+  }
+
+  const handleStyleChange = (newStyle) => {
+    setMapStyle(newStyle)
+    setIsMapLoaded(false)
+    setIsMenuOpen(false)
+    if (mapInstanceRef.current) {
+      try {
+        mapInstanceRef.current.setStyle({
+          version: 8,
+          sources: {
+            osm: {
+              type: "raster",
+              tiles: [getMapTileUrl(newStyle)],
+              tileSize: 256,
+              attribution: "",
+            },
+          },
+          layers: [
+            {
+              id: "osm-tiles",
+              type: "raster",
+              source: "osm",
+              minzoom: 0,
+              maxzoom: 22,
+            },
+          ],
+        })
+        mapInstanceRef.current.once("style.load", () => {
+          mapInstanceRef.current.setPitch(newStyle === "3d" ? 60 : 0)
+          mapInstanceRef.current.resize()
+          mapInstanceRef.current.triggerRepaint()
+          setIsMapLoaded(true)
+          if (routeGeoJSON) {
+            mapInstanceRef.current.addSource("route", {
+              type: "geojson",
+              data: routeGeoJSON,
+            })
+            mapInstanceRef.current.addLayer({
+              id: "route-line",
+              type: "line",
+              source: "route",
+              paint: {
+                "line-color": "#1E90FF",
+                "line-width": 5,
+                "line-opacity": 0.8,
+              },
+            })
+          }
+          if (userMarkerRef.current) {
+            userMarkerRef.current.addTo(mapInstanceRef.current)
+          }
+        })
+      } catch (error) {
+        console.error("Error switching map style:", error)
+        alert("Failed to switch map style. Please try again.")
+        setIsMapLoaded(false)
+      }
+    }
+  }
+
+  return (
+    <motion.div
+      className={`absolute top-4 left-4 z-10 rounded-full p-1 ${
+        darkMode ? "bg-[#0A2A43]/80" : "bg-white/80"
+      } backdrop-blur-sm shadow-md`}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.button
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        className={`p-2 rounded-full ${
+          darkMode ? "text-[#0A2A43] hover:bg-[#1E3A8A]/50" : "text-[#1E3A8A] hover:bg-[#1E3A8A]/50"
+        }`}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        aria-expanded={isMenuOpen}
+        aria-label="Toggle map style menu"
+      >
+        <MoreVertical className="w-5 h-5" />
+      </motion.button>
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.ul
+            className={`absolute top-16 left-4 w-32 rounded-lg shadow-lg overflow-hidden ${
+              darkMode ? "bg-[#0A2A43] border-gray-600" : "bg-white border-gray-300"
+            }`}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {["2d", "3d", "satellite"].map((style) => (
+              <motion.li
+                key={style}
+                onClick={() => handleStyleChange(style)}
+                className={`p-3 text-sm font-medium cursor-pointer ${
+                  mapStyle === style
+                    ? darkMode
+                      ? "bg-[#1E3A8A] text-white"
+                      : "bg-[#1E3A8A] text-white"
+                    : darkMode
+                    ? "text-[#0A2A43] hover:bg-[#1E3A8A]/50 hover:text-white"
+                    : "text-[#1E3A8A] hover:bg-[#1E3A8A]/50 hover:text-white"
+                }`}
+                whileHover={{ backgroundColor: darkMode ? "#1E3A8A" : "#F3F4F6" }}
+                role="menuitem"
+                aria-label={`Switch to ${style === "2d" ? "2D" : style === "3d" ? "3D" : "Satellite"} view`}
+              >
+                {style === "2d" ? "2D" : style === "3d" ? "3D" : "Satellite"}
+              </motion.li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  )
+}
+
 function Emergency() {
   const { darkMode } = useContext(DarkModeContext)
   const mapRef = useRef(null)
@@ -65,6 +206,7 @@ function Emergency() {
   const [isMapLoaded, setIsMapLoaded] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [searchSuggestions, setSearchSuggestions] = useState([])
+  const [isSearchActive, setIsSearchActive] = useState(false)
   const lastLocationRef = useRef(null)
   const lastSpokenStepRef = useRef(-1)
   const lastUpdateTimeRef = useRef(0)
@@ -116,7 +258,7 @@ function Emergency() {
 
   const getDistance = (loc1, loc2) => {
     const toRad = (x) => (x * Math.PI) / 180
-    const R = 6371e3 // Earth's radius in meters
+    const R = 6371e3
     const lat1 = loc1[1], lon1 = loc1[0], lat2 = loc2[1], lon2 = loc2[0]
     const dLat = toRad(lat2 - lat1)
     const dLon = toRad(lon2 - lon1)
@@ -146,11 +288,28 @@ function Emergency() {
     window.speechSynthesis.speak(utterance)
   }
 
+  const getMapTileUrl = (style) => {
+    switch (style) {
+      case "3d":
+      case "2d":
+        return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+      case "satellite":
+        try {
+          return "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        } catch (e) {
+          console.warn("Satellite tile URL failed, falling back to OpenStreetMap", e)
+          return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        }
+      default:
+        return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+    }
+  }
+
   useEffect(() => {
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         const now = Date.now()
-        if (now - lastUpdateTimeRef.current < 15000) return // Throttle to 15 seconds
+        if (now - lastUpdateTimeRef.current < 15000) return
         const { latitude, longitude, heading } = pos.coords
         const newLocation = [longitude, latitude]
         if (!lastLocationRef.current || getDistance(lastLocationRef.current, newLocation) > 150) {
@@ -169,22 +328,17 @@ function Emergency() {
     return () => navigator.geolocation.clearWatch(watchId)
   }, [])
 
-  const getMapTileUrl = (style) => {
-    switch (style) {
-      case "3d":
-      case "2d":
-        return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-      case "satellite":
-        return "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-      default:
-        return "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-    }
-  }
-
   useEffect(() => {
     if (!location || !mapRef.current) return
 
     const initializeMap = () => {
+      if (!mapRef.current) {
+        console.error("Map container is not available")
+        alert("Map container not found. Please refresh the page.")
+        setIsMapLoaded(false)
+        return
+      }
+
       let map
       try {
         map = new maplibregl.Map({
@@ -219,46 +373,14 @@ function Emergency() {
 
         map.on("error", (e) => {
           console.error("Map error:", e.error)
-          alert(`Failed to load map tiles for ${mapStyle} mode. Please try again or check console for details.`)
-        })
-
-        map.on("load", () => {
-          setIsMapLoaded(true)
-          map.resize()
-          map.triggerRepaint()
-        })
-      } catch (error) {
-        console.error("Map initialization error:", error)
-        alert("Failed to initialize map. Please refresh the page.")
-        return
-      }
-
-      map.addControl(new maplibregl.NavigationControl(), "top-right")
-      map.addControl(
-        new maplibregl.GeolocateControl({
-          positionOptions: { enableHighAccuracy: true },
-          trackUserLocation: true,
-        })
-      )
-
-      const styleToggle = document.createElement("select")
-      styleToggle.className = "absolute top-2 left-2 p-2 bg-white rounded shadow z-10"
-      styleToggle.innerHTML = `
-        <option value="2d" ${mapStyle === "2d" ? "selected" : ""}>2D View</option>
-        <option value="3d" ${mapStyle === "3d" ? "selected" : ""}>3D View</option>
-        <option value="satellite" ${mapStyle === "satellite" ? "selected" : ""}>Satellite View</option>
-      `
-      styleToggle.onchange = (e) => {
-        const newStyle = e.target.value
-        setMapStyle(newStyle)
-        setIsMapLoaded(false)
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.setStyle({
+          alert(`Failed to load map tiles for ${mapStyle} mode: ${e.error.message}. Falling back to default tiles.`)
+          setIsMapLoaded(false)
+          map.setStyle({
             version: 8,
             sources: {
               osm: {
                 type: "raster",
-                tiles: [getMapTileUrl(newStyle)],
+                tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
                 tileSize: 256,
                 attribution: "",
               },
@@ -273,155 +395,150 @@ function Emergency() {
               },
             ],
           })
-          mapInstanceRef.current.once("style.load", () => {
-            mapInstanceRef.current.setPitch(newStyle === "3d" ? 60 : 0)
-            mapInstanceRef.current.resize()
-            mapInstanceRef.current.triggerRepaint()
-            setIsMapLoaded(true)
-            if (routeGeoJSON) {
-              mapInstanceRef.current.addSource("route", {
-                type: "geojson",
-                data: routeGeoJSON,
-              })
-              mapInstanceRef.current.addLayer({
-                id: "route-line",
-                type: "line",
-                source: "route",
-                paint: {
-                  "line-color": "#1E90FF",
-                  "line-width": 5,
-                  "line-opacity": 0.8,
-                },
-              })
-            }
-            if (userMarkerRef.current) {
-              userMarkerRef.current.addTo(mapInstanceRef.current)
-            }
-          })
-        }
-      }
-      map.getContainer().appendChild(styleToggle)
+        })
 
-      userMarkerRef.current = new maplibregl.Marker({ color: "blue" })
-        .setLngLat(location)
-        .setPopup(new maplibregl.Popup().setText("You are here"))
-        .addTo(map)
+        map.on("load", () => {
+          setIsMapLoaded(true)
+          map.resize()
+          map.triggerRepaint()
 
-      const fetchHospitals = async () => {
-        const [lon, lat] = location
-        const query = `
+          // Add controls and markers after map load to avoid errors
+          map.addControl(new maplibregl.NavigationControl(), "top-right")
+          map.addControl(
+            new maplibregl.GeolocateControl({
+              positionOptions: { enableHighAccuracy: true },
+              trackUserLocation: true,
+            })
+          )
+
+          userMarkerRef.current = new maplibregl.Marker({ color: "blue" })
+            .setLngLat(location)
+            .setPopup(new maplibregl.Popup().setText("You are here"))
+            .addTo(map)
+
+          const fetchHospitals = async () => {
+            const [lon, lat] = location
+            const query = `
 [out:json][timeout:25];
 (
   node["amenity"="hospital"](around:10000,${lat},${lon});
   node["amenity"="clinic"](around:10000,${lat},${lon});
 );
 out body;`
-        try {
-          const res = await fetch("https://overpass-api.de/api/interpreter", {
-            method: "POST",
-            body: query,
-          })
-          const json = await res.json()
-          const sortedHospitals = json.elements
-            .map(h => ({
-              ...h,
-              distance: getDistance([lon, lat], [h.lon, h.lat])
-            }))
-            .sort((a, b) => a.distance - b.distance)
-          setHospitals(sortedHospitals)
-
-          sortedHospitals.forEach((h) => {
-            const el = document.createElement("div")
-            el.className = "hospital-marker"
-            el.style.backgroundColor = "red"
-            el.style.width = "12px"
-            el.style.height = "12px"
-            el.style.borderRadius = "50%"
-
-            new maplibregl.Marker(el)
-              .setLngLat([h.lon, h.lat])
-              .setPopup(
-                new maplibregl.Popup().setHTML(`
-                  <strong>${h.tags.name || "Hospital/Clinic"}</strong><br/>
-                  <button onclick="window.getRoute(${h.lon}, ${h.lat}, '${h.tags.name || "Hospital/Clinic"}')">Lock & Route</button>
-                `)
-              )
-              .addTo(map)
-          })
-
-          window.getRoute = async (lon, lat, name) => {
-            setDestination([lon, lat])
-            setIsTracking(false)
-            if (mapInstanceRef.current) {
-              mapInstanceRef.current.easeTo({
-                center: [lon, lat],
-                zoom: 15,
-                duration: 1000,
+            try {
+              const res = await fetch("https://overpass-api.de/api/interpreter", {
+                method: "POST",
+                body: query,
               })
-            }
-            const modes = ["driving-car", "cycling-regular", "foot-walking"]
-            const routeData = {}
-            const directions = {}
-            for (const mode of modes) {
-              try {
-                const response = await axios.post(
-                  `https://api.openrouteservice.org/v2/directions/${mode}/geojson`,
-                  { coordinates: [location, [lon, lat]] },
-                  {
-                    headers: {
-                      Authorization: orsApiKey,
-                      "Content-Type": "application/json",
-                    },
-                  }
-                )
-                routeData[mode] = response.data
-                directions[mode] = response.data.features[0]?.properties.segments[0]?.steps || []
-              } catch (error) {
-                console.error(`Error fetching ${mode} route:`, error.message)
-              }
-            }
-            setRouteGeoJSON(routeData["driving-car"])
-            setRouteInfo({
-              name,
-              car: routeData["driving-car"]?.features[0]?.properties.segments[0],
-              bike: routeData["cycling-regular"]?.features[0]?.properties.segments[0],
-              foot: routeData["foot-walking"]?.features[0]?.properties.segments[0],
-              directions,
-            })
-            lastSpokenStepRef.current = -1
-            lastDistanceUpdateRef.current = 0
+              if (!res.ok) throw new Error(`HTTP error ${res.status}`)
+              const json = await res.json()
+              const sortedHospitals = json.elements
+                .map(h => ({
+                  ...h,
+                  distance: getDistance([lon, lat], [h.lon, h.lat])
+                }))
+                .sort((a, b) => a.distance - b.distance)
+              setHospitals(sortedHospitals)
 
-            if (mapInstanceRef.current && routeData["driving-car"]) {
-              if (mapInstanceRef.current.getSource("route")) {
-                mapInstanceRef.current.getSource("route").setData(routeData["driving-car"])
-              } else {
-                mapInstanceRef.current.addSource("route", {
-                  type: "geojson",
-                  data: routeData["driving-car"],
+              sortedHospitals.forEach((h) => {
+                const el = document.createElement("div")
+                el.className = "hospital-marker"
+                el.style.backgroundColor = "red"
+                el.style.width = "12px"
+                el.style.height = "12px"
+                el.style.borderRadius = "50%"
+
+                new maplibregl.Marker(el)
+                  .setLngLat([h.lon, h.lat])
+                  .setPopup(
+                    new maplibregl.Popup().setHTML(`
+                      <strong>${h.tags.name || "Hospital/Clinic"}</strong><br/>
+                      <button onclick="window.getRoute(${h.lon}, ${h.lat}, '${h.tags.name || "Hospital/Clinic"}')">Lock & Route</button>
+                    `)
+                  )
+                  .addTo(map)
+              })
+
+              window.getRoute = async (lon, lat, name) => {
+                setDestination([lon, lat])
+                setIsTracking(false)
+                if (mapInstanceRef.current) {
+                  mapInstanceRef.current.easeTo({
+                    center: [lon, lat],
+                    zoom: 15,
+                    duration: 1000,
+                  })
+                }
+                const modes = ["driving-car", "cycling-regular", "foot-walking"]
+                const routeData = {}
+                const directions = {}
+                for (const mode of modes) {
+                  try {
+                    const response = await axios.post(
+                      `https://api.openrouteservice.org/v2/directions/${mode}/geojson`,
+                      { coordinates: [location, [lon, lat]] },
+                      {
+                        headers: {
+                          Authorization: orsApiKey,
+                          "Content-Type": "application/json",
+                        },
+                      }
+                    )
+                    routeData[mode] = response.data
+                    directions[mode] = response.data.features[0]?.properties.segments[0]?.steps || []
+                  } catch (error) {
+                    console.error(`Error fetching ${mode} route:`, error.message)
+                  }
+                }
+                setRouteGeoJSON(routeData["driving-car"])
+                setRouteInfo({
+                  name,
+                  car: routeData["driving-car"]?.features[0]?.properties.segments[0],
+                  bike: routeData["cycling-regular"]?.features[0]?.properties.segments[0],
+                  foot: routeData["foot-walking"]?.features[0]?.properties.segments[0],
+                  directions,
                 })
-                mapInstanceRef.current.addLayer({
-                  id: "route-line",
-                  type: "line",
-                  source: "route",
-                  paint: {
-                    "line-color": "#1E90FF",
-                    "line-width": 5,
-                    "line-opacity": 0.8,
-                  },
-                })
+                lastSpokenStepRef.current = -1
+                lastDistanceUpdateRef.current = 0
+
+                if (mapInstanceRef.current && routeData["driving-car"]) {
+                  if (mapInstanceRef.current.getSource("route")) {
+                    mapInstanceRef.current.getSource("route").setData(routeData["driving-car"])
+                  } else {
+                    mapInstanceRef.current.addSource("route", {
+                      type: "geojson",
+                      data: routeData["driving-car"],
+                    })
+                    mapInstanceRef.current.addLayer({
+                      id: "route-line",
+                      type: "line",
+                      source: "route",
+                      paint: {
+                        "line-color": "#1E90FF",
+                        "line-width": 5,
+                        "line-opacity": 0.8,
+                      },
+                    })
+                  }
+                }
               }
+            } catch (error) {
+              console.error("Error fetching hospitals:", error)
+              alert("Failed to load hospitals: " + error.message)
             }
           }
-        } catch (error) {
-          console.error("Error fetching hospitals:", error)
-          alert("Failed to load hospitals. Please try again.")
-        }
-      }
 
-      fetchHospitals()
+          fetchHospitals()
+        })
+      } catch (error) {
+        console.error("Map initialization error:", error)
+        alert("Failed to initialize map: " + error.message + ". Please check your network and refresh the page.")
+        setIsMapLoaded(false)
+        return
+      }
     }
 
-    const timeout = setTimeout(initializeMap, 200)
+    const timeout = setTimeout(initializeMap, 500)
     return () => {
       clearTimeout(timeout)
       if (mapInstanceRef.current) {
@@ -560,6 +677,7 @@ out body;`
   const handleSearchSelect = (lon, lat, name) => {
     setSearchQuery("")
     setSearchSuggestions([])
+    setIsSearchActive(false)
     if (mapInstanceRef.current) {
       mapInstanceRef.current.easeTo({
         center: [lon, lat],
@@ -610,34 +728,75 @@ out body;`
 
         <motion.div className="mt-12">
           <h2 className="text-2xl mb-4 text-center">Nearby Hospitals & Clinics</h2>
-          <div className="relative mb-4">
-            <div className="flex items-center">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search hospitals or clinics..."
-                className={`w-full p-2 pr-10 rounded-lg ${
-                  darkMode ? "bg-[#0A2A43] text-[#FDFBFB]" : "bg-white text-[#1E3A8A]"
-                }`}
-              />
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5" />
-            </div>
-            {searchSuggestions.length > 0 && (
-              <ul className={`absolute z-10 w-full mt-1 rounded-lg shadow-lg ${
-                darkMode ? "bg-[#0A2A43] text-[#FDFBFB]" : "bg-white text-[#1E3A8A]"
-              }`}>
-                {searchSuggestions.map((h) => (
-                  <li
-                    key={h.id}
-                    onClick={() => handleSearchSelect(h.lon, h.lat, h.tags.name || "Hospital/Clinic")}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                  >
-                    {h.tags.name || "Hospital/Clinic"} ({(h.distance / 1000).toFixed(2)} km)
-                  </li>
-                ))}
-              </ul>
-            )}
+          <div className="relative mb-4 sticky top-0 z-20" role="search">
+            <motion.div
+              className={`flex items-center rounded-full overflow-hidden ${
+                darkMode ? "bg-[#0A2A43]/80" : "bg-white/80"
+              } backdrop-blur-sm shadow-md`}
+              initial={{ width: isSearchActive ? "100%" : 40 }}
+              animate={{ width: isSearchActive ? "100%" : 40 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <motion.button
+                onClick={() => setIsSearchActive(!isSearchActive)}
+                className="p-3"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                aria-label={isSearchActive ? "Close search" : "Open search"}
+              >
+                {isSearchActive ? (
+                  <X className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <Search className="w-5 h-5 text-gray-500" />
+                )}
+              </motion.button>
+              <AnimatePresence>
+                {isSearchActive && (
+                  <motion.input
+                    key="search-input"
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search hospitals or clinics..."
+                    className={`flex-1 p-3 bg-transparent focus:outline-none ${
+                      darkMode ? "text-[#FDFBFB] placeholder-gray-400" : "text-[#1E3A8A] placeholder-gray-500"
+                    }`}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                    aria-label="Search hospitals or clinics"
+                  />
+                )}
+              </AnimatePresence>
+            </motion.div>
+            <AnimatePresence>
+              {searchSuggestions.length > 0 && isSearchActive && (
+                <motion.ul
+                  key="search-suggestions"
+                  className={`absolute z-10 w-full mt-1 rounded-lg shadow-lg overflow-hidden ${
+                    darkMode ? "bg-[#0A2A43] text-[#0A2A43] border-gray-600" : "bg-white text-[#1E3A8A] border-gray-300"
+                  }`}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {searchSuggestions.map((h) => (
+                    <motion.li
+                      key={h.id}
+                      onClick={() => handleSearchSelect(h.lon, h.lat, h.tags.name || "Hospital/Clinic")}
+                      className={`p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer ${
+                        darkMode ? "text-[#0A2A43]" : "text-[#1E3A8A]"
+                      }`}
+                      whileHover={{ backgroundColor: darkMode ? "#1E3A8A" : "#F3F4F6" }}
+                    >
+                      {h.tags.name || "Hospital/Clinic"} ({(h.distance / 1000).toFixed(2)} km)
+                    </motion.li>
+                  ))}
+                </motion.ul>
+              )}
+            </AnimatePresence>
           </div>
           <div
             ref={mapRef}
@@ -648,13 +807,21 @@ out body;`
                 <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#1E3A8A]"></div>
               </div>
             )}
+            <MapStyleSwitcher
+              mapStyle={mapStyle}
+              setMapStyle={setMapStyle}
+              mapInstanceRef={mapInstanceRef}
+              routeGeoJSON={routeGeoJSON}
+              userMarkerRef={userMarkerRef}
+              setIsMapLoaded={setIsMapLoaded}
+            />
           </div>
           {routeInfo && (
-            <div className="mt-4 text-center">
+            <div className={`mt-4 text-center ${darkMode ? "text-[#0A2A43]" : "text-[#1E3A8A]"}`}>
               <p><strong>Route to {routeInfo.name}</strong></p>
-              <p>Car: {routeInfo.car?.distance / 1000} km, {Math.round(routeInfo.car?.duration / 60)} min</p>
-              <p>Bike: {routeInfo.bike?.distance / 1000} km, {Math.round(routeInfo.bike?.duration / 60)} min</p>
-              <p>Foot: {routeInfo.foot?.distance / 1000} km, {Math.round(routeInfo.foot?.duration / 60)} min</p>
+              <p>Car: {(routeInfo.car?.distance / 1000).toFixed(2)} km, {Math.round(routeInfo.car?.duration / 60)} min</p>
+              <p>Bike: {(routeInfo.bike?.distance / 1000).toFixed(2)} km, {Math.round(routeInfo.bike?.duration / 60)} min</p>
+              <p>Foot: {(routeInfo.foot?.distance / 1000).toFixed(2)} km, {Math.round(routeInfo.foot?.duration / 60)} min</p>
               <div className="mt-2 flex justify-center space-x-4">
                 <button
                   onClick={() => setIsTracking(!isTracking)}
@@ -690,7 +857,4 @@ out body;`
   )
 }
 
-
-
 export default Emergency
-
