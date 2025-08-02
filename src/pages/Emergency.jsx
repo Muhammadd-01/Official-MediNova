@@ -84,7 +84,7 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
         sources: {
           satellite: {
             type: "raster",
-            tiles: ["https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default//GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg"],
+            tiles: ["https://tiles.opentileserver.org/satellite/{z}/{x}/{y}.png"],
             tileSize: 256,
             attribution: "",
           },
@@ -132,27 +132,62 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
     setIsMenuOpen(false)
     if (mapInstanceRef.current) {
       try {
-        mapInstanceRef.current.setStyle(getMapStyle(newStyle))
-        mapInstanceRef.current.once("style.load", () => {
-          mapInstanceRef.current.setPitch(newStyle === "3d" ? 60 : 0)
+        const map = mapInstanceRef.current
+        map.setStyle(getMapStyle(newStyle))
+
+        // Timeout to detect tile loading failure
+        const tileLoadTimeout = setTimeout(() => {
+          if (newStyle === "satellite" && map.getLayer("satellite-tiles")) {
+            const tilesLoaded = map.areTilesLoaded()
+            if (!tilesLoaded) {
+              console.warn("Satellite tiles failed to load, switching to fallback")
+              map.setStyle({
+                version: 8,
+                sources: {
+                  satellite: {
+                    type: "raster",
+                    tiles: ["https://tiles.opentileserver.org/satellite/{z}/{x}/{y}.png"],
+                    tileSize: 256,
+                    attribution: "",
+                  },
+                },
+                layers: [
+                  {
+                    id: "satellite-tiles",
+                    type: "raster",
+                    source: "satellite",
+                    minzoom: 0,
+                    maxzoom: 22,
+                  },
+                ],
+              })
+            }
+          }
+          setIsMapLoaded(true)
+          setStyleLoading(false)
+        }, 5000)
+
+        map.once("style.load", () => {
+          clearTimeout(tileLoadTimeout)
+          map.setPitch(newStyle === "3d" ? 60 : 0)
           if (newStyle === "3d") {
-            mapInstanceRef.current.addSource("maplibre-terrain", {
+            map.addSource("maplibre-terrain", {
               type: "raster-dem",
               tiles: ["https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.png"],
               tileSize: 256,
             })
-            mapInstanceRef.current.setTerrain({ source: "maplibre-terrain", exaggeration: 1.5 })
+            map.setTerrain({ source: "maplibre-terrain", exaggeration: 1.5 })
           }
-          mapInstanceRef.current.resize()
-          mapInstanceRef.current.triggerRepaint()
+          map.resize()
+          map.triggerRepaint()
           setIsMapLoaded(true)
           setStyleLoading(false)
           if (routeGeoJSON) {
-            mapInstanceRef.current.addSource("route", {
+            map.addSource("route", {
               type: "geojson",
               data: routeGeoJSON,
             })
-            mapInstanceRef.current.addLayer({
+            map.addLayer({
               id: "route-line",
               type: "line",
               source: "route",
@@ -164,14 +199,66 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
             })
           }
           if (userMarkerRef.current) {
-            userMarkerRef.current.addTo(mapInstanceRef.current)
+            userMarkerRef.current.addTo(map)
           }
           if (destination && routeInfo) {
-            mapInstanceRef.current.easeTo({
+            map.easeTo({
               center: destination,
               zoom: 15,
               duration: 1000,
             })
+          }
+        })
+
+        map.on("error", (e) => {
+          console.error("Map error:", e.error)
+          if (e.error.message.includes("403") || e.error.message.includes("openmaptiles")) {
+            console.warn("Tile source error, attempting fallback")
+            if (newStyle === "satellite") {
+              map.setStyle({
+                version: 8,
+                sources: {
+                  satellite: {
+                    type: "raster",
+                    tiles: ["https://tiles.opentileserver.org/satellite/{z}/{x}/{y}.png"],
+                    tileSize: 256,
+                    attribution: "",
+                  },
+                },
+                layers: [
+                  {
+                    id: "satellite-tiles",
+                    type: "raster",
+                    source: "satellite",
+                    minzoom: 0,
+                    maxzoom: 22,
+                  },
+                ],
+              })
+            } else {
+              map.setStyle({
+                version: 8,
+                sources: {
+                  osm: {
+                    type: "raster",
+                    tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+                    tileSize: 256,
+                    attribution: "",
+                  },
+                },
+                layers: [
+                  {
+                    id: "osm-tiles",
+                    type: "raster",
+                    source: "osm",
+                    minzoom: 0,
+                    maxzoom: 22,
+                  },
+                ],
+              })
+            }
+            setIsMapLoaded(true)
+            setStyleLoading(false)
           }
         })
       } catch (error) {
@@ -183,7 +270,7 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
                 sources: {
                   satellite: {
                     type: "raster",
-                    tiles: ["https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default//GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg"],
+                    tiles: ["https://tiles.opentileserver.org/satellite/{z}/{x}/{y}.png"],
                     tileSize: 256,
                     attribution: "",
                   },
@@ -271,7 +358,7 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
                       ? "bg-[#1E3A8A] text-white"
                       : "bg-[#1E3A8A] text-white"
                     : darkMode
-                    ? "text-[#0A2A43] hoveSystem: r:bg-[#1E3A8A]/50 hover:text-white"
+                    ? "text-[#0A2A43] hover:bg-[#1E3A8A]/50 hover:text-white"
                     : "text-[#1E3A8A] hover:bg-[#1E3A8A]/50 hover:text-white"
                 }`}
                 whileHover={{ backgroundColor: darkMode ? "#1E3A8A" : "#F3F4F6" }}
@@ -474,6 +561,37 @@ function Emergency() {
         })
         mapInstanceRef.current = map
 
+        const tileLoadTimeout = setTimeout(() => {
+          if (mapStyle === "satellite" && map.getLayer("satellite-tiles")) {
+            const tilesLoaded = map.areTilesLoaded()
+            if (!tilesLoaded) {
+              console.warn("Initial satellite tiles failed to load, switching to fallback")
+              map.setStyle({
+                version: 8,
+                sources: {
+                  satellite: {
+                    type: "raster",
+                    tiles: ["https://tiles.opentileserver.org/satellite/{z}/{x}/{y}.png"],
+                    tileSize: 256,
+                    attribution: "",
+                  },
+                },
+                layers: [
+                  {
+                    id: "satellite-tiles",
+                    type: "raster",
+                    source: "satellite",
+                    minzoom: 0,
+                    maxzoom: 22,
+                  },
+                ],
+              })
+            }
+          }
+          setIsMapLoaded(true)
+          setStyleLoading(false)
+        }, 5000)
+
         map.on("error", (e) => {
           console.error("Map error:", e.error)
           if (e.error.message.includes("403") || e.error.message.includes("openmaptiles")) {
@@ -484,7 +602,7 @@ function Emergency() {
                 sources: {
                   satellite: {
                     type: "raster",
-                    tiles: ["https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default//GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg"],
+                    tiles: ["https://tiles.opentileserver.org/satellite/{z}/{x}/{y}.png"],
                     tileSize: 256,
                     attribution: "",
                   },
@@ -527,6 +645,7 @@ function Emergency() {
         })
 
         map.on("load", () => {
+          clearTimeout(tileLoadTimeout)
           setIsMapLoaded(true)
           setStyleLoading(false)
           map.resize()
