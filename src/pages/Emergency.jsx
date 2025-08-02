@@ -51,40 +51,22 @@ function EmergencyGuide({ title, steps }) {
   )
 }
 
-const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON, userMarkerRef, setIsMapLoaded, setStyleLoading, destination, routeInfo }) => {
+const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON, userMarkerRef, setIsMapLoaded, setStyleLoading, destination, routeInfo, setTileLoadStatus }) => {
   const { darkMode } = useContext(DarkModeContext)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const getMapStyle = (style) => {
     if (style === "satellite") {
-      if (mapboxKey) {
-        return {
-          version: 8,
-          sources: {
-            satellite: {
-              type: "raster",
-              tiles: [`https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg?access_token=${mapboxKey}`],
-              tileSize: 256,
-              attribution: "",
-            },
-          },
-          layers: [
-            {
-              id: "satellite-tiles",
-              type: "raster",
-              source: "satellite",
-              minzoom: 0,
-              maxzoom: 22,
-            },
-          ],
-        }
-      }
       return {
         version: 8,
         sources: {
           satellite: {
             type: "raster",
-            tiles: ["https://tiles.opentileserver.org/satellite/{z}/{x}/{y}.png"],
+            tiles: [
+              mapboxKey
+                ? `https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg?access_token=${mapboxKey}`
+                : "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            ],
             tileSize: 256,
             attribution: "",
           },
@@ -129,43 +111,41 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
     setMapStyle(newStyle)
     setIsMapLoaded(false)
     setStyleLoading(true)
+    setTileLoadStatus("loading")
     setIsMenuOpen(false)
     if (mapInstanceRef.current) {
       try {
         const map = mapInstanceRef.current
         map.setStyle(getMapStyle(newStyle))
 
-        // Timeout to detect tile loading failure
         const tileLoadTimeout = setTimeout(() => {
-          if (newStyle === "satellite" && map.getLayer("satellite-tiles")) {
-            const tilesLoaded = map.areTilesLoaded()
-            if (!tilesLoaded) {
-              console.warn("Satellite tiles failed to load, switching to fallback")
-              map.setStyle({
-                version: 8,
-                sources: {
-                  satellite: {
-                    type: "raster",
-                    tiles: ["https://tiles.opentileserver.org/satellite/{z}/{x}/{y}.png"],
-                    tileSize: 256,
-                    attribution: "",
-                  },
+          if (newStyle === "satellite" && (!map.isStyleLoaded() || !map.areTilesLoaded())) {
+            console.warn("Satellite tiles failed to load, switching to Esri World Imagery")
+            setTileLoadStatus("failed")
+            map.setStyle({
+              version: 8,
+              sources: {
+                satellite: {
+                  type: "raster",
+                  tiles: ["https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+                  tileSize: 256,
+                  attribution: "",
                 },
-                layers: [
-                  {
-                    id: "satellite-tiles",
-                    type: "raster",
-                    source: "satellite",
-                    minzoom: 0,
-                    maxzoom: 22,
-                  },
-                ],
-              })
-            }
+              },
+              layers: [
+                {
+                  id: "satellite-tiles",
+                  type: "raster",
+                  source: "satellite",
+                  minzoom: 0,
+                  maxzoom: 22,
+                },
+              ],
+            })
+            setIsMapLoaded(true)
+            setStyleLoading(false)
           }
-          setIsMapLoaded(true)
-          setStyleLoading(false)
-        }, 5000)
+        }, 3000)
 
         map.once("style.load", () => {
           clearTimeout(tileLoadTimeout)
@@ -182,6 +162,7 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
           map.triggerRepaint()
           setIsMapLoaded(true)
           setStyleLoading(false)
+          setTileLoadStatus(newStyle === "satellite" && map.isStyleLoaded() && map.areTilesLoaded() ? "success" : "failed")
           if (routeGeoJSON) {
             map.addSource("route", {
               type: "geojson",
@@ -212,53 +193,55 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
 
         map.on("error", (e) => {
           console.error("Map error:", e.error)
-          if (e.error.message.includes("403") || e.error.message.includes("openmaptiles")) {
-            console.warn("Tile source error, attempting fallback")
-            if (newStyle === "satellite") {
-              map.setStyle({
-                version: 8,
-                sources: {
-                  satellite: {
-                    type: "raster",
-                    tiles: ["https://tiles.opentileserver.org/satellite/{z}/{x}/{y}.png"],
-                    tileSize: 256,
-                    attribution: "",
-                  },
+          if (newStyle === "satellite") {
+            console.warn("Satellite tile error, using Esri World Imagery")
+            setTileLoadStatus("failed")
+            map.setStyle({
+              version: 8,
+              sources: {
+                satellite: {
+                  type: "raster",
+                  tiles: ["https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+                  tileSize: 256,
+                  attribution: "",
                 },
-                layers: [
-                  {
-                    id: "satellite-tiles",
-                    type: "raster",
-                    source: "satellite",
-                    minzoom: 0,
-                    maxzoom: 22,
-                  },
-                ],
-              })
-            } else {
-              map.setStyle({
-                version: 8,
-                sources: {
-                  osm: {
-                    type: "raster",
-                    tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-                    tileSize: 256,
-                    attribution: "",
-                  },
+              },
+              layers: [
+                {
+                  id: "satellite-tiles",
+                  type: "raster",
+                  source: "satellite",
+                  minzoom: 0,
+                  maxzoom: 22,
                 },
-                layers: [
-                  {
-                    id: "osm-tiles",
-                    type: "raster",
-                    source: "osm",
-                    minzoom: 0,
-                    maxzoom: 22,
-                  },
-                ],
-              })
-            }
+              ],
+            })
             setIsMapLoaded(true)
             setStyleLoading(false)
+          } else {
+            map.setStyle({
+              version: 8,
+              sources: {
+                osm: {
+                  type: "raster",
+                  tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+                  tileSize: 256,
+                  attribution: "",
+                },
+              },
+              layers: [
+                {
+                  id: "osm-tiles",
+                  type: "raster",
+                  source: "osm",
+                  minzoom: 0,
+                  maxzoom: 22,
+                },
+              ],
+            })
+            setIsMapLoaded(true)
+            setStyleLoading(false)
+            setTileLoadStatus("failed")
           }
         })
       } catch (error) {
@@ -270,7 +253,7 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
                 sources: {
                   satellite: {
                     type: "raster",
-                    tiles: ["https://tiles.opentileserver.org/satellite/{z}/{x}/{y}.png"],
+                    tiles: ["https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
                     tileSize: 256,
                     attribution: "",
                   },
@@ -308,6 +291,7 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
         )
         setIsMapLoaded(true)
         setStyleLoading(false)
+        setTileLoadStatus("failed")
       }
     }
   }
@@ -391,6 +375,7 @@ function Emergency() {
   const [isMuted, setIsMuted] = useState(false)
   const [isMapLoaded, setIsMapLoaded] = useState(false)
   const [styleLoading, setStyleLoading] = useState(false)
+  const [tileLoadStatus, setTileLoadStatus] = useState("loading")
   const [searchQuery, setSearchQuery] = useState("")
   const [searchSuggestions, setSearchSuggestions] = useState([])
   const [isSearchActive, setIsSearchActive] = useState(false)
@@ -531,7 +516,32 @@ function Emergency() {
       try {
         map = new maplibregl.Map({
           container: mapRef.current,
-          style: mapboxKey
+          style: mapStyle === "satellite"
+            ? {
+                version: 8,
+                sources: {
+                  satellite: {
+                    type: "raster",
+                    tiles: [
+                      mapboxKey
+                        ? `https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg?access_token=${mapboxKey}`
+                        : "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                    ],
+                    tileSize: 256,
+                    attribution: "",
+                  },
+                },
+                layers: [
+                  {
+                    id: "satellite-tiles",
+                    type: "raster",
+                    source: "satellite",
+                    minzoom: 0,
+                    maxzoom: 22,
+                  },
+                ],
+              }
+            : mapboxKey
             ? `https://api.mapbox.com/styles/v1/mapbox/streets-v11?access_token=${mapboxKey}`
             : {
                 version: 8,
@@ -562,85 +572,85 @@ function Emergency() {
         mapInstanceRef.current = map
 
         const tileLoadTimeout = setTimeout(() => {
-          if (mapStyle === "satellite" && map.getLayer("satellite-tiles")) {
-            const tilesLoaded = map.areTilesLoaded()
-            if (!tilesLoaded) {
-              console.warn("Initial satellite tiles failed to load, switching to fallback")
-              map.setStyle({
-                version: 8,
-                sources: {
-                  satellite: {
-                    type: "raster",
-                    tiles: ["https://tiles.opentileserver.org/satellite/{z}/{x}/{y}.png"],
-                    tileSize: 256,
-                    attribution: "",
-                  },
+          if (mapStyle === "satellite" && (!map.isStyleLoaded() || !map.areTilesLoaded())) {
+            console.warn("Initial satellite tiles failed to load, switching to Esri World Imagery")
+            setTileLoadStatus("failed")
+            map.setStyle({
+              version: 8,
+              sources: {
+                satellite: {
+                  type: "raster",
+                  tiles: ["https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+                  tileSize: 256,
+                  attribution: "",
                 },
-                layers: [
-                  {
-                    id: "satellite-tiles",
-                    type: "raster",
-                    source: "satellite",
-                    minzoom: 0,
-                    maxzoom: 22,
-                  },
-                ],
-              })
-            }
+              },
+              layers: [
+                {
+                  id: "satellite-tiles",
+                  type: "raster",
+                  source: "satellite",
+                  minzoom: 0,
+                  maxzoom: 22,
+                },
+              ],
+            })
+            setIsMapLoaded(true)
+            setStyleLoading(false)
           }
-          setIsMapLoaded(true)
-          setStyleLoading(false)
-        }, 5000)
+        }, 3000)
 
         map.on("error", (e) => {
           console.error("Map error:", e.error)
-          if (e.error.message.includes("403") || e.error.message.includes("openmaptiles")) {
-            console.warn("Tile source error, attempting fallback")
-            if (mapStyle === "satellite") {
-              map.setStyle({
-                version: 8,
-                sources: {
-                  satellite: {
-                    type: "raster",
-                    tiles: ["https://tiles.opentileserver.org/satellite/{z}/{x}/{y}.png"],
-                    tileSize: 256,
-                    attribution: "",
-                  },
+          if (mapStyle === "satellite") {
+            console.warn("Satellite tile error, using Esri World Imagery")
+            setTileLoadStatus("failed")
+            map.setStyle({
+              version: 8,
+              sources: {
+                satellite: {
+                  type: "raster",
+                  tiles: ["https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+                  tileSize: 256,
+                  attribution: "",
                 },
-                layers: [
-                  {
-                    id: "satellite-tiles",
-                    type: "raster",
-                    source: "satellite",
-                    minzoom: 0,
-                    maxzoom: 22,
-                  },
-                ],
-              })
-            } else {
-              map.setStyle({
-                version: 8,
-                sources: {
-                  osm: {
-                    type: "raster",
-                    tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-                    tileSize: 256,
-                    attribution: "",
-                  },
+              },
+              layers: [
+                {
+                  id: "satellite-tiles",
+                  type: "raster",
+                  source: "satellite",
+                  minzoom: 0,
+                  maxzoom: 22,
                 },
-                layers: [
-                  {
-                    id: "osm-tiles",
-                    type: "raster",
-                    source: "osm",
-                    minzoom: 0,
-                    maxzoom: 22,
-                  },
-                ],
-              })
-            }
+              ],
+            })
             setIsMapLoaded(true)
             setStyleLoading(false)
+          } else {
+            map.setStyle({
+              version: 8,
+              sources: {
+                osm: {
+                  type: "raster",
+                  tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+                  tileSize: 256,
+                  attribution: "",
+                },
+              },
+              layers: [
+                {
+                  id: "osm-tiles",
+                  type: "raster",
+                  source: "osm",
+                  minzoom: 0,
+                  maxzoom: 22,
+                },
+              ],
+            })
+            setIsMapLoaded(true)
+            setStyleLoading(false)
+            setTileLoadStatus("failed")
           }
         })
 
@@ -648,6 +658,7 @@ function Emergency() {
           clearTimeout(tileLoadTimeout)
           setIsMapLoaded(true)
           setStyleLoading(false)
+          setTileLoadStatus(mapStyle === "satellite" && map.isStyleLoaded() && map.areTilesLoaded() ? "success" : "failed")
           map.resize()
           map.triggerRepaint()
 
@@ -812,6 +823,7 @@ out body;`
         console.error("Map initialization error:", error)
         setIsMapLoaded(true)
         setStyleLoading(false)
+        setTileLoadStatus("failed")
         mapInstanceRef.current = new maplibregl.Map({
           container: mapRef.current,
           style: {
@@ -857,6 +869,7 @@ out body;`
       }
       setIsMapLoaded(false)
       setStyleLoading(false)
+      setTileLoadStatus("loading")
       observer.disconnect()
     }
   }, [location, mapStyle])
@@ -1123,6 +1136,11 @@ out body;`
                 )}
               </div>
             )}
+            {tileLoadStatus === "failed" && mapStyle === "satellite" && (
+              <div className={`absolute top-4 right-4 z-10 p-2 rounded-lg bg-red-600 text-white`}>
+                Failed to load satellite imagery, using fallback
+              </div>
+            )}
             <MapStyleSwitcher
               mapStyle={mapStyle}
               setMapStyle={setMapStyle}
@@ -1133,6 +1151,7 @@ out body;`
               setStyleLoading={setStyleLoading}
               destination={destination}
               routeInfo={routeInfo}
+              setTileLoadStatus={setTileLoadStatus}
             />
           </div>
           {routeInfo && (
