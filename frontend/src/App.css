@@ -1,0 +1,48 @@
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+
+/* Brown glow hover effect */
+.logo:hover {
+  filter: drop-shadow(0 0 2em #8b3a3aaa); /* Rich brown shadow */
+}
+
+/* Optional: change if you're using React logo */
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #b04c41aa); /* Lighter brown highlight */
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+/* Updated from gray to muted brown */
+.read-the-docs {
+  color: #a56969; /* Soft muted brown */
+}
