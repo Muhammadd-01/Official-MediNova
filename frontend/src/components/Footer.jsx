@@ -5,7 +5,6 @@ import { DarkModeContext } from "../App";
 function Footer() {
   const { darkMode } = useContext(DarkModeContext);
 
-  // Exact navbar theme colors
   const bgColor = darkMode
     ? "bg-[#0A2A43]/90 backdrop-blur-md"
     : "bg-white/30 backdrop-blur-md";
@@ -32,16 +31,18 @@ function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              {["/", "/about", "/articles", "/consultation"].map((path, i) => (
-                <li key={i}>
-                  <Link
-                    to={path}
-                    className={`transition duration-300 ${hoverColor}`}
-                  >
-                    {["Home", "About Us", "Articles", "Consultation"][i]}
-                  </Link>
-                </li>
-              ))}
+              {["/", "/about", "/articles", "/consultation", "/pharmacy"].map(
+                (path, i) => (
+                  <li key={i}>
+                    <Link
+                      to={path}
+                      className={`transition duration-300 ${hoverColor}`}
+                    >
+                      {["Home", "About Us", "Articles", "Consultation", "Pharmacy"][i]}
+                    </Link>
+                  </li>
+                )
+              )}
             </ul>
           </div>
 

@@ -12,20 +12,23 @@ function Header() {
   const headerBg = "bg-white/30 dark:bg-[#0D3B66]/30 backdrop-blur-md";
   const textColor = darkMode ? "text-white" : "text-[#0D3B66]";
 
+  // ✅ Added Pharmacy here
   const navItems = [
     "Home",
     "About",
     "Medicine Suggestion",
     "Consultation",
     "Articles",
-    // "News",
+    "Pharmacy",
     "Emergency",
     "Contact",
   ];
 
   return (
     <>
-      <header className={`fixed top-0 left-0 w-full z-50 shadow-md transition-colors duration-300 ${headerBg} ${textColor}`}>
+      <header
+        className={`fixed top-0 left-0 w-full z-50 shadow-md transition-colors duration-300 ${headerBg} ${textColor}`}
+      >
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             {/* Logo */}
@@ -39,9 +42,17 @@ function Header() {
             {/* Desktop Nav */}
             <nav className="hidden md:flex flex-wrap items-center gap-2 ml-6">
               {navItems.map((item) => (
-                <motion.div key={item} whileHover={{ scale: 1.07 }} whileTap={{ scale: 0.95 }}>
+                <motion.div
+                  key={item}
+                  whileHover={{ scale: 1.07 }}
+                  whileTap={{ scale: 0.95 }}
+                >
                   <Link
-                    to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
+                    to={
+                      item === "Home"
+                        ? "/"
+                        : `/${item.toLowerCase().replace(" ", "-")}`
+                    }
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:bg-opacity-20 ${
                       darkMode
                         ? "text-white hover:bg-white"
@@ -76,7 +87,10 @@ function Header() {
                 </motion.button>
               ) : (
                 <>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
                     <Link
                       to="/login"
                       className="h-10 px-4 text-sm font-semibold rounded-full shadow-md bg-[#0D3B66] text-white hover:text-gray-300 transition-all duration-300 flex items-center"
@@ -84,7 +98,10 @@ function Header() {
                       Login
                     </Link>
                   </motion.div>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
                     <Link
                       to="/register"
                       className="h-10 px-4 text-sm font-semibold rounded-full shadow-md bg-[#0D3B66] text-white hover:text-gray-300 transition-all duration-300 flex items-center"
@@ -98,7 +115,10 @@ function Header() {
 
             {/* Mobile Toggle */}
             <div className="md:hidden">
-              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={`p-2 rounded-md ${textColor}`}>
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className={`p-2 rounded-md ${textColor}`}
+              >
                 {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
@@ -107,12 +127,18 @@ function Header() {
 
         {/* Mobile Dropdown Menu (Top-down) */}
         {isMenuOpen && (
-          <div className={`md:hidden absolute top-full left-0 w-full ${headerBg} ${textColor} backdrop-blur-lg transition-all duration-300`}>
+          <div
+            className={`md:hidden absolute top-full left-0 w-full ${headerBg} ${textColor} backdrop-blur-lg transition-all duration-300`}
+          >
             <div className="px-4 py-4 space-y-2">
               {navItems.map((item) => (
                 <Link
                   key={item}
-                  to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
+                  to={
+                    item === "Home"
+                      ? "/"
+                      : `/${item.toLowerCase().replace(" ", "-")}`
+                  }
                   className="block px-5 py-2 rounded-full font-medium text-sm hover:bg-white/20 transition-colors duration-300"
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -128,7 +154,11 @@ function Header() {
                 }}
                 className="w-full flex items-center justify-center px-5 py-2 rounded-full font-medium text-sm bg-[#0D3B66] text-white hover:text-gray-300 transition-all duration-300"
               >
-                {darkMode ? <Moon size={18} className="mr-2" /> : <Sun size={18} className="mr-2" />}
+                {darkMode ? (
+                  <Moon size={18} className="mr-2" />
+                ) : (
+                  <Sun size={18} className="mr-2" />
+                )}
                 Toggle Dark Mode
               </button>
 

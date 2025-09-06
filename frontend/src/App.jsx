@@ -15,6 +15,7 @@ import Consultation from "./pages/Consultation";
 import Feedback from "./pages/Feedback";
 import Contact from "./pages/Contact";
 import Articles from "./pages/Articles";
+import Pharmacy from "./pages/Pharmacy";
 import News from "./pages/News";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -74,6 +75,7 @@ function App() {
                     <Route path="/feedback" element={<Feedback />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/articles" element={<Articles />} />
+                    <Route path="/pharmacy" element={<Pharmacy />} />
                     <Route path="/news" element={<News />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
