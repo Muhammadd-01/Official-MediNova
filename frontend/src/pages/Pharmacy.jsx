@@ -1,43 +1,40 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useRef } from "react";
 import { DarkModeContext } from "../App";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-
-// Import Header and Footer
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 function Pharmacy() {
   const { darkMode } = useContext(DarkModeContext);
 
-  const [map, setMap] = useState(null);
+  const mapRef = useRef(null); // ✅ map instance
+  const mapContainerRef = useRef(null); // ✅ DOM ref
   const [userLocation, setUserLocation] = useState(null);
   const [pharmacies, setPharmacies] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [medicines, setMedicines] = useState([]);
 
-  // Initialize Map
+  // ✅ Initialize Map Once
   useEffect(() => {
-    if (!map) {
-      const mapInstance = L.map("pharmacy-map").setView([30.3753, 69.3451], 13); // Pakistan default
+    if (!mapRef.current && mapContainerRef.current) {
+      mapRef.current = L.map(mapContainerRef.current).setView([30.3753, 69.3451], 13);
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; <a href="https://osm.org">OpenStreetMap</a> contributors',
-      }).addTo(mapInstance);
-
-      setMap(mapInstance);
+      }).addTo(mapRef.current);
     }
 
-    // Get user location
-    if (navigator.geolocation) {
+    // ✅ Get user location
+    if (navigator.geolocation && mapRef.current) {
       navigator.geolocation.getCurrentPosition((pos) => {
         const { latitude, longitude } = pos.coords;
         setUserLocation([latitude, longitude]);
-        map?.setView([latitude, longitude], 15);
+        mapRef.current.setView([latitude, longitude], 15);
 
         // User marker
         L.marker([latitude, longitude])
-          .addTo(map)
+          .addTo(mapRef.current)
           .bindPopup("You are here")
           .openPopup();
 
@@ -45,9 +42,9 @@ function Pharmacy() {
         fetchNearbyPharmacies(latitude, longitude);
       });
     }
-  }, [map]);
+  }, []);
 
-  // Fetch nearby pharmacies from Overpass API
+  // ✅ Fetch pharmacies
   const fetchNearbyPharmacies = async (lat, lon) => {
     const query = `
       [out:json];
@@ -58,26 +55,23 @@ function Pharmacy() {
     const res = await fetch(url);
     const data = await res.json();
 
-    if (data.elements) {
+    if (data.elements && mapRef.current) {
       setPharmacies(data.elements);
 
       data.elements.forEach((pharmacy) => {
-        if (map) {
-          L.marker([pharmacy.lat, pharmacy.lon])
-            .addTo(map)
-            .bindPopup(pharmacy.tags.name || "Pharmacy");
-        }
+        L.marker([pharmacy.lat, pharmacy.lon])
+          .addTo(mapRef.current)
+          .bindPopup(pharmacy.tags.name || "Pharmacy");
       });
     }
   };
 
-  // Search medicines from FDA API
+  // ✅ Fetch medicines
   const fetchMedicines = async (query) => {
     if (!query) {
       setMedicines([]);
       return;
     }
-
     try {
       const res = await fetch(
         `https://api.fda.gov/drug/label.json?search=openfda.brand_name:${query}&limit=10`
@@ -89,7 +83,7 @@ function Pharmacy() {
     }
   };
 
-  // Debounce medicine search
+  // ✅ Debounce medicine search
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (searchQuery) fetchMedicines(searchQuery);
@@ -99,20 +93,22 @@ function Pharmacy() {
 
   return (
     <>
-      {/* Header */}
       <Header />
-
       <div
-        className={`min-h-screen pt-24 px-4 transition-colors duration-300 ${
+        className={`min-h-screen pt-20 px-4 transition-colors duration-300 ${
           darkMode ? "bg-[#0A2A43] text-[#FDFBFB]" : "bg-white text-[#0A2A43]"
         }`}
       >
         <h1 className="text-3xl font-bold mb-6">Pharmacy Finder</h1>
 
-        {/* Map Section */}
-        <div id="pharmacy-map" className="w-full h-[400px] rounded-2xl shadow-md mb-8"></div>
+        {/* ✅ Map Section */}
+        <div
+          ref={mapContainerRef}
+          id="pharmacy-map"
+          className="w-full h-[400px] rounded-2xl shadow-md mb-8"
+        ></div>
 
-        {/* Medicine Search */}
+        {/* ✅ Medicine Search */}
         <div className="mb-6">
           <input
             type="text"
@@ -127,7 +123,7 @@ function Pharmacy() {
           />
         </div>
 
-        {/* Medicine Results */}
+        {/* ✅ Medicine Results */}
         <div className="grid gap-4 md:grid-cols-2">
           {medicines.map((med, index) => (
             <div
@@ -149,8 +145,6 @@ function Pharmacy() {
           ))}
         </div>
       </div>
-
-      {/* Footer */}
       <Footer />
     </>
   );
