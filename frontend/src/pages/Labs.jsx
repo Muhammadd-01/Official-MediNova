@@ -1,4 +1,5 @@
-import { useContext, useState, useEffect } from "react";
+// src/pages/Labs.jsx
+import { useContext, useState, useEffect, useRef } from "react";
 import { DarkModeContext } from "../App";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -18,63 +19,64 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+/**
+ * Labs.jsx
+ * - Responsive card grid of tests
+ * - Responsive + scrollable booking modal (landscape on wide screens)
+ * - Fetch banks from free/open source (with fallback)
+ * - Bank search + selection
+ * - Expandable payment fields for Card / Bank / COD
+ * - CNIC mock verification (placeholder for real NADRA integration)
+ *
+ * Notes:
+ * - Replace mock fetch URLs / verification with real APIs when you have credentials.
+ * - Tailwind classes assume you have Tailwind configured.
+ */
+
 function Labs() {
   const { darkMode } = useContext(DarkModeContext);
+
+  // Modal / form state
   const [selectedTest, setSelectedTest] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState(""); // "cod" | "card" | "bank"
   const [banks, setBanks] = useState([]);
+  const [bankQuery, setBankQuery] = useState("");
   const [cnicVerified, setCnicVerified] = useState(null);
+  const [loadingBanks, setLoadingBanks] = useState(false);
+
+  // Form data
+  const [formData, setFormData] = useState({
+    name: "",
+    cnic: "",
+    age: "",
+    gender: "",
+    phone: "",
+    email: "",
+    date: "",
+    address: "",
+    // card
+    cardHolder: "",
+    cardNumber: "",
+    cardExpiry: "",
+    cardCVV: "",
+    // bank
+    bankName: "",
+    accountNumber: "",
+    transactionId: "",
+  });
 
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-gray-800";
   const cardBg = darkMode ? "bg-[#081F5C]/95" : "bg-white";
   const hoverCard = darkMode ? "hover:bg-[#0A2A43]" : "hover:bg-gray-100";
   const borderColor = darkMode ? "border-white/10" : "border-gray-200";
 
-  // Fetch mock banks (free API placeholder)
-  useEffect(() => {
-    async function fetchBanks() {
-      try {
-        const res = await fetch("https://api.first.org/data/v1/banks"); // Example (not real PK banks)
-        const data = await res.json();
-        if (data.data) {
-          setBanks(Object.values(data.data).slice(0, 6)); // Take a few sample banks
-        } else {
-          setBanks([
-            { name: "HBL" },
-            { name: "UBL" },
-            { name: "Meezan Bank" },
-            { name: "Allied Bank" },
-            { name: "MCB" },
-            { name: "Bank Alfalah" },
-          ]);
-        }
-      } catch (err) {
-        setBanks([
-          { name: "HBL" },
-          { name: "UBL" },
-          { name: "Meezan Bank" },
-          { name: "Allied Bank" },
-          { name: "MCB" },
-          { name: "Bank Alfalah" },
-        ]);
-      }
-    }
-    fetchBanks();
-  }, []);
+  const modalContentRef = useRef(null);
 
-  // Mock NADRA Verification
-  const verifyCNIC = (cnic) => {
-    if (cnic && cnic.length === 13) {
-      setCnicVerified(true);
-    } else {
-      setCnicVerified(false);
-    }
-  };
-
+  // ----- List of tests (cards) -----
   const tests = [
     {
       title: "Complete Blood Count (CBC)",
-      desc: "Checks overall health and detects blood disorders.",
+      desc: "Complete blood count with detailed analysis.",
       img: "https://cdn-icons-png.flaticon.com/512/2966/2966485.png",
       icon: <Droplet className="w-8 h-8 text-[#00C2CB]" />,
       price: 2500,
@@ -116,7 +118,7 @@ function Labs() {
     },
     {
       title: "Liver Function Test (LFT)",
-      desc: "Monitors liver health and detects related diseases.",
+      desc: "Monitors liver health and enzyme levels.",
       img: "https://cdn-icons-png.flaticon.com/512/2779/2779762.png",
       icon: <Microscope className="w-8 h-8 text-[#00C2CB]" />,
       price: 3000,
@@ -136,62 +138,234 @@ function Labs() {
       price: 3200,
     },
     {
-      title: "Cholesterol Test",
+      title: "Cholesterol Test (Lipid Profile)",
       desc: "Measures cholesterol and heart risk factors.",
       img: "https://cdn-icons-png.flaticon.com/512/2966/2966499.png",
       icon: <TestTube2 className="w-8 h-8 text-[#00C2CB]" />,
       price: 2000,
     },
+    // add more if needed...
   ];
 
+  // ----- Fetch banks (tries a couple of sources then fallbacks) -----
+  useEffect(() => {
+    async function fetchBanks() {
+      setLoadingBanks(true);
+      try {
+        // Try a public endpoint (example). Many country-specific bank lists are not available publicly.
+        // We'll attempt a couple of known endpoints and fallback to a local list.
+        const urlsToTry = [
+          // NOTE: replace/add with a real open-source raw JSON URL if you have one.
+          "https://api.first.org/data/v1/banks", // community endpoint (fallback logic)
+          "https://raw.githubusercontent.com/iamsaqlain/pakistan-banks/master/banks.json", // hypothetical
+        ];
+
+        let data = null;
+        for (const url of urlsToTry) {
+          try {
+            const res = await fetch(url);
+            if (!res.ok) continue;
+            const json = await res.json();
+            // normalize a few known shapes
+            if (json?.data && Array.isArray(json.data)) {
+              data = json.data;
+            } else if (Array.isArray(json)) {
+              data = json;
+            } else if (json?.data && typeof json.data === "object") {
+              // some endpoints return object map
+              data = Object.values(json.data);
+            } else if (Array.isArray(json?.banks)) {
+              data = json.banks;
+            }
+            if (data) break;
+          } catch (e) {
+            /* try next */
+          }
+        }
+
+        if (!data || data.length === 0) {
+          // fallback static (common PK banks)
+          data = [
+            { name: "Habib Bank Limited (HBL)" },
+            { name: "United Bank Limited (UBL)" },
+            { name: "Meezan Bank" },
+            { name: "MCB Bank" },
+            { name: "Allied Bank" },
+            { name: "National Bank of Pakistan (NBP)" },
+            { name: "Bank Alfalah" },
+            { name: "Standard Chartered PK" },
+            { name: "BankIslami" },
+            { name: "Faysal Bank" },
+          ];
+        }
+
+        setBanks(data);
+      } catch (err) {
+        // final fallback
+        setBanks([
+          { name: "Habib Bank Limited (HBL)" },
+          { name: "United Bank Limited (UBL)" },
+          { name: "Meezan Bank" },
+          { name: "MCB Bank" },
+          { name: "Allied Bank" },
+          { name: "National Bank of Pakistan (NBP)" },
+        ]);
+      } finally {
+        setLoadingBanks(false);
+      }
+    }
+
+    fetchBanks();
+  }, []);
+
+  // ----- CNIC (mock) verification -----
+  const verifyCNIC = (cnic) => {
+    // Very simple mock: CNIC is valid if 13 digits. Replace with real API integration.
+    const digitsOnly = String(cnic || "").replace(/\D/g, "");
+    if (digitsOnly.length === 13) {
+      setCnicVerified(true);
+    } else {
+      setCnicVerified(false);
+    }
+  };
+
+  // ----- Helpers: filtered banks for search -----
+  const filteredBanks = banks.filter((b) =>
+    (b?.name || String(b))
+      .toLowerCase()
+      .includes(bankQuery.trim().toLowerCase())
+  );
+
+  // ----- Form handlers -----
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((p) => ({ ...p, [name]: value }));
+    if (name === "cnic") verifyCNIC(value);
+  };
+
+  const handleOpenModal = (test) => {
+    setSelectedTest(test);
+    setPaymentMethod(""); // reset selection
+    setFormData({
+      name: "",
+      cnic: "",
+      age: "",
+      gender: "",
+      phone: "",
+      email: "",
+      date: "",
+      address: "",
+      cardHolder: "",
+      cardNumber: "",
+      cardExpiry: "",
+      cardCVV: "",
+      bankName: "",
+      accountNumber: "",
+      transactionId: "",
+    });
+    setCnicVerified(null);
+    // ensure no stale scroll position
+    setTimeout(() => {
+      if (modalContentRef.current) modalContentRef.current.scrollTop = 0;
+    }, 0);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedTest(null);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // lightweight validation example
+    if (!formData.name || !formData.phone || !formData.date) {
+      alert("Please complete required fields (name, phone, date).");
+      return;
+    }
+
+    // handle payment requirements
+    if (paymentMethod === "card") {
+      if (!formData.cardNumber || !formData.cardCVV || !formData.cardExpiry) {
+        alert("Please provide card details.");
+        return;
+      }
+      // NOTE: implement real card verification / tokenization with PCI-compliant gateway (Stripe/PayFast/checkout).
+    }
+    if (paymentMethod === "bank") {
+      if (!formData.bankName || !formData.accountNumber || !formData.transactionId) {
+        alert("Please fill bank transfer details (select bank, account No, tx id).");
+        return;
+      }
+      // Optionally verify via bank/payment provider
+    }
+
+    // CNIC check (if required)
+    if (cnicVerified !== true) {
+      const ok = confirm(
+        "CNIC not verified. Do you want to continue without CNIC verification?"
+      );
+      if (!ok) return;
+    }
+
+    // send booking to backend (replace URL)
+    const bookingPayload = {
+      test: selectedTest.title,
+      price: selectedTest.price,
+      ...formData,
+      paymentMethod,
+    };
+
+    // For now, simulate submission
+    console.log("Submit booking", bookingPayload);
+    alert(
+      `Booking received ✅\n\n${formData.name}\nTest: ${selectedTest.title}\nPayment: ${paymentMethod ||
+        "Not selected"}`
+    );
+    setSelectedTest(null);
+  };
+
+  // modal style: max-w and max-h with overflow-y-auto to keep responsive & scrollable
+  // On small screens modal becomes near-fullscreen (w-full h-[95vh])
+
   return (
-    <div className="min-h-screen py-16 px-6">
+    <div className="min-h-screen py-12 px-4 sm:px-8 lg:px-16">
       <motion.h1
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`text-4xl font-bold mb-4 text-center ${textColor}`}
+        className={`text-3xl sm:text-4xl font-extrabold mb-6 text-center ${textColor}`}
       >
         MediNova Diagnostic Labs
       </motion.h1>
+
       <p
-        className={`text-center max-w-2xl mx-auto mb-12 text-lg ${
+        className={`text-center max-w-2xl mx-auto mb-10 text-base sm:text-lg ${
           darkMode ? "text-gray-300" : "text-gray-600"
         }`}
       >
-        Book your lab tests with ease — accurate results, professional care, and
-        secure payment methods.
+        Book lab tests quickly — professional reporting, sample collection, and
+        secure payment options.
       </p>
 
-      {/* Test Cards */}
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-        {tests.map((test, index) => (
+      {/* Grid of cards */}
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
+        {tests.map((test, idx) => (
           <motion.div
-            key={index}
-            initial={{ opacity: 0, scale: 0.9 }}
+            key={idx}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.1, duration: 0.4 }}
-            whileHover={{ scale: 1.05 }}
-            onClick={() => {
-              setSelectedTest(test);
-              setPaymentMethod(null);
-            }}
-            className={`${cardBg} ${hoverCard} border ${borderColor} rounded-2xl shadow-xl cursor-pointer p-6 text-center transition`}
+            transition={{ delay: idx * 0.05 }}
+            whileHover={{ scale: 1.03 }}
+            onClick={() => handleOpenModal(test)}
+            className={`${cardBg} ${hoverCard} border ${borderColor} rounded-2xl shadow-lg cursor-pointer p-6 flex flex-col items-center text-center transition`}
           >
-            <img
-              src={test.img}
-              alt={test.title}
-              className="w-20 h-20 mx-auto mb-4"
-            />
-            <div className="flex justify-center mb-2">{test.icon}</div>
-            <h3 className="text-xl font-semibold mb-2">{test.title}</h3>
-            <p
-              className={`text-sm mb-3 ${
-                darkMode ? "text-gray-300" : "text-gray-600"
-              }`}
-            >
-              {test.desc}
-            </p>
-            <p className="font-bold text-[#00C2CB]">PKR {test.price}</p>
+            <img src={test.img} alt={test.title} className="w-20 h-20 mb-3" />
+            <div className="mb-3">{test.icon}</div>
+            <h3 className="text-lg font-semibold mb-2">{test.title}</h3>
+            <p className="text-sm mb-4 text-gray-500">{test.desc}</p>
+            <div className="mt-auto">
+              <p className="text-[#00C2CB] font-bold text-lg">
+                PKR {test.price}
+              </p>
+            </div>
           </motion.div>
         ))}
       </div>
@@ -200,212 +374,366 @@ function Labs() {
       <AnimatePresence>
         {selectedTest && (
           <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50"
           >
+            {/* overlay */}
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={handleCloseModal}
+            />
+
+            {/* modal container */}
             <motion.div
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 50, opacity: 0 }}
-              className={`${cardBg} rounded-3xl p-8 max-w-3xl w-full shadow-2xl relative`}
+              ref={modalContentRef}
+              initial={{ scale: 0.96, y: 10, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.96, y: 10, opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              // responsive: full width on small screens, constrained on larger
+              className={`${cardBg} relative rounded-3xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto`}
             >
-              {/* Cancel Button */}
-              <button
-                onClick={() => setSelectedTest(null)}
-                className="absolute top-4 right-4 text-red-500 hover:text-red-700"
-              >
-                <X className="w-6 h-6" />
-              </button>
-
-              <h2 className={`text-2xl font-bold mb-4 ${textColor}`}>
-                Book {selectedTest.title}
-              </h2>
-
-              <form className="grid grid-cols-2 gap-4">
-                {/* Name */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10 col-span-2">
-                  <User className="mr-2 text-[#00C2CB]" />
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    className="w-full bg-transparent focus:outline-none"
-                    required
-                  />
+              {/* header with X */}
+              <div className="flex items-center justify-between px-6 py-4 border-b" >
+                <div>
+                  <h3 className={`text-xl font-bold ${textColor}`}>
+                    Book: {selectedTest.title}
+                  </h3>
+                  <p className="text-sm text-gray-400">
+                    Price: PKR {selectedTest.price} • Reporting time: Usually 24–48 hrs
+                  </p>
                 </div>
-                {/* CNIC */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10 col-span-2">
-                  <ShieldCheck className="mr-2 text-[#00C2CB]" />
-                  <input
-                    type="text"
-                    placeholder="CNIC (13 digits)"
-                    maxLength={13}
-                    onBlur={(e) => verifyCNIC(e.target.value)}
-                    className="w-full bg-transparent focus:outline-none"
-                    required
-                  />
-                  {cnicVerified !== null && (
-                    <span
-                      className={`ml-2 text-sm ${
-                        cnicVerified ? "text-green-500" : "text-red-500"
-                      }`}
-                    >
-                      {cnicVerified ? "Verified" : "Invalid"}
-                    </span>
-                  )}
-                </div>
-                {/* Age */}
-                <input
-                  type="number"
-                  placeholder="Age"
-                  className="p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB]"
-                  required
-                />
-                {/* Gender */}
-                <select
-                  className="p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB]"
-                  required
+
+                <button
+                  onClick={handleCloseModal}
+                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#0A2A43]"
+                  aria-label="Close"
                 >
-                  <option value="">Gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-                {/* Phone */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10 col-span-2">
-                  <Phone className="mr-2 text-[#00C2CB]" />
-                  <input
-                    type="text"
-                    placeholder="Phone Number"
-                    className="w-full bg-transparent focus:outline-none"
-                    required
-                  />
-                </div>
-                {/* Email */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10 col-span-2">
-                  <Mail className="mr-2 text-[#00C2CB]" />
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    className="w-full bg-transparent focus:outline-none"
-                    required
-                  />
-                </div>
-                {/* Date */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10 col-span-2">
-                  <Calendar className="mr-2 text-[#00C2CB]" />
-                  <input
-                    type="date"
-                    className="w-full bg-transparent focus:outline-none"
-                    required
-                  />
-                </div>
-                {/* Address */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10 col-span-2">
-                  <Home className="mr-2 text-[#00C2CB]" />
-                  <input
-                    type="text"
-                    placeholder="Address for sample collection"
-                    className="w-full bg-transparent focus:outline-none"
-                  />
-                </div>
+                  <X className="w-5 h-5 text-red-500" />
+                </button>
+              </div>
 
-                {/* Payment Section */}
-                <div className="col-span-2">
-                  <label className={`block mb-2 ${textColor}`}>
-                    Select Payment Method
-                  </label>
-                  <div className="flex gap-4 mb-4">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("cod")}
-                      className={`flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 ${
-                        paymentMethod === "cod"
-                          ? "bg-[#00C2CB] text-white"
-                          : "hover:bg-gray-200 dark:hover:bg-[#0A2A43]"
-                      }`}
-                    >
-                      Cash on Delivery
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("card")}
-                      className={`flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 ${
-                        paymentMethod === "card"
-                          ? "bg-[#00C2CB] text-white"
-                          : "hover:bg-gray-200 dark:hover:bg-[#0A2A43]"
-                      }`}
-                    >
-                      <CreditCard className="w-5 h-5" /> Card
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("bank")}
-                      className={`flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 ${
-                        paymentMethod === "bank"
-                          ? "bg-[#00C2CB] text-white"
-                          : "hover:bg-gray-200 dark:hover:bg-[#0A2A43]"
-                      }`}
-                    >
-                      <Building className="w-5 h-5" /> Bank
-                    </button>
-                  </div>
-
-                  {/* Conditional Payment Details */}
-                  {paymentMethod === "card" && (
-                    <div className="space-y-3">
+              {/* content */}
+              <form onSubmit={handleSubmit} className="p-6">
+                {/* landscape-style grid: 2 columns on md+, stacked on small */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Full name (span both on md for clarity) */}
+                  <div className="col-span-1 md:col-span-2">
+                    <label className="text-sm font-medium mb-1 block">Full Name *</label>
+                    <div className="flex items-center border rounded-xl p-2 bg-transparent">
+                      <User className="mr-2 text-[#00C2CB]" />
                       <input
+                        name="name"
+                        value={formData.name}
+                        onChange={handleFormChange}
                         type="text"
-                        placeholder="Card Number"
-                        maxLength={16}
-                        className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB]"
+                        placeholder="Full name"
+                        className="w-full bg-transparent outline-none px-2 py-1"
                         required
                       />
-                      <div className="flex gap-3">
+                    </div>
+                  </div>
+
+                  {/* CNIC (mock verify) */}
+                  <div className="">
+                    <label className="text-sm font-medium mb-1 block">CNIC (13 digits)</label>
+                    <div className="flex items-center border rounded-xl p-2 bg-transparent">
+                      <ShieldCheck className="mr-2 text-[#00C2CB]" />
+                      <input
+                        name="cnic"
+                        value={formData.cnic}
+                        onChange={handleFormChange}
+                        maxLength={13}
+                        type="text"
+                        placeholder="35202xxxxxxx"
+                        className="w-full bg-transparent outline-none px-2 py-1"
+                        required
+                      />
+                      <div className="ml-2">
+                        {cnicVerified === true && <span className="text-green-500 text-sm">Verified</span>}
+                        {cnicVerified === false && <span className="text-red-400 text-sm">Invalid</span>}
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">
+                      We perform a basic client-side CNIC format check. For real NADRA verification, integrate an official provider.
+                    </p>
+                  </div>
+
+                  {/* Age */}
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Age *</label>
+                    <input
+                      name="age"
+                      value={formData.age}
+                      onChange={handleFormChange}
+                      type="number"
+                      min={0}
+                      placeholder="e.g. 34"
+                      className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB] bg-transparent"
+                      required
+                    />
+                  </div>
+
+                  {/* Gender */}
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Gender *</label>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleFormChange}
+                      className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB] bg-transparent"
+                      required
+                    >
+                      <option value="">Select</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  {/* Phone */}
+                  <div className="col-span-1 md:col-span-2">
+                    <label className="text-sm font-medium mb-1 block">Phone *</label>
+                    <div className="flex items-center border rounded-xl p-2 bg-transparent">
+                      <Phone className="mr-2 text-[#00C2CB]" />
+                      <input
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleFormChange}
+                        type="tel"
+                        placeholder="+92 3xx xxxxxxx"
+                        className="w-full bg-transparent outline-none px-2 py-1"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Email */}
+                  <div className="col-span-1 md:col-span-2">
+                    <label className="text-sm font-medium mb-1 block">Email *</label>
+                    <div className="flex items-center border rounded-xl p-2 bg-transparent">
+                      <Mail className="mr-2 text-[#00C2CB]" />
+                      <input
+                        name="email"
+                        value={formData.email}
+                        onChange={handleFormChange}
+                        type="email"
+                        placeholder="you@example.com"
+                        className="w-full bg-transparent outline-none px-2 py-1"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Date */}
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Preferred Date *</label>
+                    <div className="flex items-center border rounded-xl p-2 bg-transparent">
+                      <Calendar className="mr-2 text-[#00C2CB]" />
+                      <input
+                        name="date"
+                        value={formData.date}
+                        onChange={handleFormChange}
+                        type="date"
+                        className="w-full bg-transparent outline-none px-2 py-1"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Address for sample collection */}
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium mb-1 block">Address (for collection)</label>
+                    <div className="flex items-center border rounded-xl p-2 bg-transparent">
+                      <Home className="mr-2 text-[#00C2CB]" />
+                      <input
+                        name="address"
+                        value={formData.address}
+                        onChange={handleFormChange}
+                        type="text"
+                        placeholder="Street, city, area"
+                        className="w-full bg-transparent outline-none px-2 py-1"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Payment method selector (span both columns) */}
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium mb-2 block">Payment Method *</label>
+                    <div className="flex gap-3 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("cod")}
+                        className={`flex-1 md:flex-none px-4 py-2 rounded-xl border flex items-center gap-2 justify-center ${paymentMethod === "cod" ? "bg-[#00C2CB] text-white" : "bg-transparent hover:bg-gray-50 dark:hover:bg-[#0A2A43]"}`}
+                      >
+                        <span>Cash on Delivery</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("card")}
+                        className={`flex-1 md:flex-none px-4 py-2 rounded-xl border flex items-center gap-2 justify-center ${paymentMethod === "card" ? "bg-[#00C2CB] text-white" : "bg-transparent hover:bg-gray-50 dark:hover:bg-[#0A2A43]"}`}
+                      >
+                        <CreditCard /> Card
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("bank")}
+                        className={`flex-1 md:flex-none px-4 py-2 rounded-xl border flex items-center gap-2 justify-center ${paymentMethod === "bank" ? "bg-[#00C2CB] text-white" : "bg-transparent hover:bg-gray-50 dark:hover:bg-[#0A2A43]"}`}
+                      >
+                        <Building /> Bank Transfer
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Conditional Payment Fields */}
+                  {paymentMethod === "card" && (
+                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">Card Holder</label>
                         <input
-                          type="text"
+                          name="cardHolder"
+                          value={formData.cardHolder}
+                          onChange={handleFormChange}
+                          placeholder="Name on card"
+                          className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB] bg-transparent"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">Card Number</label>
+                        <input
+                          name="cardNumber"
+                          value={formData.cardNumber}
+                          onChange={handleFormChange}
+                          placeholder="1234 5678 9012 3456"
+                          maxLength={19}
+                          className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB] bg-transparent"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">Expiry (MM/YY)</label>
+                        <input
+                          name="cardExpiry"
+                          value={formData.cardExpiry}
+                          onChange={handleFormChange}
                           placeholder="MM/YY"
                           maxLength={5}
-                          className="w-1/2 p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB]"
+                          className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB] bg-transparent"
                           required
                         />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">CVV</label>
                         <input
-                          type="password"
-                          placeholder="CVV"
-                          maxLength={3}
-                          className="w-1/2 p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB]"
+                          name="cardCVV"
+                          value={formData.cardCVV}
+                          onChange={handleFormChange}
+                          placeholder="3 digits"
+                          maxLength={4}
+                          className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB] bg-transparent"
                           required
                         />
+                      </div>
+                      <div className="md:col-span-2 text-sm text-gray-400">
+                        Note: For production, integrate a PCI-compliant gateway (Stripe/Checkout) and tokenize card data. This UI is for demo only.
                       </div>
                     </div>
                   )}
 
                   {paymentMethod === "bank" && (
-                    <div className="space-y-3">
-                      <select className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB]">
+                    <div className="md:col-span-2 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          className="flex-1 p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB] bg-transparent"
+                          placeholder="Search bank (type & select)"
+                          value={bankQuery}
+                          onChange={(e) => setBankQuery(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // optional: re-fetch banks if you want
+                            setBankQuery("");
+                          }}
+                          className="px-3 py-2 rounded-xl border bg-transparent"
+                        >
+                          Search
+                        </button>
+                      </div>
+
+                      <select
+                        name="bankName"
+                        value={formData.bankName}
+                        onChange={handleFormChange}
+                        className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB] bg-transparent"
+                        required
+                      >
                         <option value="">Select Bank</option>
-                        {banks.map((bank, idx) => (
-                          <option key={idx} value={bank.name}>
-                            {bank.name}
-                          </option>
-                        ))}
+                        {loadingBanks ? (
+                          <option>Loading banks...</option>
+                        ) : filteredBanks.length === 0 ? (
+                          <option>No banks found</option>
+                        ) : (
+                          filteredBanks.map((b, i) => (
+                            <option key={i} value={b.name || b}>
+                              {b.name || b}
+                            </option>
+                          ))
+                        )}
                       </select>
+
                       <input
-                        type="text"
-                        placeholder="Account Number"
-                        className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB]"
+                        name="accountNumber"
+                        value={formData.accountNumber}
+                        onChange={handleFormChange}
+                        placeholder="Account / IBAN number"
+                        className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB] bg-transparent"
                         required
                       />
+                      <input
+                        name="transactionId"
+                        value={formData.transactionId}
+                        onChange={handleFormChange}
+                        placeholder="Transaction reference (TXID)"
+                        className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB] bg-transparent"
+                        required
+                      />
+                      <div className="text-sm text-gray-400">
+                        Make the transfer to the selected bank and paste transaction ID here. We'll verify manually (or via bank API) and confirm booking.
+                      </div>
                     </div>
                   )}
-                </div>
 
-                <button
-                  type="submit"
-                  className="col-span-2 py-3 rounded-xl bg-[#00C2CB] text-white font-semibold hover:bg-[#0097A7] transition"
-                >
-                  Confirm Booking (PKR {selectedTest.price})
-                </button>
+                  {paymentMethod === "cod" && (
+                    <div className="md:col-span-2">
+                      <div className="p-3 rounded-xl border bg-transparent text-sm">
+                        Cash on Collection - pay the technician at sample collection.
+                      </div>
+                    </div>
+                  )}
+
+                  {/* submit buttons */}
+                  <div className="md:col-span-2 flex gap-3 justify-end mt-4">
+                    <button
+                      type="button"
+                      onClick={handleCloseModal}
+                      className="px-6 py-3 rounded-xl bg-red-500 text-white hover:bg-red-600"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-6 py-3 rounded-xl bg-[#00C2CB] text-white hover:bg-[#0097A7]"
+                    >
+                      Confirm Booking (PKR {selectedTest.price})
+                    </button>
+                  </div>
+                </div>
               </form>
             </motion.div>
           </motion.div>
