@@ -1,7 +1,18 @@
 import { useContext, useState } from "react";
 import { DarkModeContext } from "../App";
 import { motion, AnimatePresence } from "framer-motion";
-import { Droplet, Microscope, Activity, Syringe, TestTube2 } from "lucide-react";
+import {
+  Droplet,
+  Microscope,
+  Activity,
+  Syringe,
+  TestTube2,
+  User,
+  Phone,
+  Mail,
+  Calendar,
+  Home,
+} from "lucide-react";
 
 function Labs() {
   const { darkMode } = useContext(DarkModeContext);
@@ -15,7 +26,7 @@ function Labs() {
   const tests = [
     {
       title: "Complete Blood Count (CBC)",
-      desc: "Checks overall health and detects a variety of disorders.",
+      desc: "Checks overall health and detects blood disorders.",
       img: "https://cdn-icons-png.flaticon.com/512/2966/2966485.png",
       icon: <Droplet className="w-8 h-8 text-[#00C2CB]" />,
       price: 2500,
@@ -36,7 +47,7 @@ function Labs() {
     },
     {
       title: "Radiology (X-ray/CT/MRI)",
-      desc: "Advanced imaging with latest radiology equipment.",
+      desc: "Advanced imaging with modern radiology equipment.",
       img: "https://cdn-icons-png.flaticon.com/512/2966/2966533.png",
       icon: <Activity className="w-8 h-8 text-[#00C2CB]" />,
       price: 8000,
@@ -46,6 +57,41 @@ function Labs() {
       desc: "Protective immunization for adults and children.",
       img: "https://cdn-icons-png.flaticon.com/512/2966/2966481.png",
       icon: <Syringe className="w-8 h-8 text-[#00C2CB]" />,
+      price: 2000,
+    },
+    {
+      title: "COVID-19 PCR Test",
+      desc: "Accurate COVID-19 testing with quick reporting.",
+      img: "https://cdn-icons-png.flaticon.com/512/2785/2785819.png",
+      icon: <Activity className="w-8 h-8 text-[#00C2CB]" />,
+      price: 3500,
+    },
+    {
+      title: "Liver Function Test (LFT)",
+      desc: "Monitors liver health and detects related diseases.",
+      img: "https://cdn-icons-png.flaticon.com/512/2779/2779762.png",
+      icon: <Microscope className="w-8 h-8 text-[#00C2CB]" />,
+      price: 3000,
+    },
+    {
+      title: "Kidney Function Test (KFT)",
+      desc: "Evaluates kidney performance and health.",
+      img: "https://cdn-icons-png.flaticon.com/512/2779/2779752.png",
+      icon: <Droplet className="w-8 h-8 text-[#00C2CB]" />,
+      price: 2800,
+    },
+    {
+      title: "Thyroid Profile",
+      desc: "Checks thyroid hormone levels for imbalances.",
+      img: "https://cdn-icons-png.flaticon.com/512/2779/2779771.png",
+      icon: <Activity className="w-8 h-8 text-[#00C2CB]" />,
+      price: 3200,
+    },
+    {
+      title: "Cholesterol Test",
+      desc: "Measures cholesterol and heart risk factors.",
+      img: "https://cdn-icons-png.flaticon.com/512/2966/2966499.png",
+      icon: <TestTube2 className="w-8 h-8 text-[#00C2CB]" />,
       price: 2000,
     },
   ];
@@ -64,8 +110,8 @@ function Labs() {
           darkMode ? "text-gray-300" : "text-gray-600"
         }`}
       >
-        Explore our wide range of medical tests with professional reporting,
-        online booking, and secure payment options.
+        Book your lab tests with ease — accurate results, professional care, and
+        secure payment methods.
       </p>
 
       {/* Test Cards */}
@@ -75,7 +121,7 @@ function Labs() {
             key={index}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.2, duration: 0.4 }}
+            transition={{ delay: index * 0.1, duration: 0.4 }}
             whileHover={{ scale: 1.05 }}
             onClick={() => setSelectedTest(test)}
             className={`${cardBg} ${hoverCard} border ${borderColor} rounded-2xl shadow-xl cursor-pointer p-6 text-center transition`}
@@ -106,7 +152,7 @@ function Labs() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50"
           >
             <motion.div
               initial={{ y: 50, opacity: 0 }}
@@ -118,31 +164,112 @@ function Labs() {
                 Book {selectedTest.title}
               </h2>
               <form className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Full Name"
-                  className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Phone Number"
-                  className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
-                  required
-                />
-                <select
-                  className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
-                  required
-                >
-                  <option value="">Select Payment Method</option>
-                  <option value="cod">Cash on Delivery</option>
-                  <option value="card">Credit/Debit Card</option>
-                  <option value="online">Online Banking</option>
-                </select>
-                <textarea
-                  placeholder="Address for sample collection (optional)"
-                  className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
-                ></textarea>
+                {/* Name */}
+                <div className="flex items-center border rounded-xl p-3 bg-white/10">
+                  <User className="mr-2 text-[#00C2CB]" />
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    className="w-full bg-transparent focus:outline-none"
+                    required
+                  />
+                </div>
+                {/* Age & Gender */}
+                <div className="flex gap-3">
+                  <input
+                    type="number"
+                    placeholder="Age"
+                    className="w-1/2 p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
+                    required
+                  />
+                  <select
+                    className="w-1/2 p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
+                    required
+                  >
+                    <option value="">Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </div>
+                {/* Phone */}
+                <div className="flex items-center border rounded-xl p-3 bg-white/10">
+                  <Phone className="mr-2 text-[#00C2CB]" />
+                  <input
+                    type="text"
+                    placeholder="Phone Number"
+                    className="w-full bg-transparent focus:outline-none"
+                    required
+                  />
+                </div>
+                {/* Email */}
+                <div className="flex items-center border rounded-xl p-3 bg-white/10">
+                  <Mail className="mr-2 text-[#00C2CB]" />
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    className="w-full bg-transparent focus:outline-none"
+                    required
+                  />
+                </div>
+                {/* Date */}
+                <div className="flex items-center border rounded-xl p-3 bg-white/10">
+                  <Calendar className="mr-2 text-[#00C2CB]" />
+                  <input
+                    type="date"
+                    className="w-full bg-transparent focus:outline-none"
+                    required
+                  />
+                </div>
+                {/* Address */}
+                <div className="flex items-center border rounded-xl p-3 bg-white/10">
+                  <Home className="mr-2 text-[#00C2CB]" />
+                  <input
+                    type="text"
+                    placeholder="Address for sample collection"
+                    className="w-full bg-transparent focus:outline-none"
+                  />
+                </div>
+                {/* Payment */}
+                <div>
+                  <label className={`block mb-2 ${textColor}`}>
+                    Select Payment Method
+                  </label>
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      className="flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-[#0A2A43]"
+                    >
+                      <img
+                        src="https://cdn-icons-png.flaticon.com/512/104/104678.png"
+                        alt="COD"
+                        className="w-6 h-6"
+                      />
+                      Cash on Delivery
+                    </button>
+                    <button
+                      type="button"
+                      className="flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-[#0A2A43]"
+                    >
+                      <img
+                        src="https://cdn-icons-png.flaticon.com/512/5968/5968299.png"
+                        alt="Card"
+                        className="w-6 h-6"
+                      />
+                      Card
+                    </button>
+                    <button
+                      type="button"
+                      className="flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-[#0A2A43]"
+                    >
+                      <img
+                        src="https://cdn-icons-png.flaticon.com/512/1041/1041916.png"
+                        alt="Bank"
+                        className="w-6 h-6"
+                      />
+                      Online
+                    </button>
+                  </div>
+                </div>
                 <button
                   type="submit"
                   className="w-full py-3 rounded-xl bg-[#00C2CB] text-white font-semibold hover:bg-[#0097A7] transition"
