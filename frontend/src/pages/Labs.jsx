@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { DarkModeContext } from "../App";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -12,20 +12,64 @@ import {
   Mail,
   Calendar,
   Home,
+  X,
   CreditCard,
-  Landmark,
-  Truck,
+  Building,
+  ShieldCheck,
 } from "lucide-react";
 
 function Labs() {
   const { darkMode } = useContext(DarkModeContext);
   const [selectedTest, setSelectedTest] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState(null);
+  const [banks, setBanks] = useState([]);
+  const [cnicVerified, setCnicVerified] = useState(null);
 
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-gray-800";
-  const cardBg = darkMode ? "bg-[#081F5C]/90" : "bg-white/80";
+  const cardBg = darkMode ? "bg-[#081F5C]/95" : "bg-white";
   const hoverCard = darkMode ? "hover:bg-[#0A2A43]" : "hover:bg-gray-100";
   const borderColor = darkMode ? "border-white/10" : "border-gray-200";
+
+  // Fetch mock banks (free API placeholder)
+  useEffect(() => {
+    async function fetchBanks() {
+      try {
+        const res = await fetch("https://api.first.org/data/v1/banks"); // Example (not real PK banks)
+        const data = await res.json();
+        if (data.data) {
+          setBanks(Object.values(data.data).slice(0, 6)); // Take a few sample banks
+        } else {
+          setBanks([
+            { name: "HBL" },
+            { name: "UBL" },
+            { name: "Meezan Bank" },
+            { name: "Allied Bank" },
+            { name: "MCB" },
+            { name: "Bank Alfalah" },
+          ]);
+        }
+      } catch (err) {
+        setBanks([
+          { name: "HBL" },
+          { name: "UBL" },
+          { name: "Meezan Bank" },
+          { name: "Allied Bank" },
+          { name: "MCB" },
+          { name: "Bank Alfalah" },
+        ]);
+      }
+    }
+    fetchBanks();
+  }, []);
+
+  // Mock NADRA Verification
+  const verifyCNIC = (cnic) => {
+    if (cnic && cnic.length === 13) {
+      setCnicVerified(true);
+    } else {
+      setCnicVerified(false);
+    }
+  };
 
   const tests = [
     {
@@ -127,7 +171,10 @@ function Labs() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.1, duration: 0.4 }}
             whileHover={{ scale: 1.05 }}
-            onClick={() => setSelectedTest(test)}
+            onClick={() => {
+              setSelectedTest(test);
+              setPaymentMethod(null);
+            }}
             className={`${cardBg} ${hoverCard} border ${borderColor} rounded-2xl shadow-xl cursor-pointer p-6 text-center transition`}
           >
             <img
@@ -162,14 +209,23 @@ function Labs() {
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 50, opacity: 0 }}
-              className={`${cardBg} rounded-3xl p-8 max-w-2xl w-full shadow-2xl`}
+              className={`${cardBg} rounded-3xl p-8 max-w-3xl w-full shadow-2xl relative`}
             >
+              {/* Cancel Button */}
+              <button
+                onClick={() => setSelectedTest(null)}
+                className="absolute top-4 right-4 text-red-500 hover:text-red-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
               <h2 className={`text-2xl font-bold mb-4 ${textColor}`}>
                 Book {selectedTest.title}
               </h2>
-              <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <form className="grid grid-cols-2 gap-4">
                 {/* Name */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10 md:col-span-2">
+                <div className="flex items-center border rounded-xl p-3 bg-white/10 col-span-2">
                   <User className="mr-2 text-[#00C2CB]" />
                   <input
                     type="text"
@@ -178,15 +234,37 @@ function Labs() {
                     required
                   />
                 </div>
-                {/* Age & Gender */}
+                {/* CNIC */}
+                <div className="flex items-center border rounded-xl p-3 bg-white/10 col-span-2">
+                  <ShieldCheck className="mr-2 text-[#00C2CB]" />
+                  <input
+                    type="text"
+                    placeholder="CNIC (13 digits)"
+                    maxLength={13}
+                    onBlur={(e) => verifyCNIC(e.target.value)}
+                    className="w-full bg-transparent focus:outline-none"
+                    required
+                  />
+                  {cnicVerified !== null && (
+                    <span
+                      className={`ml-2 text-sm ${
+                        cnicVerified ? "text-green-500" : "text-red-500"
+                      }`}
+                    >
+                      {cnicVerified ? "Verified" : "Invalid"}
+                    </span>
+                  )}
+                </div>
+                {/* Age */}
                 <input
                   type="number"
                   placeholder="Age"
-                  className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
+                  className="p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB]"
                   required
                 />
+                {/* Gender */}
                 <select
-                  className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
+                  className="p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB]"
                   required
                 >
                   <option value="">Gender</option>
@@ -194,7 +272,7 @@ function Labs() {
                   <option value="female">Female</option>
                 </select>
                 {/* Phone */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10 md:col-span-2">
+                <div className="flex items-center border rounded-xl p-3 bg-white/10 col-span-2">
                   <Phone className="mr-2 text-[#00C2CB]" />
                   <input
                     type="text"
@@ -204,7 +282,7 @@ function Labs() {
                   />
                 </div>
                 {/* Email */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10 md:col-span-2">
+                <div className="flex items-center border rounded-xl p-3 bg-white/10 col-span-2">
                   <Mail className="mr-2 text-[#00C2CB]" />
                   <input
                     type="email"
@@ -214,7 +292,7 @@ function Labs() {
                   />
                 </div>
                 {/* Date */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10 md:col-span-2">
+                <div className="flex items-center border rounded-xl p-3 bg-white/10 col-span-2">
                   <Calendar className="mr-2 text-[#00C2CB]" />
                   <input
                     type="date"
@@ -223,7 +301,7 @@ function Labs() {
                   />
                 </div>
                 {/* Address */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10 md:col-span-2">
+                <div className="flex items-center border rounded-xl p-3 bg-white/10 col-span-2">
                   <Home className="mr-2 text-[#00C2CB]" />
                   <input
                     type="text"
@@ -232,22 +310,21 @@ function Labs() {
                   />
                 </div>
 
-                {/* Payment Method */}
-                <div className="md:col-span-2">
+                {/* Payment Section */}
+                <div className="col-span-2">
                   <label className={`block mb-2 ${textColor}`}>
                     Select Payment Method
                   </label>
-                  <div className="flex gap-3 flex-wrap">
+                  <div className="flex gap-4 mb-4">
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("cod")}
                       className={`flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 ${
                         paymentMethod === "cod"
-                          ? "bg-[#00C2CB]/30"
+                          ? "bg-[#00C2CB] text-white"
                           : "hover:bg-gray-200 dark:hover:bg-[#0A2A43]"
                       }`}
                     >
-                      <Truck className="w-5 h-5 text-[#00C2CB]" />
                       Cash on Delivery
                     </button>
                     <button
@@ -255,97 +332,80 @@ function Labs() {
                       onClick={() => setPaymentMethod("card")}
                       className={`flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 ${
                         paymentMethod === "card"
-                          ? "bg-[#00C2CB]/30"
+                          ? "bg-[#00C2CB] text-white"
                           : "hover:bg-gray-200 dark:hover:bg-[#0A2A43]"
                       }`}
                     >
-                      <CreditCard className="w-5 h-5 text-[#00C2CB]" />
-                      Card
+                      <CreditCard className="w-5 h-5" /> Card
                     </button>
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("bank")}
                       className={`flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 ${
                         paymentMethod === "bank"
-                          ? "bg-[#00C2CB]/30"
+                          ? "bg-[#00C2CB] text-white"
                           : "hover:bg-gray-200 dark:hover:bg-[#0A2A43]"
                       }`}
                     >
-                      <Landmark className="w-5 h-5 text-[#00C2CB]" />
-                      Bank Transfer
+                      <Building className="w-5 h-5" /> Bank
                     </button>
                   </div>
+
+                  {/* Conditional Payment Details */}
+                  {paymentMethod === "card" && (
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        placeholder="Card Number"
+                        maxLength={16}
+                        className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB]"
+                        required
+                      />
+                      <div className="flex gap-3">
+                        <input
+                          type="text"
+                          placeholder="MM/YY"
+                          maxLength={5}
+                          className="w-1/2 p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB]"
+                          required
+                        />
+                        <input
+                          type="password"
+                          placeholder="CVV"
+                          maxLength={3}
+                          className="w-1/2 p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB]"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {paymentMethod === "bank" && (
+                    <div className="space-y-3">
+                      <select className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB]">
+                        <option value="">Select Bank</option>
+                        {banks.map((bank, idx) => (
+                          <option key={idx} value={bank.name}>
+                            {bank.name}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="Account Number"
+                        className="w-full p-3 rounded-xl border focus:ring-2 focus:ring-[#00C2CB]"
+                        required
+                      />
+                    </div>
+                  )}
                 </div>
 
-                {/* Conditional Payment Fields */}
-                {paymentMethod === "card" && (
-                  <div className="md:col-span-2 grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      placeholder="Card Holder Name"
-                      className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Card Number"
-                      className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Expiry Date (MM/YY)"
-                      className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
-                    />
-                    <input
-                      type="text"
-                      placeholder="CVV"
-                      className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
-                    />
-                  </div>
-                )}
-
-                {paymentMethod === "bank" && (
-                  <div className="md:col-span-2 grid grid-cols-1 gap-4">
-                    <input
-                      type="text"
-                      placeholder="Account Holder Name"
-                      className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
-                    />
-                    <input
-                      type="text"
-                      placeholder="IBAN / Account Number"
-                      className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Bank Name"
-                      className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
-                    />
-                  </div>
-                )}
-
-                {paymentMethod === "cod" && (
-                  <p className="md:col-span-2 text-sm text-gray-400">
-                    💡 Cash will be collected at your doorstep after sample
-                    collection.
-                  </p>
-                )}
-
-                {/* Submit */}
-                <div className="md:col-span-2 flex gap-4 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedTest(null)}
-                    className="flex-1 py-3 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-3 rounded-xl bg-[#00C2CB] text-white font-semibold hover:bg-[#0097A7] transition"
-                  >
-                    Confirm Booking (PKR {selectedTest.price})
-                  </button>
-                </div>
+                <button
+                  type="submit"
+                  className="col-span-2 py-3 rounded-xl bg-[#00C2CB] text-white font-semibold hover:bg-[#0097A7] transition"
+                >
+                  Confirm Booking (PKR {selectedTest.price})
+                </button>
               </form>
             </motion.div>
           </motion.div>
