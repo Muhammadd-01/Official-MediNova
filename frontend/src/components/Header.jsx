@@ -18,10 +18,18 @@ const mobileMenuVariants = {
   exit: { opacity: 0, height: 0 },
 };
 
+// Animation variants for settings button
+const settingsButtonVariants = {
+  initial: { scale: 1, rotate: 0 },
+  hover: { scale: 1.1, rotate: 15, transition: { type: "spring", stiffness: 300, damping: 15 } },
+  tap: { scale: 0.95, rotate: -15 },
+  pulse: { scale: [1, 1.2, 1], rotate: [0, 180, 360], transition: { duration: 0.8, ease: "easeInOut" } },
+};
+
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [spin, setSpin] = useState(false);
+  const [pulse, setPulse] = useState(false);
   const { darkMode, setDarkMode } = useContext(DarkModeContext);
   const { isAuthenticated, logout } = useContext(AuthContext);
 
@@ -43,13 +51,13 @@ function Header() {
     "Contact",
   ];
 
-  // Reset spin animation for settings icon
+  // Trigger pulse animation on settings button click
   useEffect(() => {
-    if (spin) {
-      const timer = setTimeout(() => setSpin(false), 600);
+    if (pulse) {
+      const timer = setTimeout(() => setPulse(false), 800);
       return () => clearTimeout(timer);
     }
-  }, [spin]);
+  }, [pulse]);
 
   return (
     <>
@@ -92,15 +100,18 @@ function Header() {
 
             {/* Right-side Buttons (Desktop) */}
             <div className="hidden md:flex items-center gap-3 lg:gap-4 relative">
-              {/* Settings Button with Spin Animation */}
+              {/* Settings Button with Enhanced Animation */}
               <motion.button
+                variants={settingsButtonVariants}
+                initial="initial"
+                whileHover="hover"
+                whileTap="tap"
+                animate={pulse ? "pulse" : "initial"}
                 onClick={() => {
                   setIsSettingsOpen(!isSettingsOpen);
-                  setSpin(true);
+                  setPulse(true);
                 }}
-                animate={{ rotate: spin ? 360 : 0 }}
-                transition={{ duration: 0.6, ease: "easeInOut" }}
-                className={`h-9 w-9 flex items-center justify-center rounded-full shadow-md bg-[#0D3B66] text-white ${hoverBg} transition-all duration-300`}
+                className={`h-9 w-9 flex items-center justify-center rounded-full shadow-lg bg-[#0D3B66] text-white ${hoverBg} hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#00C2CB] focus:ring-opacity-50`}
                 aria-label="Settings"
               >
                 <Settings size={18} />
