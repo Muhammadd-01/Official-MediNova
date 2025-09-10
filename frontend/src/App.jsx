@@ -23,6 +23,7 @@ import Emergency from "./pages/Emergency";
 import BloodStreamBackground from "./components/BackgroundAnimation";
 import Chatbot from "./components/Chatbot";
 import GoToTop from "./components/GoToTop";
+import Labs from "./pages/Labs";
 
 // Contexts
 export const DarkModeContext = React.createContext();
@@ -74,6 +75,7 @@ function App() {
                     <Route path="/consultation" element={<Consultation />} />
                     <Route path="/feedback" element={<Feedback />} />
                     <Route path="/contact" element={<Contact />} />
+                    <Route path="/labs" element={<Labs />} />
                     <Route path="/articles" element={<Articles />} />
                     <Route path="/pharmacy" element={<Pharmacy />} />
                     <Route path="/news" element={<News />} />
