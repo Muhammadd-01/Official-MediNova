@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useContext, useEffect, useMemo } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, ChevronDown, ChevronUp, Pill, Clock, Globe, Volume2, X, Search } from "lucide-react";
@@ -29,46 +29,91 @@ const languages = [
 ];
 
 const NLM_SYMPTOM_API = "https://clinicaltables.nlm.nih.gov/api/hpo/v3/search";
+const RXNAV_ALLERGY_API = "https://rxnav.nlm.nih.gov/REST/approx.json";
+const OPENI_API_BASE = "https://openi.nlm.nih.gov/api/search";
+const fdaUrl = import.meta.env.VITE_FDA_API_URL || "https://api.fda.gov/drug/label.json";
+const CONSULTATION_LINK = "https://www.mednova.com/consultation";
 
 // Fallback lists in plain language
 const fallbackSymptoms = [
-  "Fever", "Cough", "Headache", "Sore throat", "Tiredness", "Nausea", "Dizziness",
-  "Can't breathe well", "Muscle pain", "No taste or smell", "Runny nose",
-  "Body aches", "Chills", "Diarrhea", "Throwing up", "Chest hurts", "Sneezing", "Stuffy nose",
+  "Fever", "Cough", "Headache", "Sore throat", "Fatigue", "Nausea", "Dizziness",
+  "Shortness of breath", "Muscle pain", "Loss of taste or smell", "Runny nose",
+  "Body aches", "Chills", "Diarrhea", "Vomiting", "Chest pain", "Sneezing", "Congestion",
 ];
 
 const fallbackAllergies = [
   "Penicillin", "Aspirin", "Ibuprofen", "Sulfa drugs", "Latex", "Peanuts",
   "Tree nuts", "Shellfish", "Eggs", "Milk", "Soy", "Wheat", "Fish",
+  "Pollen", "Dust mites", "Mold", "Pet dander",
 ];
 
-// Cache for symptom and allergy suggestions
+// Fallback medications for common symptoms
+const fallbackMedications = {
+  "Headache": [
+    { name: "Acetaminophen", dosage: "500mg every 4-6 hours", timing: "Take with water", precautions: "Avoid alcohol", source: "Available at CVS, Walgreens" },
+    { name: "Ibuprofen", dosage: "200mg every 4-6 hours", timing: "Take with food", precautions: "Avoid if allergic to NSAIDs", source: "Available at CVS, Walgreens" },
+  ],
+  "Sore throat": [
+    { name: "Chloraseptic Spray", dosage: "Spray 5 times every 2 hours", timing: "Spray directly on throat", precautions: "Do not swallow", source: "Available at pharmacies" },
+    { name: "Acetaminophen", dosage: "500mg every 4-6 hours", timing: "Take with water", precautions: "Avoid alcohol", source: "Available at CVS, Walgreens" },
+  ],
+  "Fever": [
+    { name: "Acetaminophen", dosage: "500mg every 4-6 hours", timing: "Take with water", precautions: "Avoid alcohol", source: "Available at CVS, Walgreens" },
+    { name: "Ibuprofen", dosage: "200mg every 4-6 hours", timing: "Take with food", precautions: "Avoid if allergic to NSAIDs", source: "Available at CVS, Walgreens" },
+  ],
+  "Cough": [
+    { name: "Dextromethorphan", dosage: "10-20mg every 4 hours", timing: "Take with water", precautions: "Avoid with MAOIs", source: "Available at pharmacies" },
+    { name: "Guaifenesin", dosage: "200-400mg every 4 hours", timing: "Take with water", precautions: "Drink plenty of fluids", source: "Available at pharmacies" },
+  ],
+};
+
+// Cache for suggestions
 const suggestionCache = new Map();
 
 const simplifyMedicalTerms = (term) => {
   const termMap = {
-    "Dyspnea": "Can't breathe well",
-    "Thoracic pain": "Chest hurts",
-    "Vertigo": "Feeling dizzy",
-    "Vomiting": "Throwing up",
+    "Dyspnea": "Shortness of breath",
+    "Thoracic pain": "Chest pain",
+    "Vertigo": "Dizziness",
+    "Vomiting": "Vomiting",
     "Pyrexia": "Fever",
-    "Cough": "Coughing",
-    "Headache": "Head hurts",
-    "Nasal congestion": "Stuffy nose",
-    "Fatigue": "Feeling tired",
+    "Cough": "Cough",
+    "Headache": "Headache",
+    "Nasal congestion": "Congestion",
+    "Fatigue": "Fatigue",
     "Myalgia": "Muscle pain",
     "Arthralgia": "Joint pain",
     "Pharyngitis": "Sore throat",
-    "Nausea": "Feeling sick to stomach",
-    "Anosmia": "No smell",
-    "Ageusia": "No taste",
+    "Nausea": "Nausea",
+    "Anosmia": "Loss of smell",
+    "Ageusia": "Loss of taste",
     "Rhinorrhea": "Runny nose",
-    "Chills": "Shivering",
-    "Diarrhea": "Loose stools",
+    "Chills": "Chills",
+    "Diarrhea": "Diarrhea",
     "Sneezing": "Sneezing",
   };
   return termMap[term] || term.replace(/ [ (].*?[ )]/g, "").replace(/medical|syndrome|disorder|abnormality/gi, "").trim();
 };
+
+async function fetchMedicineImage(medicineName) {
+  try {
+    const query = encodeURIComponent(`${medicineName} pill`);
+    const apiUrl = `${OPENI_API_BASE}?query=${query}&m=1&n=1`;
+    const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`);
+    if (!response.ok) {
+      throw new Error("Open-i API request failed");
+    }
+    const data = await response.json();
+    if (data.list && data.list.length > 0) {
+      const imgPath = data.list[0].imgLarge;
+      return `https://openi.nlm.nih.gov${imgPath}`;
+    }
+    return "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80";
+  } catch (error) {
+    console.error("Error fetching medicine image:", error);
+    return "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80";
+  }
+}
 
 function MedicineSuggestion() {
   const [formData, setFormData] = useState({
@@ -97,10 +142,12 @@ function MedicineSuggestion() {
   const [allergySearch, setAllergySearch] = useState("");
   const [symptomSuggestions, setSymptomSuggestions] = useState([]);
   const [allergySuggestions, setAllergySuggestions] = useState([]);
+  const [isFetchingSymptoms, setIsFetchingSymptoms] = useState(false);
+  const [isFetchingAllergies, setIsFetchingAllergies] = useState(false);
 
   const openRouterKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-  const hfApiKey = import.meta.env.VITE_HF_API_KEY;
-  const fdaUrl = import.meta.env.VITE_FDA_API_URL || "https://api.fda.gov/drug/label.json";
+  const symptomSearchRef = useRef(null);
+  const allergySearchRef = useRef(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -120,6 +167,14 @@ function MedicineSuggestion() {
     setFormData({ ...formData, [name]: updatedValue });
   };
 
+  const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  };
+
   const fetchSuggestions = async (query, setSuggestionsFunc, isAllergy = false) => {
     if (query.trim() === "") {
       setSuggestionsFunc([]);
@@ -133,27 +188,36 @@ function MedicineSuggestion() {
     }
 
     try {
-      const apiUrl = `${NLM_SYMPTOM_API}?terms=${encodeURIComponent(query)}&maxList=50`;
-      const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(apiUrl)}`, {
-        signal: AbortSignal.timeout(2000), // Timeout after 2 seconds
+      isAllergy ? setIsFetchingAllergies(true) : setIsFetchingSymptoms(true);
+      let apiUrl = isAllergy
+        ? `${RXNAV_ALLERGY_API}?term=${encodeURIComponent(query)}&maxEntries=50`
+        : `${NLM_SYMPTOM_API}?terms=${encodeURIComponent(query)}&maxList=50`;
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+      const response = await fetch(proxyUrl, {
+        signal: AbortSignal.timeout(5000),
       });
       if (!response.ok) {
-        throw new Error("API request failed, using fallback.");
+        throw new Error(`API request failed with status ${response.status}`);
       }
-      const data = await response.text();
-      const parsed = JSON.parse(data);
-      const labels = parsed[3] || [];
-      const simplifiedLabels = labels
-        .map(simplifyMedicalTerms)
-        .filter(
-          (label, index, self) =>
-            self.indexOf(label) === index &&
-            !formData[isAllergy ? "allergies" : "symptoms"].includes(label)
-        );
+      const data = await response.json();
+
+      let simplifiedLabels = [];
+      if (isAllergy) {
+        const candidates = data.approxGroup?.candidate || [];
+        simplifiedLabels = candidates
+          .map((c) => c.name)
+          .filter((label, index, self) => self.indexOf(label) === index && !formData.allergies.includes(label));
+      } else {
+        const labels = data[3] || [];
+        simplifiedLabels = labels
+          .map((item) => simplifyMedicalTerms(item[1]))
+          .filter((label, index, self) => self.indexOf(label) === index && !formData.symptoms.includes(label));
+      }
+
       suggestionCache.set(cacheKey, simplifiedLabels);
       setSuggestionsFunc(simplifiedLabels);
     } catch (error) {
-      console.error("Error fetching suggestions:", error);
+      console.error(`Error fetching ${isAllergy ? "allergies" : "symptoms"}:`, error);
       const fallback = isAllergy ? fallbackAllergies : fallbackSymptoms;
       const filteredFallback = fallback
         .filter(
@@ -163,20 +227,28 @@ function MedicineSuggestion() {
         );
       suggestionCache.set(cacheKey, filteredFallback);
       setSuggestionsFunc(filteredFallback);
-      setErrorMessage("Using fallback suggestions due to API unavailability.");
+    } finally {
+      isAllergy ? setIsFetchingAllergies(false) : setIsFetchingSymptoms(false);
     }
   };
 
-  // Debounced search with reduced delay (150ms)
+  const debouncedFetchSuggestions = debounce(fetchSuggestions, 300);
+
   useEffect(() => {
-    const timer = setTimeout(() => fetchSuggestions(symptomSearch, setSymptomSuggestions), 150);
-    return () => clearTimeout(timer);
+    debouncedFetchSuggestions(symptomSearch, setSymptomSuggestions, false);
   }, [symptomSearch]);
 
   useEffect(() => {
-    const timer = setTimeout(() => fetchSuggestions(allergySearch, setAllergySuggestions, true), 150);
-    return () => clearTimeout(timer);
+    debouncedFetchSuggestions(allergySearch, setAllergySuggestions, true);
   }, [allergySearch]);
+
+  useEffect(() => {
+    // Clear cache periodically to prevent stale data
+    const interval = setInterval(() => {
+      suggestionCache.clear();
+    }, 30 * 60 * 1000); // Clear every 30 minutes
+    return () => clearInterval(interval);
+  }, []);
 
   const addItem = (item, category) => {
     if (!formData[category].includes(item)) {
@@ -195,7 +267,7 @@ function MedicineSuggestion() {
     setFormData((prev) => ({ ...prev, [category]: prev[category].filter((i) => i !== item) }));
   };
 
-  const checkDrugInteractions = (medications, currentMeds) => {
+  const checkDrugInteractions = (medications, currentMeds, allergies) => {
     const currentMedList = currentMeds.toLowerCase().split(",").map((med) => med.trim());
     const knownInteractions = {
       ibuprofen: ["aspirin", "anticoagulants"],
@@ -206,6 +278,7 @@ function MedicineSuggestion() {
 
     return medications.filter((med) => {
       const medName = med.name.toLowerCase();
+      if (allergies.includes(medName)) return false;
       const interactions = knownInteractions[medName] || [];
       return !currentMedList.some((currentMed) =>
         interactions.some((interactingDrug) => currentMed.includes(interactingDrug))
@@ -216,7 +289,7 @@ function MedicineSuggestion() {
   const sanitizeSuggestions = (medications, allergies) => {
     const seen = new Set();
     return medications.filter((med) => {
-      const medName = med.split(" - ")[0].toLowerCase();
+      const medName = med.name.toLowerCase();
       if (seen.has(medName) || allergies.includes(medName)) {
         return false;
       }
@@ -244,7 +317,18 @@ function MedicineSuggestion() {
       else if (line.startsWith("⏳ Duration Guidance")) currentSection = "duration";
       else if (line.startsWith("🚨 Doctor Disclaimer")) currentSection = "disclaimer";
       else if (line.trim() && currentSection) {
-        if (currentSection === "otcMedications" || currentSection === "homeRemedies" || currentSection === "warnings") {
+        if (currentSection === "otcMedications") {
+          const parts = line.replace(/^- /, "").split(" - ");
+          if (parts.length >= 4) {
+            parsed.otcMedications.push({
+              name: parts[0].trim(),
+              dosage: parts[1].trim(),
+              timing: parts[2].trim(),
+              precautions: parts[3].trim(),
+              source: parts[4] ? parts[4].trim() : "Available at pharmacies like CVS, Walgreens",
+            });
+          }
+        } else if (currentSection === "homeRemedies" || currentSection === "warnings") {
           if (!parsed[currentSection].includes(line.replace(/^- /, ""))) {
             parsed[currentSection].push(line.replace(/^- /, ""));
           }
@@ -256,67 +340,18 @@ function MedicineSuggestion() {
     return parsed;
   };
 
-  const combineAIResponses = (openRouterText, meditronText, fdaInfo) => {
-    const openRouterParsed = parseAIResponse(openRouterText);
-    const meditronParsed = parseAIResponse(meditronText);
-
-    const combined = {
-      reasoning: "",
-      otcMedications: [],
-      homeRemedies: [],
-      warnings: [],
-      duration: "",
-      disclaimer: "",
-    };
-
-    // Combine reasoning: Prioritize OpenRouter, append Meditron if different
-    combined.reasoning = openRouterParsed.reasoning || meditronParsed.reasoning;
-    if (meditronParsed.reasoning && meditronParsed.reasoning !== openRouterParsed.reasoning) {
-      combined.reasoning += ` Additional perspective: ${meditronParsed.reasoning}`;
-    }
-
-    // Combine OTC medications: Take up to 2 unique, safe medications
-    const allMeds = [...openRouterParsed.otcMedications, ...meditronParsed.otcMedications];
-    const fdaMedNames = fdaInfo.map((item) => item.name.toLowerCase());
-    combined.otcMedications = allMeds
-      .filter((med) => {
-        const medName = med.split(" - ")[0].toLowerCase();
-        return fdaMedNames.some((fdaName) => fdaName.includes(medName)) && !formData.allergies.includes(medName);
-      })
-      .slice(0, 2);
-
-    // Combine home remedies: Merge unique remedies
-    combined.homeRemedies = [...new Set([...openRouterParsed.homeRemedies, ...meditronParsed.homeRemedies])];
-
-    // Combine warnings: Merge unique warnings
-    combined.warnings = [...new Set([...openRouterParsed.warnings, ...meditronParsed.warnings])];
-
-    // Combine duration: Prioritize OpenRouter, use Meditron if empty
-    combined.duration = openRouterParsed.duration || meditronParsed.duration;
-
-    // Combine disclaimer: Use OpenRouter, append Meditron if different
-    combined.disclaimer = openRouterParsed.disclaimer || meditronParsed.disclaimer;
-    if (meditronParsed.disclaimer && meditronParsed.disclaimer !== openRouterParsed.disclaimer) {
-      combined.disclaimer += ` Additional note: ${meditronParsed.disclaimer}`;
-    }
-
-    return combined;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.symptoms.length) {
-      setErrorMessage("Please select at least one symptom.");
+      setErrorMessage("Please select at least one symptom to proceed, dear " + formData.name + ".");
       return;
     }
     if (!formData.name.trim()) {
-      setErrorMessage("Please enter your name.");
+      setErrorMessage("Please provide your name to receive personalized suggestions, dear user.");
       return;
     }
-    if (!openRouterKey || !hfApiKey) {
-      setErrorMessage(
-        "API key(s) missing. Please set VITE_OPENROUTER_API_KEY and VITE_HF_API_KEY in your .env file."
-      );
+    if (!openRouterKey) {
+      setErrorMessage("API key is missing. Please ensure VITE_OPENROUTER_API_KEY is set in your environment.");
       return;
     }
     setErrorMessage("");
@@ -325,7 +360,15 @@ function MedicineSuggestion() {
     setTranslatedSuggestions(null);
 
     try {
-      const symptomQuery = encodeURIComponent(formData.symptoms.join(", ").trim());
+      const symptomQuery = encodeURIComponent(formData.symptoms.map(s => {
+        const synonyms = {
+          "Headache": "headache pain",
+          "Sore throat": "pharyngitis throat pain",
+          "Fever": "pyrexia elevated temperature",
+          "Cough": "cough respiratory irritation",
+        };
+        return synonyms[s] || s;
+      }).join(" OR "));
       if (!symptomQuery) throw new Error("No symptoms provided.");
 
       const hasCriticalSymptom = formData.symptoms.some((symptom) =>
@@ -333,12 +376,12 @@ function MedicineSuggestion() {
       );
       if (hasCriticalSymptom) {
         const criticalResponse = {
-          reasoning: `Dear ${formData.name}, you have serious symptoms that need immediate medical attention, such as difficulty breathing or chest pain.`,
+          reasoning: `Dear ${formData.name}, your symptoms, such as difficulty breathing or chest pain, are serious and require immediate medical attention.`,
           otcMedications: [],
-          homeRemedies: ["Rest and drink plenty of water."],
-          warnings: ["Your symptoms are serious. Please see a doctor right away."],
-          duration: "Get medical help as soon as possible.",
-          disclaimer: `Dear ${formData.name}, this is not medical advice. Please consult a healthcare professional immediately.`,
+          homeRemedies: ["Rest and stay hydrated while awaiting medical care."],
+          warnings: ["These symptoms may indicate a serious condition. Seek medical help immediately."],
+          duration: "Contact a healthcare professional as soon as possible.",
+          disclaimer: `Dear ${formData.name}, this information is not medical advice. Please consult a doctor immediately for proper diagnosis and treatment. Book a consultation here: ${CONSULTATION_LINK}`,
         };
         setSuggestions(criticalResponse);
         setTranslatedSuggestions(criticalResponse);
@@ -347,18 +390,20 @@ function MedicineSuggestion() {
       }
 
       let fdaInfo = [];
-      const maxRetries = 2;
+      const maxRetries = 3;
+      let fdaSuccess = false;
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-          const fdaFullUrl = `${fdaUrl}?search=indications_and_usage:${symptomQuery}+openfda.route:ORAL&limit=2`;
-          const fdaResponse = await fetch(fdaFullUrl, { signal: AbortSignal.timeout(5000) });
-          if (!fdaResponse.ok) {
-            throw new Error(`FDA API error: ${fdaResponse.status}`);
+          const fdaFullUrl = `${fdaUrl}?search=indications_and_usage:(${symptomQuery})+openfda.route:ORAL&limit=10`;
+          console.log("Fetching FDA data with URL:", fdaFullUrl);
+          const response = await fetch(fdaFullUrl, { signal: AbortSignal.timeout(5000) });
+          if (!response.ok) {
+            throw new Error(`FDA API error: ${response.status}`);
           }
-          const fdaData = await fdaResponse.json();
+          const fdaData = await response.json();
           if (fdaData?.results?.length > 0) {
             fdaInfo = fdaData.results.map((result) => ({
-              name: result.openfda?.brand_name?.[0] || "Generic",
+              name: result.openfda?.brand_name?.[0] || result.openfda?.generic_name?.[0] || "Generic",
               indications: result.indications_and_usage?.[0] || "No indications available",
               dosage: result.dosage_and_administration?.[0] || "Follow standard guidelines",
               warnings: result.warnings?.[0] || "No specific warnings available",
@@ -369,42 +414,43 @@ function MedicineSuggestion() {
               administration: result.dosage_and_administration?.[0] || "No administration details available",
               image: "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
             }));
-          } else {
-            fdaInfo.push({
-              name: "No FDA reference found",
-              indications: "No details available",
-              dosage: "Follow standard guidelines",
-              warnings: "No specific warnings available",
-              precautions: "No precautions available",
-              contraindications: "No contraindications available",
-              adverse_reactions: "No adverse reactions available",
-              how_supplied: "No supply information available",
-              administration: "No administration details available",
-              image: "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-            });
+            fdaSuccess = true;
           }
           break;
         } catch (error) {
-          if (attempt === maxRetries) {
-            console.error(`FDA API failed after ${maxRetries} attempts: ${error.message}`);
-            fdaInfo.push({
-              name: "No FDA reference found",
-              indications: "No details available",
-              dosage: "Follow standard guidelines",
-              warnings: "No specific warnings available",
-              precautions: "No precautions available",
-              contraindications: "No contraindications available",
-              adverse_reactions: "No adverse reactions available",
-              how_supplied: "No supply information available",
-              administration: "No administration details available",
-              image: "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-            });
-          }
+          console.error(`FDA API attempt ${attempt} failed:`, error);
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
 
-      const patientInfo = `
+      let parsedSuggestions;
+      if (!fdaSuccess) {
+        // Use fallback medications for common symptoms
+        const applicableMeds = formData.symptoms
+          .filter((symptom) => fallbackMedications[symptom])
+          .flatMap((symptom) => fallbackMedications[symptom]);
+        if (applicableMeds.length > 0) {
+          parsedSuggestions = {
+            reasoning: `Dear ${formData.name}, we couldn't find FDA data for your symptoms, but based on common medical practice, here are safe OTC options for your condition.`,
+            otcMedications: checkDrugInteractions(applicableMeds, formData.currentMedications, formData.allergies),
+            homeRemedies: ["Stay hydrated", "Rest adequately", "Maintain a balanced diet"],
+            warnings: ["Avoid if allergic to listed medications", "Check with a pharmacist if unsure"],
+            duration: "Use for up to 3 days; consult a doctor if symptoms persist.",
+            disclaimer: `Dear ${formData.name}, this is not medical advice. Please consult a doctor for proper diagnosis. Book a consultation here: ${CONSULTATION_LINK}`,
+          };
+        } else {
+          // Rare case: No FDA or fallback data
+          parsedSuggestions = {
+            reasoning: `Dear ${formData.name}, your symptoms seem uncommon, and we couldn't find matching FDA-approved OTC options. This may indicate a need for professional medical evaluation.`,
+            otcMedications: [],
+            homeRemedies: ["Stay hydrated and rest until you can see a doctor."],
+            warnings: ["Do not self-medicate without advice; symptoms could be serious."],
+            duration: "Seek immediate consultation.",
+            disclaimer: `Dear ${formData.name}, this is not medical advice. Please consult a doctor for proper diagnosis. Book a consultation here: ${CONSULTATION_LINK}`,
+          };
+        }
+      } else {
+        const patientInfo = `
 Patient Info:
 - Name: ${formData.name}
 - Age: ${formData.age}
@@ -421,120 +467,86 @@ Patient Info:
 
 FDA Data:
 ${JSON.stringify(fdaInfo, null, 2)}
-      `;
+        `;
 
-      const systemPrompt = `
-You are a compassionate, professional medical AI assistant acting like a human doctor, addressing the patient by name (${formData.name}). Provide safe, non-prescription (OTC) guidance based on ALL provided FDA data. NEVER prescribe medication. Always include a warning to consult a doctor. This is for educational purposes only; I am not a medical expert.
+        const systemPrompt = `
+You are an experienced, compassionate human doctor specializing in general medicine. Act like a real doctor: think step by step, analyze the patient's full profile (age, gender, weight, height, blood group, symptoms, allergies, history, current meds, pregnancy, breastfeeding), cross-reference with FDA data for accurate, safe OTC recommendations. Provide empathetic, personalized advice as if in a consultation. Suggest exactly one primary and one alternative OTC medication if possible, using FDA details for doses, timing, etc. NEVER suggest prescription drugs. Always emphasize consulting a professional.
 
-Use ALL FDA data provided to generate tailored suggestions using real FDA-approved OTC medications. Extract details like indications, dosage, administration, warnings, precautions, contraindications, adverse reactions, how supplied for accurate output. Provide reasoning based on FDA data and patient profile. Use simple, clear language that a non-medical person can understand.
+Use ALL FDA data to inform suggestions: extract and adapt indications, dosage, administration, warnings, precautions, contraindications, adverse reactions. Reason step-by-step based on patient profile and FDA/fallback data. Use simple, accessible language.
 
-Strictly format output in these sections, addressing the patient by name (${formData.name}):
-✅ Reasoning (Explain in simple terms why these suggestions fit your symptoms and profile, referencing FDA indications.)
-✅ OTC Medications (Provide exactly 2 distinct safe OTC options (primary and alternative) with:
-- Name (use FDA brand names if available, avoid duplicates)
-- Dosage (simple instructions based on age, weight, FDA dosage data)
-- Timing and Administration (e.g., take in morning/evening, with food/water, based on FDA administration data)
-- Precautions (simple warnings from FDA precautions, contraindications, adverse reactions)
-- Source (e.g., "Available at pharmacies like CVS, Walgreens"))
-🏠 Home Remedies / Lifestyle (Simple tips tailored to symptoms, age, gender, etc.)
-⚠️ Warnings / Avoid (Simple warnings based on allergies, pregnancy, breastfeeding, medical history, FDA warnings/contraindications)
-⏳ Duration Guidance (How long to use, when to stop, in simple terms, based on FDA data)
-🚨 Doctor Disclaimer (Always consult a doctor; this is not medical advice)
+If symptoms/allergies are rare or no matching data, respond with reasoning like 'Your symptoms seem uncommon; please see a doctor' and include link ${CONSULTATION_LINK} in disclaimer, with no meds.
+
+Strict format:
+✅ Reasoning (Step-by-step analysis of patient info, symptoms, FDA data, why suggestions fit. Empathetic tone.)
+✅ OTC Medications (Exactly 2: primary and alternative, with:
+- Name - Dosage - Timing and Administration - Precautions - Source)
+🏠 Home Remedies / Lifestyle (2-3 tailored tips)
+⚠️ Warnings / Avoid (Based on allergies, history, FDA)
+⏳ Duration Guidance (Based on FDA/standard)
+🚨 Doctor Disclaimer (Consult doctor; not advice)
 
 Rules:
-- Use ALL FDA data fields (name, indications, dosage, administration, warnings, precautions, contraindications, adverse_reactions, how_supplied) for accurate medication suggestions.
-- Suggest exactly two distinct OTC medications safe for the patient's profile, excluding allergy-conflicting drugs.
-- Avoid unsafe drugs (e.g., no aspirin for <18 years, no certain drugs for pregnancy/breastfeeding).
-- Consider medical history and current medications for interactions.
-- Use simple, non-medical language for all suggestions.
-- Highlight red flags for urgent medical care (e.g., severe symptoms).
-- Be empathetic, clear, and professional.
-- Ensure suggestions align with FDA data provided; do not invent medication details.
-      `;
+- Primary: First-line safe option; Alternative: Backup if primary unsuitable.
+- Ensure safety: e.g., no acetaminophen for liver issues, no ibuprofen in pregnancy, age <18 no aspirin.
+- Check interactions with current meds/allergies.
+- Empathetic, humble tone; address by name.
+- Base strictly on provided data; no inventions.
+        `;
 
-      const openRouterPromise = fetch(
-        "https://openrouter.ai/api/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${openRouterKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "meta-llama/llama-3.1-70b-instruct",
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: patientInfo },
-            ],
-            max_tokens: 1000,
-            temperature: 0.7,
-          }),
+        const openRouterResponse = await fetch(
+          "https://openrouter.ai/api/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${openRouterKey}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": "https://www.mednova.com", // Added for OpenRouter rankings
+              "X-Title": "MediNova", // Added for OpenRouter rankings
+            },
+            body: JSON.stringify({
+              model: "x-ai/grok-code-fast-1",
+              messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: patientInfo },
+              ],
+              max_tokens: 2000,
+              temperature: 0.7,
+            }),
+          }
+        );
+
+        if (!openRouterResponse.ok) {
+          throw new Error(`OpenRouter API error: ${openRouterResponse.status}`);
         }
-      ).then((res) => res.json()).catch((e) => ({ error: e }));
 
-      const meditronPromise = fetch(
-        "https://api-inference.huggingface.co/models/epfl-llm/meditron-7b",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${hfApiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            inputs: `${systemPrompt}\n\n${patientInfo}`,
-            parameters: { max_new_tokens: 512, return_full_text: false },
-          }),
+        const openRouterData = await openRouterResponse.json();
+        const openRouterText = openRouterData.choices?.[0]?.message?.content || "";
+        if (!openRouterText) {
+          throw new Error("No response received from Grok Code Fast 1.");
         }
-      ).then((res) => res.json()).catch((e) => ({ error: e }));
 
-      const [openRouterData, meditronData] = await Promise.all([openRouterPromise, meditronPromise]);
-
-      let openRouterText = "";
-      let meditronText = "";
-
-      if (!openRouterData.error && openRouterData.choices?.[0]?.message?.content) {
-        openRouterText = openRouterData.choices[0].message.content;
-      } else {
-        console.error("OpenRouter failed:", openRouterData.error);
+        parsedSuggestions = parseAIResponse(openRouterText);
+        parsedSuggestions.otcMedications = sanitizeSuggestions(parsedSuggestions.otcMedications, formData.allergies);
+        parsedSuggestions.otcMedications = checkDrugInteractions(
+          parsedSuggestions.otcMedications,
+          formData.currentMedications,
+          formData.allergies
+        );
       }
 
-      if (!meditronData.error && meditronData[0]?.generated_text) {
-        meditronText = meditronData[0].generated_text;
-      } else {
-        console.error("Meditron failed:", meditronData.error);
+      // Fetch images for each medication
+      for (let med of parsedSuggestions.otcMedications) {
+        med.image = await fetchMedicineImage(med.name);
       }
 
-      if (!openRouterText && !meditronText) {
-        throw new Error("Both AI models failed to respond.");
-      }
-
-      const combinedSuggestions = combineAIResponses(openRouterText || "No response from OpenRouter.", meditronText || "No response from Meditron.", fdaInfo);
-      combinedSuggestions.otcMedications = sanitizeSuggestions(combinedSuggestions.otcMedications, formData.allergies);
-      combinedSuggestions.otcMedications = checkDrugInteractions(
-        combinedSuggestions.otcMedications.map((med) => ({
-          name: med.split(" - ")[0],
-          dosage: med.split(" - ")[1] || "Follow standard guidelines",
-          timing: med.split(" - ")[2] || "As needed",
-          precautions: med.split(" - ")[3] || "No precautions available",
-          source: med.split(" - ")[4] || "Available at pharmacies like CVS, Walgreens",
-        })),
-        formData.currentMedications
-      ).map(
-        (med) =>
-          `${med.name} - ${med.dosage} - ${med.timing} - ${med.precautions} - ${med.source}`
-      );
-
-      setSuggestions(combinedSuggestions);
-      setTranslatedSuggestions(combinedSuggestions);
+      setSuggestions(parsedSuggestions);
+      setTranslatedSuggestions(parsedSuggestions);
       if (selectedLanguage !== "en") {
-        await handleTranslate(combinedSuggestions);
+        await handleTranslate(parsedSuggestions);
       }
     } catch (error) {
       console.error("Error in handleSubmit:", error);
-      setErrorMessage(
-        `⚠️ Failed to fetch suggestions: ${error.message}. Please verify your API keys or try again.`
-      );
-      setSuggestions(null);
+      setErrorMessage(`Dear ${formData.name}, an error occurred while fetching suggestions. Please try again or consult a doctor at ${CONSULTATION_LINK}.`);
     } finally {
       setLoading(false);
     }
@@ -547,7 +559,7 @@ Rules:
     }
 
     setIsTranslating(true);
-    const maxRetries = 2;
+    const maxRetries = 3;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const aiResponse = await fetch(
@@ -557,16 +569,18 @@ Rules:
             headers: {
               Authorization: `Bearer ${openRouterKey}`,
               "Content-Type": "application/json",
+              "HTTP-Referer": "https://www.mednova.com",
+              "X-Title": "MediNova",
             },
             body: JSON.stringify({
-              model: "meta-llama/llama-3.1-70b-instruct",
+              model: "x-ai/grok-code-fast-1", // Use Grok for translation as well
               messages: [
                 {
                   role: "system",
                   content: `
 Translate the following medical suggestions into ${
                     languages.find((lang) => lang.code === selectedLanguage)?.name || "English"
-                  } with high precision, using simple, non-medical language. Preserve the exact structure, formatting, and all sections (Reasoning, OTC Medications, Home Remedies, Warnings, Duration, Disclaimer). Address the patient by name (${formData.name}). Ensure translations are culturally appropriate and maintain the original meaning.
+                  } with high precision, using simple, non-medical language. Preserve the exact structure, formatting, and all sections (Reasoning, OTC Medications, Home Remedies, Warnings, Duration, Disclaimer). Address the patient by name (${formData.name}). Ensure translations are culturally appropriate and maintain the original meaning, reflecting care and humility.
                   `,
                 },
                 {
@@ -596,10 +610,7 @@ Translate the following medical suggestions into ${
           break;
         }
       } catch (error) {
-        if (attempt === maxRetries) {
-          console.error("Translation error after retries:", error);
-          setErrorMessage(`Translation failed after ${maxRetries} attempts: ${error.message}. Please try again.`);
-        }
+        console.error("Translation error after retries:", error);
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
@@ -622,12 +633,12 @@ Translate the following medical suggestions into ${
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => setIsSpeaking(false);
       utterance.onerror = (e) => {
-        setErrorMessage(`Speech error: ${e.error}. Try a different language or browser.`);
+        setErrorMessage(`Speech error: ${e.error}. Try a different language or browser, dear ${formData.name}.`);
         setIsSpeaking(false);
       };
       window.speechSynthesis.speak(utterance);
     } else {
-      setErrorMessage("Text-to-speech is not supported in this browser.");
+      setErrorMessage("Text-to-speech is not supported in this browser, dear " + formData.name + ".");
     }
   };
 
@@ -641,7 +652,7 @@ Translate the following medical suggestions into ${
   const getFullText = (sugs) => {
     let text = `Dear ${formData.name},\n\n`;
     if (sugs?.reasoning) text += `Reasoning:\n${sugs.reasoning}\n\n`;
-    if (sugs?.otcMedications?.length > 0) text += `OTC Medications:\n${sugs.otcMedications.join("\n")}\n\n`;
+    if (sugs?.otcMedications?.length > 0) text += `OTC Medications:\n${sugs.otcMedications.map(med => `${med.name} - ${med.dosage} - ${med.timing} - ${med.precautions} - ${med.source}`).join("\n")}\n\n`;
     if (sugs?.homeRemedies?.length > 0) text += `Home Remedies / Lifestyle:\n${sugs.homeRemedies.join("\n")}\n\n`;
     if (sugs?.warnings?.length > 0) text += `Warnings / Avoid:\n${sugs.warnings.join("\n")}\n\n`;
     if (sugs?.duration) text += `Duration Guidance:\n${sugs.duration}\n\n`;
@@ -659,7 +670,7 @@ Translate the following medical suggestions into ${
         <title>Medicine Suggestions - MediNova</title>
         <meta
           name="description"
-          content="Get personalized, doctor-like medicine suggestions with safe dosage and administration guidance."
+          content="Receive personalized, safe, and FDA-informed OTC medication suggestions based on your symptoms."
         />
         <link
           rel="canonical"
@@ -674,7 +685,7 @@ Translate the following medical suggestions into ${
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          Medicine Suggestion
+          Personalized Medicine Suggestions
         </motion.h1>
 
         {errorMessage && (
@@ -895,13 +906,14 @@ Translate the following medical suggestions into ${
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 relative">
             <label className={`block text-sm font-medium ${textColor}`}>
               Symptoms:
             </label>
             <div className="relative">
               <motion.input
                 type="text"
+                ref={symptomSearchRef}
                 value={symptomSearch}
                 onChange={(e) => setSymptomSearch(e.target.value)}
                 placeholder="Type to search symptoms..."
@@ -910,9 +922,12 @@ Translate the following medical suggestions into ${
               />
               <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             </div>
+            {isFetchingSymptoms && (
+              <p className="text-sm text-gray-500">Fetching symptoms...</p>
+            )}
             {symptomSuggestions.length > 0 && (
               <motion.ul
-                className={`absolute z-10 mt-2 w-full border rounded-xl ${darkMode ? "bg-gray-800 border-gray-600" : "bg-white border-blue-200"} shadow-lg max-h-60 overflow-y-auto`}
+                className={`relative z-20 mt-2 border rounded-xl ${darkMode ? "bg-gray-800 border-gray-600" : "bg-white border-blue-200"} shadow-lg max-h-60 overflow-y-auto`}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
@@ -944,13 +959,14 @@ Translate the following medical suggestions into ${
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 relative">
             <label className={`block text-sm font-medium ${textColor}`}>
               Allergies:
             </label>
             <div className="relative">
               <motion.input
                 type="text"
+                ref={allergySearchRef}
                 value={allergySearch}
                 onChange={(e) => setAllergySearch(e.target.value)}
                 placeholder="Type to search allergies..."
@@ -959,9 +975,12 @@ Translate the following medical suggestions into ${
               />
               <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             </div>
+            {isFetchingAllergies && (
+              <p className="text-sm text-gray-500">Fetching allergies...</p>
+            )}
             {allergySuggestions.length > 0 && (
               <motion.ul
-                className={`absolute z-10 mt-2 w-full border rounded-xl ${darkMode ? "bg-gray-800 border-gray-600" : "bg-white border-blue-200"} shadow-lg max-h-60 overflow-y-auto`}
+                className={`relative z-20 mt-2 border rounded-xl ${darkMode ? "bg-gray-800 border-gray-600" : "bg-white border-blue-200"} shadow-lg max-h-60 overflow-y-auto`}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
@@ -1030,7 +1049,7 @@ Translate the following medical suggestions into ${
             whileHover={{ scale: 1.05, boxShadow: "0 8px 25px rgba(0,0,0,0.2)" }}
             whileTap={{ scale: 0.95 }}
           >
-            {loading ? "Fetching..." : "Get Personalized Suggestions"}
+            {loading ? "Fetching Suggestions..." : "Get Personalized Suggestions"}
           </motion.button>
         </motion.form>
 
@@ -1047,7 +1066,7 @@ Translate the following medical suggestions into ${
                 <Pill size={28} /> Personalized Suggestions for {formData.name}
               </h2>
               <div className="mb-10">
-                <h3 className="text-xl font-semibold mb-4">Here’s what you provided:</h3>
+                <h3 className="text-xl font-semibold mb-4">Your Provided Information:</h3>
                 <ul className="space-y-3">
                   <motion.li
                     className={`p-4 rounded-xl ${darkMode ? "bg-gray-800" : "bg-blue-50"} shadow-sm`}
@@ -1227,26 +1246,23 @@ Translate the following medical suggestions into ${
                     <Pill className="text-blue-500" size={24} />
                     OTC Medications
                   </h3>
-                  {(translatedSuggestions || suggestions).otcMedications.slice(0, 2).map((med, index) => {
-                    const [name, dosage, timing, precautions, source] = med.split(" - ");
-                    return name !== "None" && (
-                      <MedicineCard
-                        key={index}
-                        medicine={{
-                          name: name || "Generic",
-                          dosage: dosage || "Standard dose",
-                          timing: timing || "Follow standard guidelines",
-                          precautions: precautions || "No precautions available",
-                          source: source || "Available at pharmacies like CVS, Walgreens",
-                          image: "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-                          description: index === 0 ? "Primary OTC medication for symptom relief" : "Alternative OTC medication for symptom relief",
-                          sideEffects: ["Consult a pharmacist for detailed side effects"],
-                          brandNames: [name || "Generic"],
-                        }}
-                        title={index === 0 ? "Primary Medication" : "Alternative Medication"}
-                      />
-                    );
-                  })}
+                  {(translatedSuggestions || suggestions).otcMedications.slice(0, 2).map((med, index) => (
+                    <MedicineCard
+                      key={index}
+                      medicine={{
+                        name: med.name || "Generic",
+                        dosage: med.dosage || "Standard dose",
+                        timing: med.timing || "Follow standard guidelines",
+                        precautions: med.precautions || "No precautions available",
+                        source: med.source || "Available at pharmacies like CVS, Walgreens",
+                        image: med.image,
+                        description: index === 0 ? "Primary OTC medication for symptom relief" : "Alternative OTC medication for symptom relief",
+                        sideEffects: ["Consult a pharmacist for detailed side effects"],
+                        brandNames: [med.name || "Generic"],
+                      }}
+                      title={index === 0 ? "Primary Medication" : "Alternative Medication"}
+                    />
+                  ))}
                 </div>
               )}
               {(translatedSuggestions || suggestions)?.homeRemedies?.length > 0 && (
@@ -1318,7 +1334,7 @@ Translate the following medical suggestions into ${
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  {(translatedSuggestions || suggestions).disclaimer || `Please consult a healthcare professional before taking any medication, ${formData.name}. This is not medical advice.`}
+                  {(translatedSuggestions || suggestions).disclaimer || `Dear ${formData.name}, please consult a healthcare professional before taking any medication. This information is for educational purposes only and is not medical advice.`}
                 </motion.p>
               </div>
             </motion.div>
@@ -1345,7 +1361,7 @@ function MedicineCard({ medicine, title }) {
       <h4 className={`text-xl font-semibold mb-4 ${textColor}`}>{title}</h4>
       <div className="flex items-start gap-6 mb-4">
         <motion.img
-          src={medicine.image || "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"}
+          src={medicine.image}
           alt={medicine?.name}
           loading="lazy"
           className="w-32 h-32 object-contain rounded-lg border-2 border-blue-300 shadow-md"
