@@ -1,19 +1,36 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Moon, Sun, Settings } from "lucide-react";
+import { Menu, X, Moon, Sun, Settings, LogIn, UserPlus, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DarkModeContext, AuthContext } from "../App";
+
+// Animation variants for the dropdown
+const dropdownVariants = {
+  hidden: { opacity: 0, y: -10, scale: 0.95 },
+  visible: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: -10, scale: 0.95 },
+};
+
+// Animation variants for mobile menu
+const mobileMenuVariants = {
+  hidden: { opacity: 0, height: 0 },
+  visible: { opacity: 1, height: "auto" },
+  exit: { opacity: 0, height: 0 },
+};
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [spin, setSpin] = useState(false);
   const { darkMode, setDarkMode } = useContext(DarkModeContext);
   const { isAuthenticated, logout } = useContext(AuthContext);
 
-  const headerBg = "bg-white/30 dark:bg-[#0D3B66]/30 backdrop-blur-md";
+  // Dynamic classes for consistent theming
+  const headerBg = "bg-white/50 dark:bg-[#0D3B66]/50 backdrop-blur-lg";
   const textColor = darkMode ? "text-white" : "text-[#0D3B66]";
+  const hoverBg = darkMode ? "hover:bg-white/20" : "hover:bg-[#0D3B66]/20";
 
-  // ✅ Added "Labs" here
+  // Navigation items
   const navItems = [
     "Home",
     "About",
@@ -26,28 +43,38 @@ function Header() {
     "Contact",
   ];
 
+  // Reset spin animation for settings icon
+  useEffect(() => {
+    if (spin) {
+      const timer = setTimeout(() => setSpin(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [spin]);
+
   return (
     <>
+      {/* Header with fixed positioning and responsive padding */}
       <header
         className={`fixed top-0 left-0 w-full z-50 shadow-md transition-colors duration-300 ${headerBg} ${textColor}`}
       >
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             {/* Logo */}
             <Link
               to="/"
-              className={`text-2xl font-extrabold tracking-wide hover:text-[#00C2CB] transition-all duration-300 ${textColor}`}
+              className={`text-xl sm:text-2xl font-extrabold tracking-wide ${hoverBg} hover:text-[#00C2CB] transition-all duration-300 ${textColor}`}
             >
               MediNova
             </Link>
 
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex flex-wrap items-center gap-2 ml-6">
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-1 lg:gap-2 flex-1 justify-center">
               {navItems.map((item) => (
                 <motion.div
                   key={item}
-                  whileHover={{ scale: 1.07 }}
+                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
                 >
                   <Link
                     to={
@@ -55,11 +82,7 @@ function Header() {
                         ? "/"
                         : `/${item.toLowerCase().replace(" ", "-")}`
                     }
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:bg-opacity-20 ${
-                      darkMode
-                        ? "text-white hover:bg-white"
-                        : "text-[#0D3B66] hover:bg-[#0D3B66] hover:text-white"
-                    }`}
+                    className={`px-3 py-2 rounded-full text-xs lg:text-sm font-medium transition-all duration-300 ${hoverBg} ${textColor}`}
                   >
                     {item}
                   </Link>
@@ -67,59 +90,75 @@ function Header() {
               ))}
             </nav>
 
-            {/* Right-side Buttons (Desktop Only) */}
-            <div className="hidden md:flex items-center gap-4 ml-6 relative">
-              {/* Settings Button */}
+            {/* Right-side Buttons (Desktop) */}
+            <div className="hidden md:flex items-center gap-3 lg:gap-4 relative">
+              {/* Settings Button with Spin Animation */}
               <motion.button
-                onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                className="h-10 w-10 flex items-center justify-center rounded-full shadow-md bg-[#0D3B66] text-white hover:text-gray-300 transition-all duration-300"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setIsSettingsOpen(!isSettingsOpen);
+                  setSpin(true);
+                }}
+                animate={{ rotate: spin ? 360 : 0 }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
+                className={`h-9 w-9 flex items-center justify-center rounded-full shadow-md bg-[#0D3B66] text-white ${hoverBg} transition-all duration-300`}
+                aria-label="Settings"
               >
-                <Settings size={20} />
+                <Settings size={18} />
               </motion.button>
 
-              {/* Dropdown Menu */}
+              {/* Settings Dropdown */}
               <AnimatePresence>
                 {isSettingsOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute top-12 right-0 w-48 rounded-xl shadow-lg bg-white dark:bg-[#0D3B66] p-3 space-y-2 z-50"
+                    variants={dropdownVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="absolute top-12 right-0 w-48 rounded-xl shadow-lg bg-white dark:bg-[#0D3B66] p-4 space-y-3 z-50"
                   >
                     {/* Dark Mode Toggle */}
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => setDarkMode(!darkMode)}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all duration-300 hover:bg-gray-200 dark:hover:bg-[#173a5e]"
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium ${hoverBg} transition-all duration-300`}
                     >
-                      {darkMode ? <Moon size={18} /> : <Sun size={18} />}
-                      {darkMode ? "Dark Mode" : "Light Mode"}
-                    </button>
+                      {darkMode ? <Moon size={16} /> : <Sun size={16} />}
+                      <span>{darkMode ? "Light Mode" : "Dark Mode"}</span>
+                    </motion.button>
 
                     {/* Auth Buttons */}
                     {isAuthenticated ? (
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={logout}
-                        className="w-full flex items-center justify-center px-3 py-2 rounded-lg text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-all duration-300"
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-all duration-300"
                       >
-                        Logout
-                      </button>
+                        <LogOut size={16} />
+                        <span>Logout</span>
+                      </motion.button>
                     ) : (
                       <>
-                        <Link
-                          to="/login"
-                          className="block w-full text-center px-3 py-2 rounded-lg text-sm font-medium bg-[#0D3B66] text-white hover:bg-gray-300 transition-all duration-300"
-                        >
-                          Login
-                        </Link>
-                        <Link
-                          to="/register"
-                          className="block w-full text-center px-3 py-2 rounded-lg text-sm font-medium bg-[#0D3B66] text-white hover:bg-gray-300 transition-all duration-300"
-                        >
-                          Register
-                        </Link>
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                          <Link
+                            to="/login"
+                            className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium ${hoverBg} bg-[#0D3B66] text-white transition-all duration-300`}
+                          >
+                            <LogIn size={16} />
+                            <span>Login</span>
+                          </Link>
+                        </motion.div>
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                          <Link
+                            to="/register"
+                            className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium ${hoverBg} bg-[#0D3B66] text-white transition-all duration-300`}
+                          >
+                            <UserPlus size={16} />
+                            <span>Register</span>
+                          </Link>
+                        </motion.div>
                       </>
                     )}
                   </motion.div>
@@ -127,11 +166,12 @@ function Header() {
               </AnimatePresence>
             </div>
 
-            {/* Mobile Toggle */}
+            {/* Mobile Menu Toggle */}
             <div className="md:hidden">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className={`p-2 rounded-md ${textColor}`}
+                aria-label="Toggle Menu"
               >
                 {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
@@ -139,78 +179,88 @@ function Header() {
           </div>
         </div>
 
-        {/* Mobile Dropdown Menu (Top-down) */}
-        {isMenuOpen && (
-          <div
-            className={`md:hidden absolute top-full left-0 w-full ${headerBg} ${textColor} backdrop-blur-lg transition-all duration-300`}
-          >
-            <div className="px-4 py-4 space-y-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item}
-                  to={
-                    item === "Home"
-                      ? "/"
-                      : `/${item.toLowerCase().replace(" ", "-")}`
-                  }
-                  className="block px-5 py-2 rounded-full font-medium text-sm hover:bg-white/20 transition-colors duration-300"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item}
-                </Link>
-              ))}
+        {/* Mobile Dropdown Menu */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              variants={mobileMenuVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className={`md:hidden absolute top-full left-0 w-full ${headerBg} ${textColor} backdrop-blur-lg`}
+            >
+              <div className="px-4 py-4 space-y-2">
+                {navItems.map((item) => (
+                  <Link
+                    key={item}
+                    to={
+                      item === "Home"
+                        ? "/"
+                        : `/${item.toLowerCase().replace(" ", "-")}`
+                    }
+                    className={`block px-5 py-2 rounded-full text-sm font-medium ${hoverBg} transition-colors duration-300`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {item}
+                  </Link>
+                ))}
 
-              {/* Settings Dropdown in Mobile */}
-              <div className="border-t border-gray-300 dark:border-gray-600 pt-3">
-                {/* Dark Mode */}
-                <button
-                  onClick={() => {
-                    setDarkMode(!darkMode);
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-5 py-2 rounded-full font-medium text-sm bg-[#0D3B66] text-white hover:text-gray-300 transition-all duration-300"
-                >
-                  {darkMode ? <Moon size={18} /> : <Sun size={18} />}
-                  Toggle Dark Mode
-                </button>
-
-                {/* Auth Buttons */}
-                {isAuthenticated ? (
+                {/* Mobile Settings Section */}
+                <div className="border-t border-gray-300 dark:border-gray-600 pt-3 space-y-2">
+                  {/* Dark Mode Toggle */}
                   <button
                     onClick={() => {
-                      logout();
+                      setDarkMode(!darkMode);
                       setIsMenuOpen(false);
                     }}
-                    className="w-full flex items-center justify-center px-5 py-2 rounded-full font-medium text-sm bg-red-600 text-white hover:bg-red-700 transition-all duration-300"
+                    className={`w-full flex items-center gap-3 px-5 py-2 rounded-full text-sm font-medium ${hoverBg} bg-[#0D3B66] text-white transition-all duration-300`}
                   >
-                    Logout
+                    {darkMode ? <Moon size={18} /> : <Sun size={18} />}
+                    {darkMode ? "Light Mode" : "Dark Mode"}
                   </button>
-                ) : (
-                  <>
-                    <Link
-                      to="/login"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="block w-full text-center px-5 py-2 rounded-full font-medium text-sm bg-[#0D3B66] text-white hover:text-gray-300 transition-all duration-300"
+
+                  {/* Auth Buttons */}
+                  {isAuthenticated ? (
+                    <button
+                      onClick={() => {
+                        logout();
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 justify-center px-5 py-2 rounded-full text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-all duration-300"
                     >
-                      Login
-                    </Link>
-                    <Link
-                      to="/register"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="block w-full text-center px-5 py-2 rounded-full font-medium text-sm bg-[#0D3B66] text-white hover:text-gray-300 transition-all duration-300"
-                    >
-                      Register
-                    </Link>
-                  </>
-                )}
+                      <LogOut size={18} />
+                      Logout
+                    </button>
+                  ) : (
+                    <>
+                      <Link
+                        to="/login"
+                        onClick={() => setIsMenuOpen(false)}
+                        className={`flex items-center gap-3 justify-center w-full px-5 py-2 rounded-full text-sm font-medium ${hoverBg} bg-[#0D3B66] text-white transition-all duration-300`}
+                      >
+                        <LogIn size={18} />
+                        Login
+                      </Link>
+                      <Link
+                        to="/register"
+                        onClick={() => setIsMenuOpen(false)}
+                        className={`flex items-center gap-3 justify-center w-full px-5 py-2 rounded-full text-sm font-medium ${hoverBg} bg-[#0D3B66] text-white transition-all duration-300`}
+                      >
+                        <UserPlus size={18} />
+                        Register
+                      </Link>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
-      {/* Spacer for fixed header */}
-      <div className="h-20 w-full"></div>
+      {/* Spacer to prevent content overlap */}
+      <div className="h-16 w-full"></div>
     </>
   );
 }

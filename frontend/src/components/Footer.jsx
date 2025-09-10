@@ -31,18 +31,23 @@ function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              {["/", "/about", "/articles", "/consultation", "/pharmacy"].map(
-                (path, i) => (
-                  <li key={i}>
-                    <Link
-                      to={path}
-                      className={`transition duration-300 ${hoverColor}`}
-                    >
-                      {["Home", "About Us", "Articles", "Consultation", "Pharmacy"][i]}
-                    </Link>
-                  </li>
-                )
-              )}
+              {[
+                { path: "/", label: "Home" },
+                { path: "/about", label: "About Us" },
+                { path: "/articles", label: "Articles" },
+                { path: "/consultation", label: "Consultation" },
+                { path: "/pharmacy", label: "Pharmacy" },
+                { path: "/labs", label: "Labs" }, // ✅ Added Labs here
+              ].map(({ path, label }) => (
+                <li key={path}>
+                  <Link
+                    to={path}
+                    className={`transition duration-300 ${hoverColor}`}
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
