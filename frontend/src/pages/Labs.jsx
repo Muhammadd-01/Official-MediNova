@@ -12,11 +12,15 @@ import {
   Mail,
   Calendar,
   Home,
+  CreditCard,
+  Landmark,
+  Truck,
 } from "lucide-react";
 
 function Labs() {
   const { darkMode } = useContext(DarkModeContext);
   const [selectedTest, setSelectedTest] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("");
 
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-gray-800";
   const cardBg = darkMode ? "bg-[#081F5C]/90" : "bg-white/80";
@@ -158,14 +162,14 @@ function Labs() {
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 50, opacity: 0 }}
-              className={`${cardBg} rounded-3xl p-8 max-w-lg w-full shadow-2xl`}
+              className={`${cardBg} rounded-3xl p-8 max-w-2xl w-full shadow-2xl`}
             >
               <h2 className={`text-2xl font-bold mb-4 ${textColor}`}>
                 Book {selectedTest.title}
               </h2>
-              <form className="space-y-4">
+              <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Name */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10">
+                <div className="flex items-center border rounded-xl p-3 bg-white/10 md:col-span-2">
                   <User className="mr-2 text-[#00C2CB]" />
                   <input
                     type="text"
@@ -175,24 +179,22 @@ function Labs() {
                   />
                 </div>
                 {/* Age & Gender */}
-                <div className="flex gap-3">
-                  <input
-                    type="number"
-                    placeholder="Age"
-                    className="w-1/2 p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
-                    required
-                  />
-                  <select
-                    className="w-1/2 p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
-                    required
-                  >
-                    <option value="">Gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
-                </div>
+                <input
+                  type="number"
+                  placeholder="Age"
+                  className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
+                  required
+                />
+                <select
+                  className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
+                  required
+                >
+                  <option value="">Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
                 {/* Phone */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10">
+                <div className="flex items-center border rounded-xl p-3 bg-white/10 md:col-span-2">
                   <Phone className="mr-2 text-[#00C2CB]" />
                   <input
                     type="text"
@@ -202,7 +204,7 @@ function Labs() {
                   />
                 </div>
                 {/* Email */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10">
+                <div className="flex items-center border rounded-xl p-3 bg-white/10 md:col-span-2">
                   <Mail className="mr-2 text-[#00C2CB]" />
                   <input
                     type="email"
@@ -212,7 +214,7 @@ function Labs() {
                   />
                 </div>
                 {/* Date */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10">
+                <div className="flex items-center border rounded-xl p-3 bg-white/10 md:col-span-2">
                   <Calendar className="mr-2 text-[#00C2CB]" />
                   <input
                     type="date"
@@ -221,7 +223,7 @@ function Labs() {
                   />
                 </div>
                 {/* Address */}
-                <div className="flex items-center border rounded-xl p-3 bg-white/10">
+                <div className="flex items-center border rounded-xl p-3 bg-white/10 md:col-span-2">
                   <Home className="mr-2 text-[#00C2CB]" />
                   <input
                     type="text"
@@ -229,60 +231,122 @@ function Labs() {
                     className="w-full bg-transparent focus:outline-none"
                   />
                 </div>
-                {/* Payment */}
-                <div>
+
+                {/* Payment Method */}
+                <div className="md:col-span-2">
                   <label className={`block mb-2 ${textColor}`}>
                     Select Payment Method
                   </label>
-                  <div className="flex gap-4">
+                  <div className="flex gap-3 flex-wrap">
                     <button
                       type="button"
-                      className="flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-[#0A2A43]"
+                      onClick={() => setPaymentMethod("cod")}
+                      className={`flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 ${
+                        paymentMethod === "cod"
+                          ? "bg-[#00C2CB]/30"
+                          : "hover:bg-gray-200 dark:hover:bg-[#0A2A43]"
+                      }`}
                     >
-                      <img
-                        src="https://cdn-icons-png.flaticon.com/512/104/104678.png"
-                        alt="COD"
-                        className="w-6 h-6"
-                      />
+                      <Truck className="w-5 h-5 text-[#00C2CB]" />
                       Cash on Delivery
                     </button>
                     <button
                       type="button"
-                      className="flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-[#0A2A43]"
+                      onClick={() => setPaymentMethod("card")}
+                      className={`flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 ${
+                        paymentMethod === "card"
+                          ? "bg-[#00C2CB]/30"
+                          : "hover:bg-gray-200 dark:hover:bg-[#0A2A43]"
+                      }`}
                     >
-                      <img
-                        src="https://cdn-icons-png.flaticon.com/512/5968/5968299.png"
-                        alt="Card"
-                        className="w-6 h-6"
-                      />
+                      <CreditCard className="w-5 h-5 text-[#00C2CB]" />
                       Card
                     </button>
                     <button
                       type="button"
-                      className="flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-[#0A2A43]"
+                      onClick={() => setPaymentMethod("bank")}
+                      className={`flex-1 p-3 rounded-xl border flex items-center justify-center gap-2 ${
+                        paymentMethod === "bank"
+                          ? "bg-[#00C2CB]/30"
+                          : "hover:bg-gray-200 dark:hover:bg-[#0A2A43]"
+                      }`}
                     >
-                      <img
-                        src="https://cdn-icons-png.flaticon.com/512/1041/1041916.png"
-                        alt="Bank"
-                        className="w-6 h-6"
-                      />
-                      Online
+                      <Landmark className="w-5 h-5 text-[#00C2CB]" />
+                      Bank Transfer
                     </button>
                   </div>
                 </div>
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-xl bg-[#00C2CB] text-white font-semibold hover:bg-[#0097A7] transition"
-                >
-                  Confirm Booking (PKR {selectedTest.price})
-                </button>
+
+                {/* Conditional Payment Fields */}
+                {paymentMethod === "card" && (
+                  <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      placeholder="Card Holder Name"
+                      className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Card Number"
+                      className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Expiry Date (MM/YY)"
+                      className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="CVV"
+                      className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
+                    />
+                  </div>
+                )}
+
+                {paymentMethod === "bank" && (
+                  <div className="md:col-span-2 grid grid-cols-1 gap-4">
+                    <input
+                      type="text"
+                      placeholder="Account Holder Name"
+                      className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="IBAN / Account Number"
+                      className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Bank Name"
+                      className="p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#00C2CB]"
+                    />
+                  </div>
+                )}
+
+                {paymentMethod === "cod" && (
+                  <p className="md:col-span-2 text-sm text-gray-400">
+                    💡 Cash will be collected at your doorstep after sample
+                    collection.
+                  </p>
+                )}
+
+                {/* Submit */}
+                <div className="md:col-span-2 flex gap-4 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTest(null)}
+                    className="flex-1 py-3 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 rounded-xl bg-[#00C2CB] text-white font-semibold hover:bg-[#0097A7] transition"
+                  >
+                    Confirm Booking (PKR {selectedTest.price})
+                  </button>
+                </div>
               </form>
-              <button
-                onClick={() => setSelectedTest(null)}
-                className="mt-4 w-full py-2 text-sm rounded-xl bg-red-500 text-white hover:bg-red-600 transition"
-              >
-                Cancel
-              </button>
             </motion.div>
           </motion.div>
         )}
