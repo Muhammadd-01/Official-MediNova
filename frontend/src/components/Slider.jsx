@@ -37,38 +37,47 @@ function Slider() {
   const textColor = darkMode ? "text-white" : "text-[#0B1C3D]";
 
   return (
-    <div className="relative w-full h-[600px] overflow-hidden rounded-lg shadow-lg">
+    <div className="relative w-full h-[400px] sm:h-[500px] md:h-[600px] overflow-hidden rounded-3xl shadow-xl">
       <AnimatePresence initial={false}>
         <motion.div
           key={currentSlide}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -50 }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
           className="absolute top-0 left-0 w-full h-full"
         >
           <img
             src={slides[currentSlide].image || "/placeholder.svg"}
             alt={slides[currentSlide].title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
           />
           <div
-            className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#E1EBF7]/80 to-transparent px-8 py-6 ${textColor}`}
+            className={`absolute inset-0 bg-gradient-to-t from-[#0A3D62]/80 dark:from-[#0A2A43]/80 to-transparent flex items-end px-6 py-8 sm:px-8 sm:py-10 ${textColor}`}
           >
-            <h2 className="text-4xl font-bold mb-4">{slides[currentSlide].title}</h2>
-            <p className="text-xl">{slides[currentSlide].description}</p>
+            <div className="max-w-3xl">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 drop-shadow-md">
+                {slides[currentSlide].title}
+              </h2>
+              <p className="text-lg sm:text-xl md:text-2xl drop-shadow-md">
+                {slides[currentSlide].description}
+              </p>
+            </div>
           </div>
         </motion.div>
       </AnimatePresence>
 
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-3 z-10">
         {slides.map((_, index) => (
           <button
             key={index}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              index === currentSlide ? "bg-white scale-125" : "bg-gray-400"
+            className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] ${
+              index === currentSlide
+                ? "bg-[#0A3D62] dark:bg-[#FDFBFB] scale-125"
+                : "bg-gray-400/50 hover:bg-gray-400"
             }`}
             onClick={() => setCurrentSlide(index)}
+            aria-label={`Go to slide ${index + 1}`}
           ></button>
         ))}
       </div>
