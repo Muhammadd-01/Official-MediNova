@@ -33,35 +33,37 @@ const faqs = [
 function FAQ() {
   const { darkMode } = useContext(DarkModeContext);
 
-  const primaryText = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
-  const bgColor = darkMode ? "bg-[#0A2A43]" : "bg-white";
-  const boxBg = darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50";
-  const boxText = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
-  const border = darkMode ? "border-[#FDFBFB]/50" : "border-gray-200";
+  const cardBg = darkMode
+    ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB]"
+    : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62]";
 
   return (
     <motion.div
-      className={`mt-8 p-6 sm:p-8 rounded-[40px] shadow-md ${bgColor} ${primaryText} border ${border} transition-all duration-300 hover:shadow-xl`}
-      initial={{ opacity: 0, y: 20 }}
+      className="mt-8"
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
       role="region"
       aria-label="Frequently Asked Questions Section"
     >
-      <h2 className={`text-2xl sm:text-3xl font-bold mb-6 text-center ${primaryText}`}>
+      <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-center">
         Frequently Asked Questions
       </h2>
-      <div className="space-y-4">
+
+      <div className="space-y-5">
         {faqs.map((faq, index) => (
           <motion.div
             key={index}
-            className={`p-4 rounded-xl ${boxBg} ${boxText} border ${border} transition-all duration-300 hover:shadow-lg hover:bg-gray-100 dark:hover:bg-[#0A2A43]/70`}
-            initial={{ opacity: 0, x: -20 }}
+            className={`p-6 rounded-[30px] ${cardBg} backdrop-blur-2xl transition-all duration-500`}
+            initial={{ opacity: 0, x: -25 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.1 }}
+            transition={{ duration: 0.4, delay: index * 0.12 }}
+            whileHover={{ scale: 1.01 }}
           >
-            <h3 className="text-lg sm:text-xl font-semibold mb-2">{faq.question}</h3>
-            <p className="text-sm sm:text-base">{faq.answer}</p>
+            <h3 className="text-lg sm:text-xl font-semibold mb-2">
+              {faq.question}
+            </h3>
+            <p className="text-sm sm:text-base leading-relaxed">{faq.answer}</p>
           </motion.div>
         ))}
       </div>

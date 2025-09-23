@@ -1,8 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { motion } from "framer-motion";
+import { DarkModeContext } from "../App";
 
 function NewsletterSignup() {
   const [email, setEmail] = useState("");
+  const { darkMode } = useContext(DarkModeContext);
+
+  const cardBg = darkMode
+    ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB]"
+    : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62]";
+  const inputBg = darkMode
+    ? "bg-[#0A2A43]/60 border-white/10 text-[#FDFBFB]"
+    : "bg-white/60 border-[#0A3D62]/10 text-[#0A3D62]";
+  const buttonBg = darkMode
+    ? "bg-white/70 text-[#0A2A43] hover:bg-white/80"
+    : "bg-[#0A3D62]/80 text-white hover:bg-[#0A3D62]/90";
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -13,51 +25,43 @@ function NewsletterSignup() {
 
   return (
     <motion.div
-      className={`
-        p-6 sm:p-8 rounded-[40px] shadow-md
-        bg-white text-[#0A3D62]
-        dark:bg-[#0A2A43] dark:text-[#FDFBFB]
-        transition-all duration-300 hover:shadow-xl border border-gray-200 dark:border-gray-700
-      `}
-      initial={{ opacity: 0, y: 20 }}
+      className={`p-8 sm:p-10 rounded-[40px] ${cardBg} backdrop-blur-2xl transition-all duration-500`}
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      whileHover={{ scale: 1.01 }}
       role="region"
       aria-label="Newsletter Signup Section"
     >
-      <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center">
+      <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-center">
         Subscribe to Our Newsletter
       </h2>
-      <div className="flex flex-col sm:flex-row gap-4">
+
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col sm:flex-row gap-4"
+        aria-label="Newsletter subscription form"
+      >
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Enter your email"
           required
-          className={`
-            flex-grow px-4 py-3 rounded-xl border
-            border-gray-200 text-[#0A3D62] bg-gray-50
-            dark:border-[#FDFBFB]/50 dark:text-[#FDFBFB] dark:bg-[#0A2A43]/80
-            focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]
-            transition-all duration-300
-          `}
+          className={`flex-grow px-5 py-4 rounded-2xl ${inputBg} border focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all duration-300`}
           aria-label="Enter your email for newsletter subscription"
         />
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className={`
-            px-6 py-3 rounded-xl transition-all duration-300
-            bg-[#0A3D62] text-[#FDFBFB] hover:bg-[#08253A] hover:shadow-md
-            dark:bg-[#FDFBFB] dark:text-[#0A2A43] dark:hover:bg-[#d6d6d6]
-            focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]
-          `}
+
+        <motion.button
+          type="submit"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          className={`px-8 py-4 rounded-2xl font-semibold ${buttonBg} transition-all duration-500`}
           aria-label="Subscribe to newsletter"
         >
           Subscribe
-        </button>
-      </div>
+        </motion.button>
+      </form>
     </motion.div>
   );
 }

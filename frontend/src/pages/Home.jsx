@@ -12,14 +12,6 @@ import HealthTips from "../components/HealthTips";
 import HorizontalSponsorSlider from "../components/HorizontalSponsorSlider";
 import { DarkModeContext } from "../App";
 
-const sponsors = [
-  { name: "PharmaCorp", logo: "/sponsor-logos/pharmacorp.png" },
-  { name: "MediTech", logo: "/sponsor-logos/meditech.png" },
-  { name: "HealthPlus", logo: "/sponsor-logos/healthplus.png" },
-  { name: "BioLife", logo: "/sponsor-logos/biolife.png" },
-  { name: "CureAll", logo: "/sponsor-logos/cureall.png" },
-];
-
 function Home() {
   const { darkMode } = useContext(DarkModeContext);
 
@@ -29,16 +21,19 @@ function Home() {
     transition: { duration: 0.6 },
   };
 
+  const cardBg = darkMode
+    ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB]"
+    : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62]";
+
   return (
     <>
       <Helmet>
         <title>MediNova - Your Trusted Medical Platform</title>
-        <meta name="description" content="MediNova offers expert-backed medical consultations, personalized drug recommendations, and secure digital healthcare services 24/7." />
+        <meta
+          name="description"
+          content="MediNova offers expert-backed medical consultations, personalized drug recommendations, and secure digital healthcare services 24/7."
+        />
         <link rel="canonical" href="https://www.MediNova.com" />
-        <meta property="og:title" content="MediNova - Your Trusted Medical Platform" />
-        <meta property="og:description" content="Expert-backed consultations, AI-powered medicine suggestions, and health tools. Secure, reliable, and always available." />
-        <meta property="og:url" content="https://www.MediNova.com" />
-        <meta property="og:type" content="website" />
       </Helmet>
 
       <div className="animate-fadeIn">
@@ -50,6 +45,7 @@ function Home() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
+          {/* Title */}
           <motion.h1
             className="text-4xl sm:text-5xl font-bold mb-8 text-center text-[#0A3D62] dark:text-[#FDFBFB]"
             {...fadeInUp}
@@ -57,11 +53,14 @@ function Home() {
             Welcome to MediNova
           </motion.h1>
 
+          {/* Subtitle */}
           <motion.p
             className="text-lg sm:text-xl mb-12 text-center text-muted-foreground dark:text-[#FDFBFB] max-w-4xl mx-auto"
             {...fadeInUp}
           >
-            Your digital bridge to licensed doctors, evidence-based medicine recommendations, and real-time health guidance — all under one secure platform.
+            Your digital bridge to licensed doctors, evidence-based medicine
+            recommendations, and real-time health guidance — all under one
+            secure platform.
           </motion.p>
 
           {/* Services Cards */}
@@ -75,7 +74,7 @@ function Home() {
               {
                 title: "Medicine Suggestions",
                 image:
-                  "https://images.unsplash.com/photo-1585435557343-3b092031a831?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                  "https://images.unsplash.com/photo-1585435557343-3b092031a831?auto=format&fit=crop&w=800&q=80",
                 description:
                   "Receive AI-assisted, guideline-based medicine suggestions — reviewed by certified pharmacists.",
                 link: "/medicine-suggestion",
@@ -83,7 +82,7 @@ function Home() {
               {
                 title: "Expert Consultations",
                 image:
-                  "https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                  "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=800&q=80",
                 description:
                   "Book secure consultations with specialists in cardiology, dermatology, mental health, and more.",
                 link: "/consultation",
@@ -91,7 +90,7 @@ function Home() {
               {
                 title: "Health Articles",
                 image:
-                  "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+                  "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80",
                 description:
                   "Explore doctor-reviewed articles on prevention, nutrition, and chronic conditions.",
                 link: "/articles",
@@ -99,37 +98,32 @@ function Home() {
             ].map((service, index) => (
               <motion.div
                 key={service.title}
-                className="bg-white dark:bg-[#0A2A43] text-card-foreground dark:text-[#FDFBFB] rounded-[40px] shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:bg-gray-50 dark:hover:bg-[#0A2A43]/70 border border-gray-200 dark:border-gray-700"
-                whileHover={{ scale: 1.02 }}
+                className={`rounded-[40px] p-6 backdrop-blur-2xl ${cardBg} transition-all duration-500`}
+                whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 {...fadeInUp}
                 transition={{ delay: 0.1 * (index + 1) }}
-                role="article"
-                aria-label={service.title}
               >
-                <div className="overflow-hidden rounded-t-[40px]">
+                <div className="overflow-hidden rounded-3xl mb-4">
                   <img
                     src={service.image || "/placeholder.svg"}
                     alt={service.title}
-                    className="w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
+                    className="w-full h-48 object-cover transition-transform duration-500 hover:scale-105"
                     loading="lazy"
                   />
                 </div>
-                <div className="p-6">
-                  <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-[#0A3D62] dark:text-[#FDFBFB]">
-                    {service.title}
-                  </h2>
-                  <p className="text-sm sm:text-base text-muted-foreground dark:text-[#FDFBFB] mb-4">
-                    {service.description}
-                  </p>
-                  <Link
-                    to={service.link}
-                    className="inline-block bg-[#0A3D62] text-[#FDFBFB] px-4 sm:px-6 py-2 sm:py-3 rounded-xl hover:bg-[#08253A] transition-all duration-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]"
-                    aria-label={`Learn more about ${service.title}`}
-                  >
-                    Learn More
-                  </Link>
-                </div>
+                <h2 className="text-xl sm:text-2xl font-semibold mb-4">
+                  {service.title}
+                </h2>
+                <p className="text-sm sm:text-base mb-6">
+                  {service.description}
+                </p>
+                <Link
+                  to={service.link}
+                  className="inline-block px-6 py-3 rounded-2xl font-semibold bg-[#0A3D62]/80 text-white hover:bg-[#0A3D62]/90 transition-all duration-300"
+                >
+                  Learn More
+                </Link>
               </motion.div>
             ))}
           </motion.div>
@@ -146,12 +140,10 @@ function Home() {
 
           {/* Why MediNova */}
           <motion.div
-            className="bg-white dark:bg-[#0A2A43] text-card-foreground dark:text-[#FDFBFB] rounded-[40px] shadow-md p-6 sm:p-8 mb-16 transition-all duration-300 hover:shadow-xl border border-gray-200 dark:border-gray-700"
+            className={`rounded-[40px] p-8 backdrop-blur-2xl ${cardBg} mb-16 transition-all duration-500`}
             {...fadeInUp}
-            role="region"
-            aria-label="Why Choose MediNova Section"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-[#0A3D62] dark:text-[#FDFBFB]">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center">
               Why Choose MediNova?
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -179,16 +171,15 @@ function Home() {
               ].map((item, index) => (
                 <motion.div
                   key={item.title}
-                  className="p-4 rounded-xl bg-gray-50 dark:bg-[#0A2A43]/50 transition-all duration-300 hover:bg-gray-100 dark:hover:bg-[#0A2A43]/70"
+                  className={`p-6 rounded-2xl backdrop-blur-2xl ${cardBg} transition-all duration-500`}
+                  whileHover={{ scale: 1.01 }}
                   {...fadeInUp}
                   transition={{ delay: 0.1 * (index + 1) }}
                 >
-                  <h3 className="text-lg sm:text-xl font-semibold mb-3 text-[#0A3D62] dark:text-[#FDFBFB]">
+                  <h3 className="text-lg sm:text-xl font-semibold mb-3">
                     {item.title}
                   </h3>
-                  <p className="text-sm sm:text-base text-muted-foreground dark:text-[#FDFBFB]">
-                    {item.description}
-                  </p>
+                  <p className="text-sm sm:text-base">{item.description}</p>
                 </motion.div>
               ))}
             </div>
@@ -196,32 +187,30 @@ function Home() {
 
           {/* Trust Section */}
           <motion.div
-            className="mb-16 rounded-[40px] bg-white dark:bg-[#0A2A43] p-6 sm:p-8 border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl"
+            className={`rounded-[40px] p-8 backdrop-blur-2xl ${cardBg} mb-16 transition-all duration-500`}
             {...fadeInUp}
-            role="region"
-            aria-label="Trusted by Healthcare Professionals Section"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-[#0A3D62] dark:text-[#FDFBFB]">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center">
               Trusted by Healthcare Professionals
             </h2>
-            <p className="text-base sm:text-lg text-center mb-4 text-muted-foreground dark:text-[#FDFBFB]">
-              Used by 1,200+ licensed practitioners and recommended by 40+ clinics nationwide.
+            <p className="text-base sm:text-lg text-center mb-4">
+              Used by 1,200+ licensed practitioners and recommended by 40+
+              clinics nationwide.
             </p>
-            <p className="text-sm sm:text-md text-center text-muted-foreground dark:text-[#FDFBFB]">
-              MediNova complies with HIPAA, HIMS-Pakistan, and ICD-11 medical data standards.
+            <p className="text-sm sm:text-md text-center">
+              MediNova complies with HIPAA, HIMS-Pakistan, and ICD-11 medical
+              data standards.
             </p>
           </motion.div>
 
           {/* Sponsors */}
           <motion.div
-            className="mb-16 rounded-[40px] bg-transparent p-6 sm:p-8 transition-all duration-300 hover:shadow-xl"
+            className={`rounded-[40px] p-8 backdrop-blur-2xl ${cardBg} mb-16 transition-all duration-500`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.6 }}
-            role="region"
-            aria-label="Our Sponsors Section"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-[#0A3D62] dark:text-[#FDFBFB]">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center">
               Our Sponsors
             </h2>
             <HorizontalSponsorSlider />

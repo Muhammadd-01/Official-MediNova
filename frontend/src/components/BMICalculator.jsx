@@ -8,76 +8,85 @@ const BMICalculator = () => {
   const [bmi, setBMI] = useState(null);
   const { darkMode } = useContext(DarkModeContext);
 
-  // Color scheme synced with Slider (#0A3D62 light, #0A2A43 dark)
-  const primaryText = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
-  const bgColor = darkMode ? "bg-[#0A2A43]" : "bg-white";
-  const inputBg = darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50";
-  const inputText = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
-  const borderColor = darkMode ? "border-[#FDFBFB]/50" : "border-gray-200";
-  const buttonBg = darkMode ? "bg-[#FDFBFB] text-[#0A2A43]" : "bg-[#0A3D62] text-[#FDFBFB]";
-  const buttonHover = darkMode
-    ? "hover:bg-[#d6d6d6] hover:text-[#0A2A43]"
-    : "hover:bg-[#08253A] hover:text-[#FDFBFB]";
+  const cardBg = darkMode
+    ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB]"
+    : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62]";
+  const inputBg = darkMode
+    ? "bg-[#0A2A43]/60 border-white/10 text-[#FDFBFB]"
+    : "bg-white/60 border-[#0A3D62]/10 text-[#0A3D62]";
+  const buttonBg = darkMode
+    ? "bg-white/70 text-[#0A2A43] hover:bg-white/80"
+    : "bg-[#0A3D62]/80 text-white hover:bg-[#0A3D62]/90";
+
+  function calculateBMI(e) {
+    e.preventDefault();
+    if (height && weight) {
+      const h = height / 100;
+      setBMI((weight / (h * h)).toFixed(1));
+    }
+  }
 
   return (
     <motion.div
-      className={`p-6 sm:p-8 rounded-[40px] shadow-md ${bgColor} ${primaryText} transition-all duration-300 hover:shadow-xl border ${borderColor}`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      className={`p-8 sm:p-10 rounded-[40px] ${cardBg} backdrop-blur-2xl transition-all duration-500`}
+      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      whileHover={{ scale: 1.01 }}
     >
-      <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-center">BMI Calculator</h2>
+      <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-center tracking-wide">
+        BMI Calculator
+      </h2>
 
-      <form className="space-y-4 sm:space-y-6" aria-label="BMI Calculator Form">
+      <form className="space-y-6" aria-label="BMI Calculator Form">
         <div>
-          <label htmlFor="height" className={`block mb-1 font-medium ${primaryText}`}>
-            Height (cm):
+          <label htmlFor="height" className="block mb-2 font-medium">
+            Height (cm)
           </label>
           <input
             type="number"
             id="height"
             value={height}
             onChange={(e) => setHeight(e.target.value)}
-            className={`w-full p-3 rounded-xl ${inputBg} ${inputText} ${borderColor} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-colors duration-300`}
+            className={`w-full p-4 rounded-2xl ${inputBg} border focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all duration-300`}
             required
-            aria-label="Enter height in centimeters"
           />
         </div>
 
         <div>
-          <label htmlFor="weight" className={`block mb-1 font-medium ${primaryText}`}>
-            Weight (kg):
+          <label htmlFor="weight" className="block mb-2 font-medium">
+            Weight (kg)
           </label>
           <input
             type="number"
             id="weight"
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
-            className={`w-full p-3 rounded-xl ${inputBg} ${inputText} ${borderColor} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-colors duration-300`}
+            className={`w-full p-4 rounded-2xl ${inputBg} border focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all duration-300`}
             required
-            aria-label="Enter weight in kilograms"
           />
         </div>
 
-        <button
+        <motion.button
           type="button"
           onClick={(e) => calculateBMI(e)}
-          className={`w-full px-4 py-3 rounded-xl ${buttonBg} ${buttonHover} font-medium transition-all duration-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`}
-          aria-label="Calculate BMI"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          className={`w-full px-6 py-3 rounded-2xl font-semibold ${buttonBg} transition-all duration-500`}
         >
           Calculate BMI
-        </button>
+        </motion.button>
       </form>
 
       {bmi && (
         <motion.div
-          className={`mt-6 p-4 rounded-xl bg-gray-50 dark:bg-[#0A2A43]/50 ${primaryText}`}
-          initial={{ opacity: 0, y: 10 }}
+          className="mt-8 p-6 rounded-3xl bg-white/30 dark:bg-[#0A2A43]/50 backdrop-blur-xl text-center"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.4 }}
         >
-          <p className="font-semibold text-lg">Your BMI: {bmi}</p>
-          <p className="text-sm">
+          <p className="font-bold text-2xl">Your BMI: {bmi}</p>
+          <p className="text-sm mt-3">
             {bmi < 18.5
               ? "Underweight"
               : bmi < 25
@@ -90,15 +99,6 @@ const BMICalculator = () => {
       )}
     </motion.div>
   );
-
-  function calculateBMI(e) {
-    e.preventDefault();
-    if (height && weight) {
-      const heightInMeters = height / 100;
-      const bmiValue = (weight / (heightInMeters * heightInMeters)).toFixed(1);
-      setBMI(bmiValue);
-    }
-  }
 };
 
 export default BMICalculator;

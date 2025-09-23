@@ -5,18 +5,23 @@ import { DarkModeContext } from "../App";
 function Footer() {
   const { darkMode } = useContext(DarkModeContext);
 
-  const bgColor = darkMode
-    ? "bg-[#0A2A43]/90 backdrop-blur-md"
-    : "bg-white/30 backdrop-blur-md";
-  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A2A43]";
-  const hoverColor = darkMode ? "hover:text-gray-300" : "hover:text-[#00C2CB]";
-  const borderColor = darkMode ? "border-white/20" : "border-[#0A2A43]/20";
+  // Match Header glassmorphism
+  const footerBg =
+    "bg-white/20 dark:bg-[#0D3B66]/30 backdrop-blur-xl border border-white/20 dark:border-[#00C2CB]/20 shadow-lg";
+  const textColor = darkMode ? "text-white" : "text-[#0D3B66]";
+
+  // ✅ Same hover & style as Header links
+  const navLink =
+    "text-base font-medium transition-colors duration-300 " +
+    (darkMode
+      ? "text-white hover:text-gray-300"
+      : "text-[#0D3B66] hover:text-[#00C2CB]");
 
   return (
     <footer
-      className={`py-10 transition-all duration-300 mt-auto w-full ${bgColor} ${textColor}`}
+      className={`w-full mt-auto transition-all duration-300 ${footerBg} ${textColor} rounded-t-2xl`}
     >
-      <div className="px-4 max-w-screen-xl mx-auto">
+      <div className="px-6 py-10 max-w-screen-xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About */}
           <div>
@@ -37,13 +42,10 @@ function Footer() {
                 { path: "/articles", label: "Articles" },
                 { path: "/consultation", label: "Consultation" },
                 { path: "/pharmacy", label: "Pharmacy" },
-                { path: "/labs", label: "Labs" }, // ✅ Added Labs here
+                { path: "/labs", label: "Labs" },
               ].map(({ path, label }) => (
                 <li key={path}>
-                  <Link
-                    to={path}
-                    className={`transition duration-300 ${hoverColor}`}
-                  >
+                  <Link to={path} className={navLink}>
                     {label}
                   </Link>
                 </li>
@@ -62,10 +64,7 @@ function Footer() {
                 { path: "/contact", label: "Contact Us" },
               ].map(({ path, label }) => (
                 <li key={path}>
-                  <Link
-                    to={path}
-                    className={`transition duration-300 ${hoverColor}`}
-                  >
+                  <Link to={path} className={navLink}>
                     {label}
                   </Link>
                 </li>
@@ -92,7 +91,7 @@ function Footer() {
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`text-sm ${hoverColor} transition duration-300`}
+                  className={`text-sm ${navLink}`}
                 >
                   {label}
                 </a>
@@ -102,10 +101,8 @@ function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className={`mt-8 pt-8 border-t ${borderColor} text-center`}>
-          <p className="text-sm">
-            &copy; {new Date().getFullYear()} MediNova. All rights reserved.
-          </p>
+        <div className="mt-8 pt-8 border-t border-white/20 text-center text-sm">
+          &copy; {new Date().getFullYear()} MediNova. All rights reserved.
         </div>
       </div>
     </footer>
