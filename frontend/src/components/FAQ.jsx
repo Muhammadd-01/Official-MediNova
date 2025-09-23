@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+import { motion } from "framer-motion";
 import { DarkModeContext } from "../App";
 
 const faqs = [
@@ -32,29 +33,39 @@ const faqs = [
 function FAQ() {
   const { darkMode } = useContext(DarkModeContext);
 
-  const primaryText = darkMode ? "text-[#FDFBFB]" : "text-[#0A2A43]";
-  const bgColor = darkMode ? "bg-[#0A2A43]" : "bg-[#FDFBFB]";
-  const boxBg = darkMode ? "bg-[#0A2A43]" : "bg-[#FDFBFB]";
-  const boxText = darkMode ? "text-[#FDFBFB]" : "text-[#0A2A43]";
-  const border = darkMode ? "border border-[#FDFBFB]/20" : "border border-[#E5E7EB]";
+  const primaryText = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
+  const bgColor = darkMode ? "bg-[#0A2A43]" : "bg-white";
+  const boxBg = darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50";
+  const boxText = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
+  const border = darkMode ? "border-[#FDFBFB]/50" : "border-gray-200";
 
   return (
-    <div className={`mt-8 ${primaryText}`}>
-      <h2 className={`text-2xl font-bold mb-4 ${primaryText}`}>
+    <motion.div
+      className={`mt-8 p-6 sm:p-8 rounded-[40px] shadow-md ${bgColor} ${primaryText} border ${border} transition-all duration-300 hover:shadow-xl`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      role="region"
+      aria-label="Frequently Asked Questions Section"
+    >
+      <h2 className={`text-2xl sm:text-3xl font-bold mb-6 text-center ${primaryText}`}>
         Frequently Asked Questions
       </h2>
       <div className="space-y-4">
         {faqs.map((faq, index) => (
-          <div
+          <motion.div
             key={index}
-            className={`p-4 rounded-lg shadow ${boxBg} ${boxText} ${border}`}
+            className={`p-4 rounded-xl ${boxBg} ${boxText} border ${border} transition-all duration-300 hover:shadow-lg hover:bg-gray-100 dark:hover:bg-[#0A2A43]/70`}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: index * 0.1 }}
           >
-            <h3 className="text-lg font-semibold mb-2">{faq.question}</h3>
-            <p>{faq.answer}</p>
-          </div>
+            <h3 className="text-lg sm:text-xl font-semibold mb-2">{faq.question}</h3>
+            <p className="text-sm sm:text-base">{faq.answer}</p>
+          </motion.div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

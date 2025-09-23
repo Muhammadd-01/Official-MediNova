@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useContext } from "react";
@@ -47,20 +45,20 @@ function Home() {
         <Slider />
 
         <motion.div
-          className="container mx-auto px-4 py-16"
+          className="container mx-auto px-4 sm:px-6 py-16"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
           <motion.h1
-            className="text-5xl font-bold mb-8 text-center text-[#0A3D62] dark:text-[#FDFBFB]"
+            className="text-4xl sm:text-5xl font-bold mb-8 text-center text-[#0A3D62] dark:text-[#FDFBFB]"
             {...fadeInUp}
           >
             Welcome to MediNova
           </motion.h1>
 
           <motion.p
-            className="text-xl mb-12 text-center text-muted-foreground dark:text-[#FDFBFB]"
+            className="text-lg sm:text-xl mb-12 text-center text-muted-foreground dark:text-[#FDFBFB] max-w-4xl mx-auto"
             {...fadeInUp}
           >
             Your digital bridge to licensed doctors, evidence-based medicine recommendations, and real-time health guidance — all under one secure platform.
@@ -68,7 +66,7 @@ function Home() {
 
           {/* Services Cards */}
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16"
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-16"
             initial="initial"
             animate="animate"
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -101,25 +99,33 @@ function Home() {
             ].map((service, index) => (
               <motion.div
                 key={service.title}
-                className="bg-white dark:bg-[#0A2A43] text-card-foreground dark:text-[#FDFBFB] rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="bg-white dark:bg-[#0A2A43] text-card-foreground dark:text-[#FDFBFB] rounded-[40px] shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:bg-gray-50 dark:hover:bg-[#0A2A43]/70 border border-gray-200 dark:border-gray-700"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 {...fadeInUp}
                 transition={{ delay: 0.1 * (index + 1) }}
+                role="article"
+                aria-label={service.title}
               >
-                <img
-                  src={service.image || "/placeholder.svg"}
-                  alt={service.title}
-                  className="w-full h-48 object-cover"
-                />
+                <div className="overflow-hidden rounded-t-[40px]">
+                  <img
+                    src={service.image || "/placeholder.svg"}
+                    alt={service.title}
+                    className="w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
+                    loading="lazy"
+                  />
+                </div>
                 <div className="p-6">
-                  <h2 className="text-2xl font-semibold mb-4 text-[#0A3D62] dark:text-[#FDFBFB]">
+                  <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-[#0A3D62] dark:text-[#FDFBFB]">
                     {service.title}
                   </h2>
-                  <p className="text-muted-foreground dark:text-[#FDFBFB] mb-4">{service.description}</p>
+                  <p className="text-sm sm:text-base text-muted-foreground dark:text-[#FDFBFB] mb-4">
+                    {service.description}
+                  </p>
                   <Link
                     to={service.link}
-                    className="inline-block bg-[#0A3D62] text-white px-4 py-2 rounded hover:bg-[#08253A] transition-colors duration-300"
+                    className="inline-block bg-[#0A3D62] text-[#FDFBFB] px-4 sm:px-6 py-2 sm:py-3 rounded-xl hover:bg-[#08253A] transition-all duration-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]"
+                    aria-label={`Learn more about ${service.title}`}
                   >
                     Learn More
                   </Link>
@@ -130,7 +136,7 @@ function Home() {
 
           {/* Tools Section */}
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16"
+            className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-16"
             {...fadeInUp}
             transition={{ delay: 0.4 }}
           >
@@ -140,13 +146,15 @@ function Home() {
 
           {/* Why MediNova */}
           <motion.div
-            className="bg-white dark:bg-[#0A2A43] text-card-foreground dark:text-[#FDFBFB] rounded-lg shadow-lg p-8 mb-16 transition-all duration-300 hover:shadow-xl"
+            className="bg-white dark:bg-[#0A2A43] text-card-foreground dark:text-[#FDFBFB] rounded-[40px] shadow-md p-6 sm:p-8 mb-16 transition-all duration-300 hover:shadow-xl border border-gray-200 dark:border-gray-700"
             {...fadeInUp}
+            role="region"
+            aria-label="Why Choose MediNova Section"
           >
-            <h2 className="text-3xl font-bold mb-6 text-[#0A3D62] dark:text-[#FDFBFB]">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-[#0A3D62] dark:text-[#FDFBFB]">
               Why Choose MediNova?
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
                 {
                   title: "Expert Medical Advice",
@@ -171,13 +179,14 @@ function Home() {
               ].map((item, index) => (
                 <motion.div
                   key={item.title}
+                  className="p-4 rounded-xl bg-gray-50 dark:bg-[#0A2A43]/50 transition-all duration-300 hover:bg-gray-100 dark:hover:bg-[#0A2A43]/70"
                   {...fadeInUp}
                   transition={{ delay: 0.1 * (index + 1) }}
                 >
-                  <h3 className="text-xl font-semibold mb-4 text-[#0A3D62] dark:text-[#FDFBFB]">
+                  <h3 className="text-lg sm:text-xl font-semibold mb-3 text-[#0A3D62] dark:text-[#FDFBFB]">
                     {item.title}
                   </h3>
-                  <p className="text-muted-foreground dark:text-[#FDFBFB]">
+                  <p className="text-sm sm:text-base text-muted-foreground dark:text-[#FDFBFB]">
                     {item.description}
                   </p>
                 </motion.div>
@@ -186,26 +195,33 @@ function Home() {
           </motion.div>
 
           {/* Trust Section */}
-          <motion.div className="mb-16" {...fadeInUp}>
-            <h2 className="text-3xl font-bold mb-6 text-center text-[#0A3D62] dark:text-[#FDFBFB]">
+          <motion.div
+            className="mb-16 rounded-[40px] bg-white dark:bg-[#0A2A43] p-6 sm:p-8 border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl"
+            {...fadeInUp}
+            role="region"
+            aria-label="Trusted by Healthcare Professionals Section"
+          >
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-[#0A3D62] dark:text-[#FDFBFB]">
               Trusted by Healthcare Professionals
             </h2>
-            <p className="text-lg text-center mb-4 text-muted-foreground dark:text-[#FDFBFB]">
+            <p className="text-base sm:text-lg text-center mb-4 text-muted-foreground dark:text-[#FDFBFB]">
               Used by 1,200+ licensed practitioners and recommended by 40+ clinics nationwide.
             </p>
-            <p className="text-md text-center text-muted-foreground dark:text-[#FDFBFB]">
+            <p className="text-sm sm:text-md text-center text-muted-foreground dark:text-[#FDFBFB]">
               MediNova complies with HIPAA, HIMS-Pakistan, and ICD-11 medical data standards.
             </p>
           </motion.div>
 
           {/* Sponsors */}
           <motion.div
-            className="mb-16"
+            className="mb-16 rounded-[40px] bg-transparent p-6 sm:p-8 transition-all duration-300 hover:shadow-xl"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.6 }}
+            role="region"
+            aria-label="Our Sponsors Section"
           >
-            <h2 className="text-3xl font-bold mb-6 text-center text-[#0A3D62] dark:text-[#FDFBFB]">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-[#0A3D62] dark:text-[#FDFBFB]">
               Our Sponsors
             </h2>
             <HorizontalSponsorSlider />
