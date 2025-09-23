@@ -23,18 +23,18 @@ function DoctorProfile({ doctor, onBookAppointment }) {
     },
   };
 
-  const bgColor = darkMode
-    ? "bg-[#0A2A43]/70 backdrop-blur-xl"
-    : "bg-white/40 backdrop-blur-xl"; // glassmorphism base
-  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#01497C]";
+  const cardBg = darkMode
+    ? "bg-[#0A2A43]/40 backdrop-blur-2xl border border-white/10 text-[#FDFBFB]"
+    : "bg-white/40 backdrop-blur-2xl border border-[#0A3D62]/20 text-[#0A3D62]";
+
   const buttonBg = darkMode
     ? "bg-gradient-to-r from-blue-400 to-purple-500 text-white hover:opacity-90"
     : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90";
 
   return (
     <motion.div
-      className={`relative p-6 rounded-[40px] shadow-xl overflow-hidden transition-all duration-500 ${bgColor} ${textColor}`}
-      whileHover={{ scale: 1.05 }}
+      className={`relative p-6 rounded-[40px] shadow-lg ${cardBg} transition-all duration-500 overflow-hidden cursor-pointer`}
+      whileHover={{ scale: 1.03, boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}
       whileTap={{ scale: 0.97 }}
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
@@ -44,16 +44,16 @@ function DoctorProfile({ doctor, onBookAppointment }) {
         <script type="application/ld+json">{JSON.stringify(schemaData)}</script>
       </Helmet>
 
-      {/* Futuristic glowing gradient border */}
+      {/* Glowing gradient overlay for liquid glass feel */}
       <div className="absolute inset-0 rounded-[40px] pointer-events-none">
         <motion.div
-          className="absolute inset-0 rounded-[40px] bg-gradient-to-r from-blue-500/40 via-purple-500/30 to-pink-500/40 blur-2xl opacity-30"
+          className="absolute inset-0 rounded-[40px] bg-gradient-to-r from-blue-400/40 via-purple-400/30 to-pink-400/30 blur-2xl opacity-30"
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
         />
       </div>
 
-      {/* Profile Image */}
+      {/* Doctor Image */}
       <motion.img
         src={doctor.image || "/placeholder.svg"}
         alt={doctor.name}
@@ -63,51 +63,26 @@ function DoctorProfile({ doctor, onBookAppointment }) {
       />
 
       {/* Doctor Info */}
-      <motion.h2
-        className="text-2xl font-bold text-center mb-2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
-        {doctor.name}
-      </motion.h2>
-
-      <motion.p
-        className="mb-1 text-center opacity-80"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-      >
+      <h2 className="text-2xl font-bold text-center mb-2">{doctor.name}</h2>
+      <p className="text-center opacity-80 mb-1">
         <strong>Specialization:</strong> {doctor.specialization}
-      </motion.p>
-
-      <motion.p
-        className="mb-1 text-center opacity-80"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-      >
+      </p>
+      <p className="text-center opacity-80 mb-1">
         <strong>Availability:</strong> {doctor.availability}
-      </motion.p>
-
-      <motion.p
-        className="mb-4 text-center opacity-80"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-      >
+      </p>
+      <p className="text-center opacity-80 mb-4">
         <strong>Phone:</strong> {doctor.phone}
-      </motion.p>
+      </p>
 
-      {/* Button with futuristic hover */}
+      {/* Book Appointment Button */}
       <motion.button
         className={`relative w-full px-5 py-3 rounded-2xl font-semibold shadow-md overflow-hidden group ${buttonBg}`}
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.95 }}
         onClick={onBookAppointment}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.97 }}
       >
         <span className="relative z-10">Book Appointment</span>
-        {/* Liquid-glass ripple animation */}
+        {/* Liquid glass ripple */}
         <motion.span
           className="absolute inset-0 bg-white/20 blur-xl rounded-2xl"
           initial={{ opacity: 0 }}
@@ -117,9 +92,6 @@ function DoctorProfile({ doctor, onBookAppointment }) {
       </motion.button>
     </motion.div>
   );
-
-
-  
 }
 
 export default DoctorProfile;
