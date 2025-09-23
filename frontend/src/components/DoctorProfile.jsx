@@ -117,6 +117,9 @@ function DoctorProfile({ doctor, onBookAppointment }) {
       </motion.button>
     </motion.div>
   );
+
+
+  
 }
 
 export default DoctorProfile;
