@@ -1,23 +1,33 @@
 import { useEffect, useState, useContext, useRef } from "react";
-import { DarkModeContext } from "../App";
+import { DarkModeContext, CartContext } from "../App";
 import Header from "../components/Header";
+import Chatbot from "../components/Chatbot";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { motion, AnimatePresence } from "framer-motion";
+import { FiShoppingCart } from "react-icons/fi";
 
 function Pharmacy() {
   const { darkMode } = useContext(DarkModeContext);
-  const mapRef = useRef(null); // Map instance
-  const mapContainerRef = useRef(null); // DOM ref
+  const { cartItems, addToCart } = useContext(CartContext);
+  const mapRef = useRef(null);
+  const mapContainerRef = useRef(null);
+
   const [userLocation, setUserLocation] = useState(null);
   const [pharmacies, setPharmacies] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [medicines, setMedicines] = useState([]);
-  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
-  const bgColor = darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50";
-  const inputBg = darkMode ? "bg-[#0A2A43]/80 text-[#FDFBFB] border-none" : "bg-gray-50 text-[#0A3D62] border-none";
+  const [cartOpen, setCartOpen] = useState(false);
 
-  // Initialize Map Once
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
+  const bgColor = darkMode
+    ? "bg-[#0A2A43]/60 backdrop-blur-xl"
+    : "bg-white/40 backdrop-blur-xl";
+  const inputBg = darkMode
+    ? "bg-[#0A2A43]/60 text-[#FDFBFB] border-none backdrop-blur-xl"
+    : "bg-white/40 text-[#0A3D62] border-none backdrop-blur-xl";
+
+  // Initialize Map
   useEffect(() => {
     if (!mapRef.current && mapContainerRef.current) {
       mapRef.current = L.map(mapContainerRef.current).setView([30.3753, 69.3451], 13);
@@ -27,7 +37,6 @@ function Pharmacy() {
       }).addTo(mapRef.current);
     }
 
-    // Get user location
     if (navigator.geolocation && mapRef.current) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -35,22 +44,17 @@ function Pharmacy() {
           setUserLocation([latitude, longitude]);
           mapRef.current.setView([latitude, longitude], 15);
 
-          // User marker
           L.marker([latitude, longitude])
             .addTo(mapRef.current)
             .bindPopup("You are here")
             .openPopup();
 
-          // Fetch nearby pharmacies
           fetchNearbyPharmacies(latitude, longitude);
         },
-        (error) => {
-          console.error("Error getting user location:", error);
-        }
+        (error) => console.error(error)
       );
     }
 
-    // Cleanup map on unmount
     return () => {
       if (mapRef.current) {
         mapRef.current.remove();
@@ -59,7 +63,6 @@ function Pharmacy() {
     };
   }, []);
 
-  // Fetch pharmacies
   const fetchNearbyPharmacies = async (lat, lon) => {
     const query = `
       [out:json];
@@ -70,22 +73,19 @@ function Pharmacy() {
     try {
       const res = await fetch(url);
       const data = await res.json();
-
       if (data.elements && mapRef.current) {
         setPharmacies(data.elements);
-
         data.elements.forEach((pharmacy) => {
           L.marker([pharmacy.lat, pharmacy.lon])
             .addTo(mapRef.current)
             .bindPopup(pharmacy.tags.name || "Pharmacy");
         });
       }
-    } catch (error) {
-      console.error("Error fetching pharmacies:", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  // Fetch medicines
   const fetchMedicines = async (query) => {
     if (!query) {
       setMedicines([]);
@@ -96,13 +96,21 @@ function Pharmacy() {
         `https://api.fda.gov/drug/label.json?search=openfda.brand_name:${query}&limit=10`
       );
       const data = await res.json();
-      setMedicines(data.results || []);
+      if (data.results) {
+        const enriched = data.results.map((med) => ({
+          ...med,
+          price: (Math.random() * 45 + 5).toFixed(2),
+          discount: Math.floor(Math.random() * 20),
+          stock: Math.floor(Math.random() * 100),
+          image: `https://via.placeholder.com/150?text=${med.openfda?.brand_name?.[0] || "Medicine"}`,
+        }));
+        setMedicines(enriched);
+      } else setMedicines([]);
     } catch (err) {
-      console.error("Error fetching medicines:", err);
+      console.error(err);
     }
   };
 
-  // Debounce medicine search
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (searchQuery) fetchMedicines(searchQuery);
@@ -110,99 +118,148 @@ function Pharmacy() {
     return () => clearTimeout(timeout);
   }, [searchQuery]);
 
+  const totalPrice = cartItems
+    .reduce((sum, item) => sum + item.qty * item.price * (1 - item.discount / 100), 0)
+    .toFixed(2);
+
   return (
     <>
-      <Header />
-      <div
-        className={`min-h-screen pt-20 p-4 sm:p-6 ${textColor} bg-transparent rounded-[40px] shadow-md transition-all duration-300 hover:shadow-xl max-w-7xl mx-auto border-none outline-none`}
-      >
+      <Header>
+        <div className="absolute left-4 top-4">
+          <motion.button
+            onClick={() => setCartOpen(true)}
+            whileTap={{ scale: 0.9, rotate: -5 }}
+            whileHover={{ scale: 1.1 }}
+            className="relative p-2 rounded-full bg-[#0A3D62]/60 text-white border border-white/20"
+          >
+            <FiShoppingCart size={24} />
+            {cartItems.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                {cartItems.length}
+              </span>
+            )}
+          </motion.button>
+        </div>
+      </Header>
+
+      <div className={`min-h-screen pt-20 p-4 sm:p-6 ${textColor} max-w-7xl mx-auto`}>
         <motion.h1
-          className="text-3xl sm:text-4xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500"
-          initial={{ opacity: 0, y: -30 }}
+          className="text-3xl sm:text-4xl font-bold mb-6 text-center"
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          Pharmacy Finder
+          Pharmacy
         </motion.h1>
 
-        {/* Map Section */}
+        {/* Map */}
         <motion.div
-          className={`w-full h-[400px] rounded-[40px] shadow-md mb-8 transition-all duration-300 hover:shadow-xl border-none outline-none`}
+          className={`w-full h-[400px] rounded-[40px] shadow-md mb-6 ${bgColor} overflow-hidden`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <div ref={mapContainerRef} id="pharmacy-map" className="w-full h-full rounded-[40px] overflow-hidden"></div>
+          <div ref={mapContainerRef} className="w-full h-full rounded-[40px] overflow-hidden"></div>
         </motion.div>
 
-        {/* Medicine Search */}
-        <motion.div
-          className="mb-6 relative"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          <motion.input
-            type="text"
-            placeholder="Search for medicines..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full p-3 sm:p-4 rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`}
-            aria-label="Search for medicines"
-          />
-          <svg
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
-            width="20"
-            height="20"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fillRule="evenodd"
-              d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </motion.div>
+        {/* Search */}
+        <motion.input
+          type="text"
+          placeholder="Search for medicines..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className={`w-full p-4 mb-6 rounded-[40px] ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`}
+        />
 
-        {/* Medicine Results */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 min-h-[200px]">
-          <AnimatePresence mode="wait">
+        {/* Medicine Grid */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <AnimatePresence>
             {medicines.length === 0 && searchQuery ? (
-              <motion.p
-                className={textColor}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 No medicines found...
               </motion.p>
             ) : (
-              medicines.map((med, index) => (
+              medicines.map((med) => (
                 <motion.div
-                  key={index}
+                  key={med.id}
                   layout
-                  initial={{ opacity: 0, y: 40 }}
+                  className={`p-4 sm:p-6 rounded-[40px] ${bgColor} shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer`}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ scale: 1.05, shadow: "0 10px 20px rgba(0,0,0,0.1)" }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className={`p-4 sm:p-6 rounded-[40px] ${bgColor} shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-none outline-none`}
+                  whileHover={{ scale: 1.03 }}
                 >
-                  <h2 className={`text-lg sm:text-xl font-semibold line-clamp-2 ${textColor}`}>
-                    {med.openfda?.brand_name?.[0] || "Unknown Medicine"}
+                  <img
+                    src={med.image}
+                    alt={med.openfda?.brand_name?.[0] || "Medicine"}
+                    className="w-full h-32 object-cover rounded-2xl mb-3"
+                  />
+                  <h2 className="text-lg font-semibold mb-2 line-clamp-2">
+                    {med.openfda?.brand_name?.[0] || "Unknown"}
                   </h2>
-                  <p className={`text-sm line-clamp-3 ${textColor} opacity-80 mt-2`}>
-                    {med.description?.slice(0, 150) || "No description available..."}
+                  <p className="text-sm mb-1 line-clamp-2">
+                    Generic: {med.openfda?.generic_name?.[0] || "Unknown"}
                   </p>
-                  <p className={`text-xs mt-2 ${textColor} opacity-70`}>
+                  <p className="text-sm mb-1">
                     Manufacturer: {med.openfda?.manufacturer_name?.[0] || "Unknown"}
                   </p>
+                  <p className="text-sm mb-1">
+                    Price: ${med.price} | Discount: {med.discount}% | Stock: {med.stock}
+                  </p>
+                  <button
+                    onClick={() => addToCart({ ...med, qty: 1 })}
+                    className="mt-2 px-4 py-2 rounded-[40px] bg-[#0A3D62] text-white hover:bg-[#08253A] hover:shadow-lg transition-all duration-300"
+                  >
+                    Add to Cart
+                  </button>
                 </motion.div>
               ))
             )}
           </AnimatePresence>
         </div>
+
+        {/* Cart Sidebar */}
+        <AnimatePresence>
+          {cartOpen && (
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              className={`fixed top-0 right-0 w-80 h-full ${bgColor} p-6 shadow-xl backdrop-blur-xl rounded-l-3xl z-50 overflow-y-auto`}
+            >
+              <button
+                onClick={() => setCartOpen(false)}
+                className="mb-4 text-xl font-bold"
+              >
+                Close
+              </button>
+              <h2 className="text-2xl font-semibold mb-4">Your Cart</h2>
+              {cartItems.length === 0 ? (
+                <p>Cart is empty</p>
+              ) : (
+                cartItems.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="mb-4 p-3 rounded-2xl bg-white/20 dark:bg-[#0A2A43]/50 backdrop-blur-xl"
+                  >
+                    <p className="font-semibold">{item.openfda?.brand_name?.[0]}</p>
+                    <p className="text-sm">
+                      Qty: {item.qty}
+                    </p>
+                    <p className="text-sm">
+                      Price: ${(item.price * item.qty * (1 - item.discount / 100)).toFixed(2)}
+                    </p>
+                  </div>
+                ))
+              )}
+              {cartItems.length > 0 && (
+                <p className="font-bold mt-4">Total: ${totalPrice}</p>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Chatbot behind cart */}
+      <div className={`${cartOpen ? "z-0" : "z-50"} relative`}>
+        <Chatbot />
       </div>
     </>
   );

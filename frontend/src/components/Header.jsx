@@ -1,8 +1,9 @@
 import { useState, useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Moon, Sun, Settings, LogIn, UserPlus, LogOut } from "lucide-react";
+import { Menu, X, Moon, Sun, Settings, LogIn, UserPlus, LogOut, ShoppingCart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { DarkModeContext, AuthContext } from "../App";
+import { DarkModeContext, AuthContext, CartContext } from "../App";
+import CartSidebar from "./CartSidebar";
 
 // Animation variants
 const dropdownVariants = {
@@ -28,14 +29,24 @@ const settingsButtonVariants = {
   },
 };
 
+const cartIconVariants = {
+  initial: { scale: 1 },
+  tap: { scale: 0.9, rotate: -15 },
+  pulse: { scale: [1, 1.2, 1], rotate: [0, 15, -15, 0], transition: { duration: 0.6 } },
+};
+
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [pulse, setPulse] = useState(false);
+  const [cartPulse, setCartPulse] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+
   const { darkMode, setDarkMode } = useContext(DarkModeContext);
   const { isAuthenticated, logout } = useContext(AuthContext);
+  const cartContext = useContext(CartContext);
+  const totalItems = cartContext?.totalItems || 0;
 
-  // Dynamic glass effect styles
   const headerBg =
     "bg-white/20 dark:bg-[#0D3B66]/30 backdrop-blur-xl border border-white/20 dark:border-[#00C2CB]/20 shadow-lg";
   const textColor = darkMode ? "text-white" : "text-[#0D3B66]";
@@ -61,6 +72,18 @@ function Header() {
     }
   }, [pulse]);
 
+  useEffect(() => {
+    if (cartPulse) {
+      const timer = setTimeout(() => setCartPulse(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [cartPulse]);
+
+  const handleCartClick = () => {
+    setCartOpen(true);
+    setCartPulse(true);
+  };
+
   return (
     <>
       <header
@@ -79,17 +102,9 @@ function Header() {
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-2 flex-1 justify-center">
               {navItems.map((item) => (
-                <motion.div
-                  key={item}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
+                <motion.div key={item} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                   <Link
-                    to={
-                      item === "Home"
-                        ? "/"
-                        : `/${item.toLowerCase().replace(" ", "-")}`
-                    }
+                    to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
                     className={`px-4 py-2 rounded-full text-sm font-medium ${hoverGlass}`}
                   >
                     {item}
@@ -100,6 +115,22 @@ function Header() {
 
             {/* Right-side Controls */}
             <div className="hidden md:flex items-center gap-3 relative">
+              {/* Cart Icon */}
+              <motion.button
+                onClick={handleCartClick}
+                variants={cartIconVariants}
+                animate={cartPulse ? "pulse" : "initial"}
+                whileTap="tap"
+                className="relative p-2 rounded-full bg-[#0D3B66] text-white border border-white/20"
+              >
+                <ShoppingCart size={24} />
+                {totalItems > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs text-white font-bold">
+                    {totalItems}
+                  </span>
+                )}
+              </motion.button>
+
               {/* Settings Button */}
               <motion.button
                 variants={settingsButtonVariants}
@@ -126,7 +157,6 @@ function Header() {
                     exit="exit"
                     className="absolute top-12 right-0 w-52 rounded-2xl p-4 space-y-3 bg-white/30 dark:bg-[#0D3B66]/40 backdrop-blur-xl border border-white/20 shadow-xl"
                   >
-                    {/* Dark Mode Toggle */}
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -137,7 +167,6 @@ function Header() {
                       <span>{darkMode ? "Light Mode" : "Dark Mode"}</span>
                     </motion.button>
 
-                    {/* Auth */}
                     {isAuthenticated ? (
                       <motion.button
                         whileHover={{ scale: 1.05 }}
@@ -172,7 +201,22 @@ function Header() {
             </div>
 
             {/* Mobile Toggle */}
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center gap-2">
+              <motion.button
+                onClick={handleCartClick}
+                variants={cartIconVariants}
+                animate={cartPulse ? "pulse" : "initial"}
+                whileTap="tap"
+                className="relative p-2 rounded-full bg-[#0D3B66] text-white border border-white/20"
+              >
+                <ShoppingCart size={24} />
+                {totalItems > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs text-white font-bold">
+                    {totalItems}
+                  </span>
+                )}
+              </motion.button>
+
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className={`p-2 rounded-full ${hoverGlass}`}
@@ -197,63 +241,13 @@ function Header() {
                 {navItems.map((item) => (
                   <Link
                     key={item}
-                    to={
-                      item === "Home"
-                        ? "/"
-                        : `/${item.toLowerCase().replace(" ", "-")}`
-                    }
+                    to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
                     onClick={() => setIsMenuOpen(false)}
                     className={`block px-5 py-2 rounded-full text-sm font-medium ${hoverGlass}`}
                   >
                     {item}
                   </Link>
                 ))}
-
-                {/* Mobile Settings */}
-                <div className="border-t border-white/30 pt-3 space-y-2">
-                  <button
-                    onClick={() => {
-                      setDarkMode(!darkMode);
-                      setIsMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-5 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}
-                  >
-                    {darkMode ? <Moon size={18} /> : <Sun size={18} />}
-                    {darkMode ? "Light Mode" : "Dark Mode"}
-                  </button>
-
-                  {isAuthenticated ? (
-                    <button
-                      onClick={() => {
-                        logout();
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 justify-center px-5 py-2 rounded-full text-sm font-semibold bg-red-600/80 text-white hover:bg-red-700/90"
-                    >
-                      <LogOut size={18} />
-                      Logout
-                    </button>
-                  ) : (
-                    <>
-                      <Link
-                        to="/login"
-                        onClick={() => setIsMenuOpen(false)}
-                        className={`flex items-center gap-3 justify-center w-full px-5 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}
-                      >
-                        <LogIn size={18} />
-                        Login
-                      </Link>
-                      <Link
-                        to="/register"
-                        onClick={() => setIsMenuOpen(false)}
-                        className={`flex items-center gap-3 justify-center w-full px-5 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}
-                      >
-                        <UserPlus size={18} />
-                        Register
-                      </Link>
-                    </>
-                  )}
-                </div>
               </div>
             </motion.div>
           )}
@@ -262,6 +256,9 @@ function Header() {
 
       {/* Spacer */}
       <div className="h-20 w-full"></div>
+
+      {/* Cart Sidebar */}
+      <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
     </>
   );
 }

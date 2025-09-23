@@ -28,6 +28,38 @@ import Labs from "./pages/Labs";
 // Contexts
 export const DarkModeContext = React.createContext();
 export const AuthContext = React.createContext();
+export const CartContext = React.createContext(); // ✅ Add CartContext
+
+// CartProvider Component
+export function CartProvider({ children }) {
+  const [cartItems, setCartItems] = useState([]);
+
+  const addToCart = (item) => {
+    setCartItems((prev) => {
+      const existing = prev.find((i) => i.id === item.id);
+      if (existing) {
+        return prev.map((i) =>
+          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+        );
+      } else {
+        return [...prev, { ...item, quantity: 1 }];
+      }
+    });
+  };
+
+  const removeFromCart = (id) => {
+    setCartItems((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  const totalItems = cartItems.reduce((sum, i) => sum + i.quantity, 0);
+  const totalPrice = cartItems.reduce((sum, i) => sum + (i.price || 0) * i.quantity, 0);
+
+  return (
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, totalItems, totalPrice }}>
+      {children}
+    </CartContext.Provider>
+  );
+}
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -57,42 +89,44 @@ function App() {
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
       <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
-        <HelmetProvider>
-          <Router>
-            <div className="flex flex-col min-h-screen relative">
-              
-              {/* ✅ Pass darkMode to the background animation */}
-              <BloodStreamBackground darkMode={darkMode} />
-              
-              <div className="relative z-10 flex flex-col min-h-screen pointer-events-auto">
-                <Header />
+        <CartProvider> {/* ✅ Wrap app with CartProvider */}
+          <HelmetProvider>
+            <Router>
+              <div className="flex flex-col min-h-screen relative">
+                
+                {/* ✅ Pass darkMode to the background animation */}
+                <BloodStreamBackground darkMode={darkMode} />
+                
+                <div className="relative z-10 flex flex-col min-h-screen pointer-events-auto">
+                  <Header />
 
-                <main className="flex-grow container mx-auto px-4 py-8">
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/medicine-suggestion" element={<MedicineSuggestion />} />
-                    <Route path="/consultation" element={<Consultation />} />
-                    <Route path="/feedback" element={<Feedback />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/labs" element={<Labs />} />
-                    <Route path="/articles" element={<Articles />} />
-                    <Route path="/pharmacy" element={<Pharmacy />} />
-                    <Route path="/news" element={<News />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/emergency" element={<Emergency />} />
-                  </Routes>
-                </main>
+                  <main className="flex-grow container mx-auto px-4 py-8">
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/about" element={<About />} />
+                      <Route path="/medicine-suggestion" element={<MedicineSuggestion />} />
+                      <Route path="/consultation" element={<Consultation />} />
+                      <Route path="/feedback" element={<Feedback />} />
+                      <Route path="/contact" element={<Contact />} />
+                      <Route path="/labs" element={<Labs />} />
+                      <Route path="/articles" element={<Articles />} />
+                      <Route path="/pharmacy" element={<Pharmacy />} />
+                      <Route path="/news" element={<News />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/register" element={<Register />} />
+                      <Route path="/emergency" element={<Emergency />} />
+                    </Routes>
+                  </main>
 
-                <Footer />
+                  <Footer />
+                </div>
+
+                <Chatbot />
+                <GoToTop />
               </div>
-
-              <Chatbot />
-              <GoToTop />
-            </div>
-          </Router>
-        </HelmetProvider>
+            </Router>
+          </HelmetProvider>
+        </CartProvider>
       </DarkModeContext.Provider>
     </AuthContext.Provider>
   );
