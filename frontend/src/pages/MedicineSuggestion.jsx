@@ -660,9 +660,9 @@ Translate the following medical suggestions into ${
     return text;
   };
 
-  const textColor = darkMode ? "text-white" : "text-[#0D3B66]";
-  const bgColor = darkMode ? "bg-gray-900" : "bg-gradient-to-br from-white to-blue-50";
-  const inputBg = darkMode ? "bg-gray-800 text-white border-gray-600" : "bg-white text-[#0D3B66] border-blue-200";
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
+  const bgColor = darkMode ? "bg-[#0A2A43]" : "bg-gradient-to-br from-white to-gray-50";
+  const inputBg = darkMode ? "bg-[#0A2A43]/80 text-[#FDFBFB] border-[#FDFBFB]/50" : "bg-gray-50 text-[#0A3D62] border-gray-200";
 
   return (
     <>
@@ -678,9 +678,9 @@ Translate the following medical suggestions into ${
         />
       </Helmet>
 
-      <div className={`max-w-5xl mx-auto p-6 ${textColor}`}>
+      <div className={`max-w-5xl mx-auto p-6 sm:p-8 ${textColor}`}>
         <motion.h1
-          className="text-4xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0D3B66] to-blue-500"
+          className="text-3xl sm:text-4xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500"
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
@@ -690,7 +690,7 @@ Translate the following medical suggestions into ${
 
         {errorMessage && (
           <motion.div
-            className="mb-6 p-4 bg-red-100 text-red-700 rounded-xl shadow-md"
+            className="mb-6 p-4 rounded-[40px] bg-red-100 text-red-700 shadow-md border border-red-200"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
@@ -701,7 +701,7 @@ Translate the following medical suggestions into ${
 
         <motion.form
           onSubmit={handleSubmit}
-          className={`mb-10 space-y-8 p-8 rounded-2xl shadow-xl ${bgColor}`}
+          className={`mb-10 space-y-8 p-6 sm:p-8 rounded-[40px] shadow-md ${bgColor} border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
@@ -717,7 +717,7 @@ Translate the following medical suggestions into ${
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className={`w-full p-4 border rounded-xl ${inputBg} focus:ring-2 focus:ring-blue-400 transition-all duration-300`}
+                className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`}
                 required
                 aria-required="true"
                 whileFocus={{ scale: 1.02 }}
@@ -733,7 +733,7 @@ Translate the following medical suggestions into ${
                 name="age"
                 value={formData.age}
                 onChange={handleInputChange}
-                className={`w-full p-4 border rounded-xl ${inputBg} focus:ring-2 focus:ring-blue-400 transition-all duration-300`}
+                className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`}
                 required
                 min="0"
                 max="120"
@@ -751,7 +751,7 @@ Translate the following medical suggestions into ${
                   name="gender"
                   value={formData.gender}
                   onChange={handleInputChange}
-                  className={`w-full p-4 border rounded-xl ${inputBg} focus:ring-2 focus:ring-blue-400 transition-all duration-300 appearance-none bg-no-repeat bg-[length:24px] bg-[right_8px_center] ${darkMode ? 'bg-[url(data:image/svg+xml,%3Csvg%20fill%3D%22%23ffffff%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E)]' : 'bg-[url(data:image/svg+xml,%3Csvg%20fill%3D%22%230D3B66%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E)]'}`}
+                  className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300 appearance-none`}
                   required
                   aria-required="true"
                 >
@@ -760,6 +760,7 @@ Translate the following medical suggestions into ${
                   <option value="female">Female</option>
                   <option value="other">Other</option>
                 </motion.select>
+                <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
               </motion.div>
             </div>
             {formData.gender === "female" && (
@@ -776,7 +777,7 @@ Translate the following medical suggestions into ${
                       value="not-pregnant"
                       checked={!isPregnant}
                       onChange={() => setIsPregnant(false)}
-                      className="mr-2 accent-blue-500 w-5 h-5"
+                      className="mr-2 accent-[#0A3D62] w-5 h-5"
                       aria-checked={!isPregnant}
                     />
                     <label htmlFor="not-pregnant" className={textColor}>Not Pregnant</label>
@@ -789,7 +790,7 @@ Translate the following medical suggestions into ${
                       value="pregnant"
                       checked={isPregnant}
                       onChange={() => setIsPregnant(true)}
-                      className="mr-2 accent-blue-500 w-5 h-5"
+                      className="mr-2 accent-[#0A3D62] w-5 h-5"
                       aria-checked={isPregnant}
                     />
                     <label htmlFor="pregnant" className={textColor}>Pregnant</label>
@@ -811,7 +812,7 @@ Translate the following medical suggestions into ${
                       value="not-breastfeeding"
                       checked={!isBreastfeeding}
                       onChange={() => setIsBreastfeeding(false)}
-                      className="mr-2 accent-blue-500 w-5 h-5"
+                      className="mr-2 accent-[#0A3D62] w-5 h-5"
                       aria-checked={!isBreastfeeding}
                     />
                     <label htmlFor="not-breastfeeding" className={textColor}>Not Breastfeeding</label>
@@ -824,7 +825,7 @@ Translate the following medical suggestions into ${
                       value="breastfeeding"
                       checked={isBreastfeeding}
                       onChange={() => setIsBreastfeeding(true)}
-                      className="mr-2 accent-blue-500 w-5 h-5"
+                      className="mr-2 accent-[#0A3D62] w-5 h-5"
                       aria-checked={isBreastfeeding}
                     />
                     <label htmlFor="breastfeeding" className={textColor}>Breastfeeding</label>
@@ -842,7 +843,7 @@ Translate the following medical suggestions into ${
                 name="weight"
                 value={formData.weight}
                 onChange={handleInputChange}
-                className={`w-full p-4 border rounded-xl ${inputBg} focus:ring-2 focus:ring-blue-400 transition-all duration-300`}
+                className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`}
                 required
                 min="1"
                 max="500"
@@ -865,7 +866,7 @@ Translate the following medical suggestions into ${
                 name="height"
                 value={formData.height}
                 onChange={handleInputChange}
-                className={`w-full p-4 border rounded-xl ${inputBg} focus:ring-2 focus:ring-blue-400 transition-all duration-300`}
+                className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`}
                 required
                 min="1"
                 max="300"
@@ -888,7 +889,7 @@ Translate the following medical suggestions into ${
                   name="bloodGroup"
                   value={formData.bloodGroup}
                   onChange={handleInputChange}
-                  className={`w-full p-4 border rounded-xl ${inputBg} focus:ring-2 focus:ring-blue-400 transition-all duration-300 appearance-none bg-no-repeat bg-[length:24px] bg-[right_8px_center] ${darkMode ? 'bg-[url(data:image/svg+xml,%3Csvg%20fill%3D%22%23ffffff%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E)]' : 'bg-[url(data:image/svg+xml,%3Csvg%20fill%3D%22%230D3B66%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E)]'}`}
+                  className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300 appearance-none`}
                   required
                   aria-required="true"
                 >
@@ -902,6 +903,7 @@ Translate the following medical suggestions into ${
                   <option value="O+">O+</option>
                   <option value="O- ">O-</option>
                 </motion.select>
+                <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
               </motion.div>
             </div>
           </div>
@@ -917,7 +919,7 @@ Translate the following medical suggestions into ${
                 value={symptomSearch}
                 onChange={(e) => setSymptomSearch(e.target.value)}
                 placeholder="Type to search symptoms..."
-                className={`w-full p-4 pr-12 border rounded-xl ${inputBg} focus:ring-2 focus:ring-blue-400 transition-all duration-300`}
+                className={`w-full p-4 pr-12 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`}
                 whileFocus={{ scale: 1.02 }}
               />
               <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -927,7 +929,7 @@ Translate the following medical suggestions into ${
             )}
             {symptomSuggestions.length > 0 && (
               <motion.ul
-                className={`relative z-20 mt-2 border rounded-xl ${darkMode ? "bg-gray-800 border-gray-600" : "bg-white border-blue-200"} shadow-lg max-h-60 overflow-y-auto`}
+                className={`relative z-20 mt-2 border rounded-xl shadow-lg max-h-60 overflow-y-auto ${darkMode ? "bg-[#0A2A43]/80 border-[#FDFBFB]/50" : "bg-gray-50 border-gray-200"}`}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
@@ -935,7 +937,7 @@ Translate the following medical suggestions into ${
                 {symptomSuggestions.map((sugg, index) => (
                   <motion.li
                     key={index}
-                    className={`p-3 cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700 ${textColor} transition-all duration-200`}
+                    className={`p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#0A2A43]/70 ${textColor} transition-all duration-200`}
                     onClick={() => addItem(sugg, "symptoms")}
                     whileHover={{ scale: 1.02 }}
                   >
@@ -948,7 +950,7 @@ Translate the following medical suggestions into ${
               {formData.symptoms.map((symp, index) => (
                 <motion.div
                   key={index}
-                  className="bg-blue-100 dark:bg-gray-600 px-3 py-1 rounded-full flex items-center gap-2"
+                  className="bg-gray-100 dark:bg-[#0A2A43]/50 px-3 py-1 rounded-xl flex items-center gap-2 border border-gray-200 dark:border-[#FDFBFB]/50"
                   initial={{ scale: 0.8 }}
                   animate={{ scale: 1 }}
                 >
@@ -970,7 +972,7 @@ Translate the following medical suggestions into ${
                 value={allergySearch}
                 onChange={(e) => setAllergySearch(e.target.value)}
                 placeholder="Type to search allergies..."
-                className={`w-full p-4 pr-12 border rounded-xl ${inputBg} focus:ring-2 focus:ring-blue-400 transition-all duration-300`}
+                className={`w-full p-4 pr-12 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`}
                 whileFocus={{ scale: 1.02 }}
               />
               <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -980,7 +982,7 @@ Translate the following medical suggestions into ${
             )}
             {allergySuggestions.length > 0 && (
               <motion.ul
-                className={`relative z-20 mt-2 border rounded-xl ${darkMode ? "bg-gray-800 border-gray-600" : "bg-white border-blue-200"} shadow-lg max-h-60 overflow-y-auto`}
+                className={`relative z-20 mt-2 border rounded-xl shadow-lg max-h-60 overflow-y-auto ${darkMode ? "bg-[#0A2A43]/80 border-[#FDFBFB]/50" : "bg-gray-50 border-gray-200"}`}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
@@ -988,7 +990,7 @@ Translate the following medical suggestions into ${
                 {allergySuggestions.map((sugg, index) => (
                   <motion.li
                     key={index}
-                    className={`p-3 cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700 ${textColor} transition-all duration-200`}
+                    className={`p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#0A2A43]/70 ${textColor} transition-all duration-200`}
                     onClick={() => addItem(sugg, "allergies")}
                     whileHover={{ scale: 1.02 }}
                   >
@@ -1001,7 +1003,7 @@ Translate the following medical suggestions into ${
               {formData.allergies.map((allg, index) => (
                 <motion.div
                   key={index}
-                  className="bg-blue-100 dark:bg-gray-600 px-3 py-1 rounded-full flex items-center gap-2"
+                  className="bg-gray-100 dark:bg-[#0A2A43]/50 px-3 py-1 rounded-xl flex items-center gap-2 border border-gray-200 dark:border-[#FDFBFB]/50"
                   initial={{ scale: 0.8 }}
                   animate={{ scale: 1 }}
                 >
@@ -1021,7 +1023,7 @@ Translate the following medical suggestions into ${
               name="medicalHistory"
               value={formData.medicalHistory}
               onChange={handleInputChange}
-              className={`w-full p-4 border rounded-xl ${inputBg} focus:ring-2 focus:ring-blue-400 transition-all duration-300`}
+              className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`}
               rows="4"
               whileFocus={{ scale: 1.02 }}
               aria-label="Medical History"
@@ -1036,7 +1038,7 @@ Translate the following medical suggestions into ${
               name="currentMedications"
               value={formData.currentMedications}
               onChange={handleInputChange}
-              className={`w-full p-4 border rounded-xl ${inputBg} focus:ring-2 focus:ring-blue-400 transition-all duration-300`}
+              className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`}
               rows="4"
               whileFocus={{ scale: 1.02 }}
               aria-label="Current Medications"
@@ -1045,9 +1047,9 @@ Translate the following medical suggestions into ${
           <motion.button
             type="submit"
             disabled={loading}
-            className={`w-full mt-6 bg-gradient-to-r from-[#0D3B66] to-blue-500 text-white px-6 py-4 rounded-xl hover:from-blue-600 hover:to-blue-400 transition-all duration-300 disabled:opacity-50 text-lg font-semibold shadow-lg`}
-            whileHover={{ scale: 1.05, boxShadow: "0 8px 25px rgba(0,0,0,0.2)" }}
-            whileTap={{ scale: 0.95 }}
+            className={`w-full mt-6 bg-[#0A3D62] text-[#FDFBFB] px-6 py-4 rounded-xl font-medium hover:bg-[#08253A] hover:shadow-md transition-all duration-300 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
           >
             {loading ? "Fetching Suggestions..." : "Get Personalized Suggestions"}
           </motion.button>
@@ -1056,20 +1058,20 @@ Translate the following medical suggestions into ${
         <AnimatePresence>
           {suggestions && (
             <motion.div
-              className={`mt-10 p-10 rounded-2xl shadow-2xl ${bgColor}`}
+              className={`mt-10 p-6 sm:p-8 rounded-[40px] shadow-md ${bgColor} border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl`}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -30 }}
               transition={{ duration: 0.6 }}
             >
-              <h2 className="text-3xl font-bold mb-8 flex items-center gap-3 bg-clip-text text-transparent bg-gradient-to-r from-[#0D3B66] to-blue-500">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-8 flex items-center gap-3 bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500">
                 <Pill size={28} /> Personalized Suggestions for {formData.name}
               </h2>
               <div className="mb-10">
                 <h3 className="text-xl font-semibold mb-4">Your Provided Information:</h3>
                 <ul className="space-y-3">
                   <motion.li
-                    className={`p-4 rounded-xl ${darkMode ? "bg-gray-800" : "bg-blue-50"} shadow-sm`}
+                    className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
@@ -1077,7 +1079,7 @@ Translate the following medical suggestions into ${
                     <strong>Name:</strong> {formData.name}
                   </motion.li>
                   <motion.li
-                    className={`p-4 rounded-xl ${darkMode ? "bg-gray-800" : "bg-blue-50"} shadow-sm`}
+                    className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 }}
@@ -1085,7 +1087,7 @@ Translate the following medical suggestions into ${
                     <strong>Age:</strong> {formData.age || "Not provided"}
                   </motion.li>
                   <motion.li
-                    className={`p-4 rounded-xl ${darkMode ? "bg-gray-800" : "bg-blue-50"} shadow-sm`}
+                    className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
@@ -1094,7 +1096,7 @@ Translate the following medical suggestions into ${
                   </motion.li>
                   {formData.gender === "female" && (
                     <motion.li
-                      className={`p-4 rounded-xl ${darkMode ? "bg-gray-800" : "bg-blue-50"} shadow-sm`}
+                      className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 }}
@@ -1104,7 +1106,7 @@ Translate the following medical suggestions into ${
                   )}
                   {isPregnant && (
                     <motion.li
-                      className={`p-4 rounded-xl ${darkMode ? "bg-gray-800" : "bg-blue-50"} shadow-sm`}
+                      className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.5 }}
@@ -1113,7 +1115,7 @@ Translate the following medical suggestions into ${
                     </motion.li>
                   )}
                   <motion.li
-                    className={`p-4 rounded-xl ${darkMode ? "bg-gray-800" : "bg-blue-50"} shadow-sm`}
+                    className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.6 }}
@@ -1121,7 +1123,7 @@ Translate the following medical suggestions into ${
                     <strong>Weight:</strong> {formData.weight ? `${formData.weight} kg` : "Not provided"}
                   </motion.li>
                   <motion.li
-                    className={`p-4 rounded-xl ${darkMode ? "bg-gray-800" : "bg-blue-50"} shadow-sm`}
+                    className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.7 }}
@@ -1129,7 +1131,7 @@ Translate the following medical suggestions into ${
                     <strong>Height:</strong> {formData.height ? `${formData.height} cm` : "Not provided"}
                   </motion.li>
                   <motion.li
-                    className={`p-4 rounded-xl ${darkMode ? "bg-gray-800" : "bg-blue-50"} shadow-sm`}
+                    className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.8 }}
@@ -1137,7 +1139,7 @@ Translate the following medical suggestions into ${
                     <strong>Blood Group:</strong> {formData.bloodGroup || "Not provided"}
                   </motion.li>
                   <motion.li
-                    className={`p-4 rounded-xl ${darkMode ? "bg-gray-800" : "bg-blue-50"} shadow-sm`}
+                    className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.9 }}
@@ -1145,7 +1147,7 @@ Translate the following medical suggestions into ${
                     <strong>Symptoms:</strong> {formData.symptoms.length > 0 ? formData.symptoms.join(", ") : "None selected"}
                   </motion.li>
                   <motion.li
-                    className={`p-4 rounded-xl ${darkMode ? "bg-gray-800" : "bg-blue-50"} shadow-sm`}
+                    className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 1.0 }}
@@ -1153,7 +1155,7 @@ Translate the following medical suggestions into ${
                     <strong>Allergies:</strong> {formData.allergies.length > 0 ? formData.allergies.join(", ") : "None selected"}
                   </motion.li>
                   <motion.li
-                    className={`p-4 rounded-xl ${darkMode ? "bg-gray-800" : "bg-blue-50"} shadow-sm`}
+                    className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 1.1 }}
@@ -1161,7 +1163,7 @@ Translate the following medical suggestions into ${
                     <strong>Medical History:</strong> {formData.medicalHistory || "Not provided"}
                   </motion.li>
                   <motion.li
-                    className={`p-4 rounded-xl ${darkMode ? "bg-gray-800" : "bg-blue-50"} shadow-sm`}
+                    className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 1.2 }}
@@ -1171,7 +1173,7 @@ Translate the following medical suggestions into ${
                 </ul>
               </div>
               <div className="flex items-center mb-8 gap-4 flex-wrap">
-                <Globe className="text-blue-500" size={24} />
+                <Globe className="text-[#0A3D62] dark:text-[#FDFBFB]" size={24} />
                 <motion.div
                   className="relative"
                   whileFocus={{ scale: 1.02 }}
@@ -1182,7 +1184,7 @@ Translate the following medical suggestions into ${
                       setSelectedLanguage(e.target.value);
                       handleTranslate();
                     }}
-                    className={`w-48 p-4 pr-10 border rounded-xl ${inputBg} focus:ring-2 focus:ring-blue-400 transition-all duration-300 appearance-none bg-no-repeat bg-[length:24px] bg-[right_8px_center] ${darkMode ? 'bg-[url(data:image/svg+xml,%3Csvg%20fill%3D%22%23ffffff%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E)]' : 'bg-[url(data:image/svg+xml,%3Csvg%20fill%3D%22%230D3B66%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E)]'}`}
+                    className={`w-48 p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300 appearance-none`}
                     aria-label="Select Language"
                   >
                     <option value="" disabled>Select Language</option>
@@ -1192,22 +1194,23 @@ Translate the following medical suggestions into ${
                       </option>
                     ))}
                   </motion.select>
+                  <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
                 </motion.div>
                 <motion.button
                   onClick={handleTranslate}
                   disabled={isTranslating}
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-5 py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 disabled:opacity-50"
+                  className={`bg-[#0A3D62] text-[#FDFBFB] px-5 py-3 rounded-xl font-medium hover:bg-[#08253A] hover:shadow-md transition-all duration-300 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`}
                   whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   {isTranslating ? "Translating..." : "Translate"}
                 </motion.button>
                 <motion.button
                   onClick={() => handleSpeak(getFullText(translatedSuggestions || suggestions))}
                   disabled={isSpeaking}
-                  className="bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-3 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
+                  className={`bg-[#0A3D62] text-[#FDFBFB] px-5 py-3 rounded-xl font-medium hover:bg-[#08253A] hover:shadow-md transition-all duration-300 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] flex items-center gap-2`}
                   whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   <Volume2 size={20} />
                   {isSpeaking ? "Speaking..." : "Listen"}
@@ -1215,9 +1218,9 @@ Translate the following medical suggestions into ${
                 {isSpeaking && (
                   <motion.button
                     onClick={handleCancelSpeak}
-                    className="bg-gradient-to-r from-red-500 to-red-600 text-white px-5 py-3 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center gap-2"
+                    className={`bg-red-500 text-white px-5 py-3 rounded-xl font-medium hover:bg-red-600 hover:shadow-md transition-all duration-300 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-red-500`}
                     whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     <X size={20} />
                     Cancel Listening
@@ -1231,7 +1234,7 @@ Translate the following medical suggestions into ${
                     Reasoning
                   </h3>
                   <motion.p
-                    className={`p-4 rounded-xl ${darkMode ? "bg-green-900" : "bg-green-100"} shadow-sm`}
+                    className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
@@ -1243,7 +1246,7 @@ Translate the following medical suggestions into ${
               {(translatedSuggestions || suggestions)?.otcMedications?.length > 0 && (
                 <div className="space-y-6 mb-10">
                   <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <Pill className="text-blue-500" size={24} />
+                    <Pill className="text-[#0A3D62] dark:text-[#FDFBFB]" size={24} />
                     OTC Medications
                   </h3>
                   {(translatedSuggestions || suggestions).otcMedications.slice(0, 2).map((med, index) => (
@@ -1268,14 +1271,14 @@ Translate the following medical suggestions into ${
               {(translatedSuggestions || suggestions)?.homeRemedies?.length > 0 && (
                 <div className="mb-10">
                   <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <Pill className="text-blue-500" size={24} />
+                    <Pill className="text-[#0A3D62] dark:text-[#FDFBFB]" size={24} />
                     Home Remedies / Lifestyle
                   </h3>
                   <ul className="space-y-3">
                     {(translatedSuggestions || suggestions).homeRemedies.map((remedy, index) => (
                       <motion.li
                         key={index}
-                        className={`p-4 rounded-xl ${darkMode ? "bg-gray-800" : "bg-blue-50"} shadow-sm hover:bg-blue-100 dark:hover:bg-gray-700 transition-all duration-300`}
+                        className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50 hover:bg-gray-100 dark:hover:bg-[#0A2A43]/70 transition-all duration-300`}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
@@ -1296,7 +1299,7 @@ Translate the following medical suggestions into ${
                     {(translatedSuggestions || suggestions).warnings.map((warning, index) => (
                       <motion.li
                         key={index}
-                        className={`p-4 rounded-xl ${darkMode ? "bg-yellow-900" : "bg-yellow-100"} text-yellow-600 dark:text-yellow-400 shadow-sm hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-all duration-300`}
+                        className={`p-4 rounded-xl bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-400 shadow-sm border border-yellow-200 dark:border-yellow-700 hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-all duration-300`}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
@@ -1310,11 +1313,11 @@ Translate the following medical suggestions into ${
               {(translatedSuggestions || suggestions)?.duration && (
                 <div className="mb-10">
                   <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <Clock className="text-purple-500" size={24} />
+                    <Clock className="text-[#0A3D62] dark:text-[#FDFBFB]" size={24} />
                     Duration Guidance
                   </h3>
                   <motion.p
-                    className={`p-4 rounded-xl ${darkMode ? "bg-purple-900" : "bg-purple-100"} shadow-sm`}
+                    className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
@@ -1329,7 +1332,7 @@ Translate the following medical suggestions into ${
                   Doctor Disclaimer
                 </h3>
                 <motion.p
-                  className={`p-4 rounded-xl ${darkMode ? "bg-red-900" : "bg-red-100"} text-red-600 dark:text-red-400 shadow-sm`}
+                  className={`p-4 rounded-xl bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 shadow-sm border border-red-200 dark:border-red-700`}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
@@ -1348,30 +1351,29 @@ Translate the following medical suggestions into ${
 function MedicineCard({ medicine, title }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { darkMode } = useContext(DarkModeContext);
-  const textColor = darkMode ? "text-white" : "text-[#0D3B66]";
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
 
   return (
     <motion.div
-      className={`p-6 rounded-xl shadow-lg ${darkMode ? "bg-gray-800" : "bg-white"} overflow-hidden relative border border-blue-200 dark:border-gray-600`}
+      className={`p-6 rounded-[40px] shadow-md overflow-hidden relative border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl ${darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50"}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#0D3B66] to-blue-500 transform rotate-45 translate-x-12 -translate-y-12 opacity-30"></div>
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#0A3D62] to-blue-500 transform rotate-45 translate-x-12 -translate-y-12 opacity-10"></div>
       <h4 className={`text-xl font-semibold mb-4 ${textColor}`}>{title}</h4>
-      <div className="flex items-start gap-6 mb-4">
-        <motion.img
-          src={medicine.image}
-          alt={medicine?.name}
-          loading="lazy"
-          className="w-32 h-32 object-contain rounded-lg border-2 border-blue-300 shadow-md"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.4 }}
-          onError={(e) => {
-            e.target.src = "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80";
-          }}
-        />
+      <div className="flex flex-col sm:flex-row items-start gap-6 mb-4">
+        <motion.div className="overflow-hidden rounded-[40px]" whileHover={{ scale: 1.05 }}>
+          <img
+            src={medicine.image}
+            alt={medicine?.name}
+            loading="lazy"
+            className="w-32 h-32 object-contain border border-gray-200 dark:border-[#FDFBFB]/50 shadow-md transition-transform duration-300"
+            onError={(e) => {
+              e.target.src = "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80";
+            }}
+          />
+        </motion.div>
         <div className="flex-1">
           <h5 className={`text-lg font-semibold ${textColor}`}>{medicine?.name}</h5>
           <p className={`text-sm ${textColor} opacity-80 mb-2`}>{medicine?.description}</p>
@@ -1409,7 +1411,7 @@ function MedicineCard({ medicine, title }) {
         <p className={`${textColor} text-sm`}>{medicine?.brandNames?.join(", ") || "N/A"}</p>
       </motion.div>
       <motion.button
-        className={`${textColor} hover:text-blue-500 transition-all duration-300 flex items-center text-sm mt-4`}
+        className={`${textColor} hover:text-[#0A3D62] dark:hover:text-[#FDFBFB] transition-all duration-300 flex items-center text-sm mt-4`}
         onClick={() => setIsExpanded(!isExpanded)}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}

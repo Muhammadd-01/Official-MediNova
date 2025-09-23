@@ -1,3 +1,4 @@
+
 import React, { useContext, useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
@@ -9,6 +10,9 @@ import { motion, AnimatePresence } from "framer-motion";
 function SocialShare({ url, title }) {
   const encodedUrl = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(title);
+  const { darkMode } = useContext(DarkModeContext);
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-white";
+  const bgColor = darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50";
 
   return (
     <div className="mt-4 flex gap-2">
@@ -26,15 +30,18 @@ function SocialShare({ url, title }) {
           label: "LinkedIn",
         },
       ].map((item, index) => (
-        <a
+        <motion.a
           key={index}
           href={item.href}
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-[#081F5C] text-white px-3 py-1 rounded-full text-xs hover:bg-[#061640] transition"
+          className={`bg-[#0A3D62] ${textColor} px-4 py-2 rounded-xl text-sm font-medium hover:bg-[#08253A] hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.98 }}
+          aria-label={`Share on ${item.label}`}
         >
           {item.label}
-        </a>
+        </motion.a>
       ))}
     </div>
   );
@@ -53,6 +60,9 @@ function Articles() {
   const [lazyAnimate, setLazyAnimate] = useState(true);
 
   const articlesPerPage = 20;
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
+  const bgColor = darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50";
+  const inputBg = darkMode ? "bg-[#0A2A43]/80 text-[#FDFBFB] border-none" : "bg-gray-50 text-[#0A3D62] border-none";
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -63,10 +73,15 @@ function Articles() {
           (res) => res.json()
         )
       );
-      const results = await Promise.all(requests);
-      const combined = results.flat();
-      setAllArticles(combined);
-      setLoading(false);
+      try {
+        const results = await Promise.all(requests);
+        const combined = results.flat();
+        setAllArticles(combined);
+      } catch (error) {
+        console.error("Error fetching articles:", error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchArticles();
   }, []);
@@ -133,84 +148,133 @@ function Articles() {
           name="description"
           content="Explore trending health articles from Dev.to"
         />
+        <link rel="canonical" href="https://www.MediNova.com/articles" />
       </Helmet>
 
       <div
-        className={`px-4 md:px-10 pt-6 ${
-          darkMode
-            ? "bg-transparent text-[#B8C4F4]"
-            : "bg-gray-50 text-[#081F5C]"
-        }`}
+        className={`max-w-7xl mx-auto p-4 sm:p-6 ${textColor} bg-transparent rounded-[40px] shadow-md transition-all duration-300 hover:shadow-xl border-none outline-none`}
       >
-        <h1 className="text-3xl font-bold mb-6">Health Articles</h1>
+        <motion.h1
+          className="text-3xl sm:text-4xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500"
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
+          Health Articles
+        </motion.h1>
 
         {/* Filters */}
-        <div className="flex flex-col md:flex-row flex-wrap gap-4 mb-6">
+        <motion.div
+          className={`flex flex-col md:flex-row flex-wrap gap-4 mb-8 p-4 sm:p-6 rounded-[40px] ${bgColor} shadow-md hover:shadow-xl transition-all duration-300 border-none outline-none`}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
           {[
             {
               value: authorFilter,
               setter: setAuthorFilter,
               placeholder: "Filter by Author",
               options: uniqueAuthors,
+              ariaLabel: "Filter articles by author",
             },
             {
               value: dateFilter,
               setter: setDateFilter,
               placeholder: "Filter by Date",
               options: uniqueDates,
+              ariaLabel: "Filter articles by date",
             },
             {
               value: tagFilter,
               setter: setTagFilter,
               placeholder: "Filter by Tag",
               options: uniqueTags,
+              ariaLabel: "Filter articles by tag",
             },
           ].map((filter, idx) => (
-            <select
+            <motion.div
               key={idx}
-              className={`p-2 border rounded w-full md:w-1/3 ${
-                darkMode
-                  ? "bg-[#081F5C] text-white border-[#B8C4F4]"
-                  : "bg-white text-[#081F5C]"
-              }`}
-              value={filter.value}
-              onChange={(e) => filter.setter(e.target.value)}
+              className="relative w-full md:w-1/3"
+              whileFocus={{ scale: 1.02 }}
             >
-              <option value="">{filter.placeholder}</option>
-              {filter.options.map((item, index) => (
-                <option key={index} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
+              <motion.select
+                className={`w-full p-3 sm:p-4 rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300 appearance-none`}
+                value={filter.value}
+                onChange={(e) => filter.setter(e.target.value)}
+                aria-label={filter.ariaLabel}
+              >
+                <option value="">{filter.placeholder}</option>
+                {filter.options.map((item, index) => (
+                  <option key={index} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </motion.select>
+              <svg
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+                width="20"
+                height="20"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </motion.div>
           ))}
 
-          <select
-            className={`p-2 border rounded w-full md:w-1/3 ${
-              darkMode
-                ? "bg-[#081F5C] text-white border-[#B8C4F4]"
-                : "bg-white text-[#081F5C]"
-            }`}
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="">Sort Articles</option>
-            <option value="popularity">By Popularity</option>
-          </select>
+          <motion.div className="relative w-full md:w-1/3" whileFocus={{ scale: 1.02 }}>
+            <motion.select
+              className={`w-full p-3 sm:p-4 rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300 appearance-none`}
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              aria-label="Sort articles"
+            >
+              <option value="">Sort Articles</option>
+              <option value="popularity">By Popularity</option>
+            </motion.select>
+            <svg
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+              width="20"
+              height="20"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </motion.div>
 
-          <button
+          <motion.button
             onClick={resetFilters}
-            className="p-2 bg-[#081F5C] text-white rounded hover:bg-[#061640] w-full md:w-auto"
+            className={`w-full md:w-auto bg-[#0A3D62] ${darkMode ? "text-[#FDFBFB]" : "text-white"} px-6 py-3 sm:py-4 rounded-xl font-medium hover:bg-[#08253A] hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+            aria-label="Reset all filters"
           >
             Reset Filters
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10 min-h-[400px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10 min-h-[400px]">
           <AnimatePresence mode="wait">
             {loading ? (
-              <p>Loading...</p>
+              <motion.p
+                className={textColor}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                Loading...
+              </motion.p>
             ) : (
               currentArticles.map((article) => (
                 <motion.div
@@ -218,49 +282,43 @@ function Articles() {
                   layout
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={{ scale: 1.05, shadow: "0 10px 20px rgba(0,0,0,0.1)" }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
-                  className={`transition-transform duration-300 ${
-                    darkMode
-                      ? "bg-[#081F5C] text-white"
-                      : "bg-white text-[#081F5C]"
-                  } p-6 rounded-2xl border ${
-                    darkMode ? "border-[#B8C4F4]" : "border-[#081F5C]"
-                  }`}
+                  className={`p-6 rounded-[40px] ${bgColor} shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-none outline-none`}
                 >
                   {article.cover_image && (
                     <LazyImage
                       src={article.cover_image}
                       alt={article.title}
-                      className="w-full h-48 object-cover mb-4 rounded-xl"
+                      className="w-full h-48 object-cover mb-4 rounded-[40px]"
+                      loading="lazy"
                     />
                   )}
-                  <h2 className="text-xl font-semibold mb-2 line-clamp-2">
+                  <h2 className={`text-xl sm:text-2xl font-semibold mb-2 line-clamp-2 ${textColor}`}>
                     {article.title}
                   </h2>
-                  <p className="mb-4 text-sm line-clamp-3">
+                  <p className={`text-sm line-clamp-3 ${textColor} opacity-80 mb-4`}>
                     {article.description}
                   </p>
-                  <p
-                    className={`text-xs ${
-                      darkMode ? "text-[#B8C4F4]" : "text-[#081F5C]"
-                    } mb-2`}
-                  >
+                  <p className={`text-xs ${textColor} mb-2`}>
                     By {article.user?.name || "Unknown Author"} |{" "}
                     {article.readable_publish_date}
                   </p>
-                  <a
+                  <motion.a
                     href={article.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block mt-2 bg-white text-[#081F5C] px-4 py-2 rounded-full hover:bg-gray-100 text-sm transition duration-300 font-semibold"
+                    className={`inline-block mt-2 bg-[#0A3D62] ${darkMode ? "text-[#FDFBFB]" : "text-white"} px-4 py-2 rounded-xl text-sm font-semibold hover:bg-[#08253A] hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.98 }}
+                    aria-label={`Read more about ${article.title}`}
                   >
                     Read More ↗
-                  </a>
+                  </motion.a>
                   <SocialShare url={article.url} title={article.title} />
                   <div className="mt-4">
-                    <h3 className="font-semibold mb-1 text-sm">Tags:</h3>
+                    <h3 className={`font-semibold mb-1 text-sm ${textColor}`}>Tags:</h3>
                     <div className="flex flex-wrap gap-2">
                       {(Array.isArray(article.tag_list)
                         ? article.tag_list
@@ -269,7 +327,7 @@ function Articles() {
                         <Link
                           key={index}
                           to={`/search?q=${encodeURIComponent(tag)}`}
-                          className="bg-[#E2E8F0] text-[#081F5C] px-2 py-1 rounded-full text-xs hover:bg-[#CBD5E1]"
+                          className={`bg-gray-100 dark:bg-[#0A2A43]/50 px-2 py-1 rounded-xl text-xs ${textColor} hover:bg-gray-200 dark:hover:bg-[#0A2A43]/70 transition-all duration-300`}
                         >
                           #{tag}
                         </Link>
@@ -289,12 +347,13 @@ function Articles() {
             whileHover={{ scale: 1.05 }}
             disabled={page <= 1}
             onClick={() => handlePageChange("prev")}
-            className="bg-gradient-to-r from-[#081F5C] to-[#0B285F] text-white font-semibold px-6 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+            className={`bg-[#0A3D62] ${darkMode ? "text-[#FDFBFB]" : "text-white"} font-semibold px-6 py-3 rounded-xl shadow-md hover:bg-[#08253A] hover:shadow-lg transition-all duration-300 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`}
+            aria-label="Previous page"
           >
             Previous
           </motion.button>
 
-          <span className="text-lg font-medium">
+          <span className={`text-lg font-medium ${textColor}`}>
             Page {page} of {totalPages}
           </span>
 
@@ -303,15 +362,14 @@ function Articles() {
             whileHover={{ scale: 1.05 }}
             disabled={page >= totalPages}
             onClick={() => handlePageChange("next")}
-            className="bg-gradient-to-r from-[#081F5C] to-[#0B285F] text-white font-semibold px-6 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+            className={`bg-[#0A3D62] ${darkMode ? "text-[#FDFBFB]" : "text-white"} font-semibold px-6 py-3 rounded-xl shadow-md hover:bg-[#08253A] hover:shadow-lg transition-all duration-300 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`}
+            aria-label="Next page"
           >
             Next
           </motion.button>
         </div>
 
         <div className="mt-16">
-          {" "}
-          {/* You can adjust mt-16 to mt-20 if needed */}
           <NewsletterSignup />
         </div>
       </div>

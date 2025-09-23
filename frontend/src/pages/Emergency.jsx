@@ -1,6 +1,6 @@
-import { useState, useContext, useEffect, useRef } from "react"
-import { Helmet } from "react-helmet-async"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState, useContext, useEffect, useRef } from "react";
+import { Helmet } from "react-helmet-async";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Phone,
   Ambulance,
@@ -12,35 +12,35 @@ import {
   Search,
   X,
   Satellite,
-} from "lucide-react"
-import { DarkModeContext } from "../App"
-import maplibregl from "maplibre-gl"
-import axios from "axios"
-import "maplibre-gl/dist/maplibre-gl.css"
+} from "lucide-react";
+import { DarkModeContext } from "../App";
+import Header from "../components/Header";
+import maplibregl from "maplibre-gl";
+import axios from "axios";
+import "maplibre-gl/dist/maplibre-gl.css";
 
-const orsApiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjgyNGUwMDBmYzBiNTQxODRiNDczYTIwY2Q3YjIxYWQ2IiwiaCI6Im11cm11cjY0In0="
-const mapboxKey = process.env.REACT_APP_MAPBOX_KEY || "" // Set in .env or replace with your Mapbox API key
+const orsApiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjgyNGUwMDBmYzBiNTQxODRiNDczYTIwY2Q3YjIxYWQ2IiwiaCI6Im11cm11cjY0In0=";
+const mapboxKey = process.env.REACT_APP_MAPBOX_KEY || "";
 
 function EmergencyGuide({ title, steps }) {
-  const [isExpanded, setIsExpanded] = useState(false)
-  const { darkMode } = useContext(DarkModeContext)
+  const [isExpanded, setIsExpanded] = useState(false);
+  const { darkMode } = useContext(DarkModeContext);
+  const cardBg = darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50";
+  const hoverBg = darkMode ? "hover:bg-[#0A2A43]/90" : "hover:bg-gray-100";
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
 
   return (
     <div className="mb-4">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className={`flex justify-between items-center w-full p-4 rounded-lg ${
-          darkMode ? "bg-[#0A2A43] text-[#FDFBFB]" : "bg-red-100 text-[#1E3A8A]"
-        }`}
+        className={`flex justify-between items-center w-full p-4 rounded-[40px] ${cardBg} ${hoverBg} ${textColor} shadow-md transition-all duration-300 border-none outline-none`}
       >
         <h3 className="text-lg font-semibold">{title}</h3>
         {isExpanded ? <ChevronUp /> : <ChevronDown />}
       </button>
       {isExpanded && (
         <ol
-          className={`list-decimal list-inside mt-2 p-4 rounded-lg space-y-1 text-sm ${
-            darkMode ? "bg-[#0A2A43] text-[#FDFBFB]" : "bg-white text-[#1E3A8A]"
-          }`}
+          className={`list-decimal list-inside mt-2 p-4 rounded-[40px] space-y-1 text-sm ${cardBg} ${textColor} shadow-md border-none outline-none`}
         >
           {steps.map((step, i) => (
             <li key={i}>{step}</li>
@@ -48,12 +48,15 @@ function EmergencyGuide({ title, steps }) {
         </ol>
       )}
     </div>
-  )
+  );
 }
 
-const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON, userMarkerRef, setIsMapLoaded, setStyleLoading, destination, routeInfo, setTileLoadStatus }) => {
-  const { darkMode } = useContext(DarkModeContext)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+function MapStyleSwitcher({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON, userMarkerRef, setIsMapLoaded, setStyleLoading, destination, routeInfo, setTileLoadStatus }) {
+  const { darkMode } = useContext(DarkModeContext);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const cardBg = darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50";
+  const hoverBg = darkMode ? "hover:bg-[#0A2A43]/90" : "hover:bg-gray-100";
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
 
   const getMapStyle = (style) => {
     if (style === "satellite") {
@@ -80,10 +83,10 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
             maxzoom: 22,
           },
         ],
-      }
+      };
     }
     if (mapboxKey) {
-      return `https://api.mapbox.com/styles/v1/mapbox/streets-v11?access_token=${mapboxKey}`
+      return `https://api.mapbox.com/styles/v1/mapbox/streets-v11?access_token=${mapboxKey}`;
     }
     return {
       version: 8,
@@ -104,24 +107,24 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
           maxzoom: 22,
         },
       ],
-    }
-  }
+    };
+  };
 
   const handleStyleChange = (newStyle) => {
-    setMapStyle(newStyle)
-    setIsMapLoaded(false)
-    setStyleLoading(true)
-    setTileLoadStatus("loading")
-    setIsMenuOpen(false)
+    setMapStyle(newStyle);
+    setIsMapLoaded(false);
+    setStyleLoading(true);
+    setTileLoadStatus("loading");
+    setIsMenuOpen(false);
     if (mapInstanceRef.current) {
       try {
-        const map = mapInstanceRef.current
-        map.setStyle(getMapStyle(newStyle))
+        const map = mapInstanceRef.current;
+        map.setStyle(getMapStyle(newStyle));
 
         const tileLoadTimeout = setTimeout(() => {
           if (newStyle === "satellite" && (!map.isStyleLoaded() || !map.areTilesLoaded())) {
-            console.warn("Satellite tiles failed to load, switching to Esri World Imagery")
-            setTileLoadStatus("failed")
+            console.warn("Satellite tiles failed to load, switching to Esri World Imagery");
+            setTileLoadStatus("failed");
             map.setStyle({
               version: 8,
               sources: {
@@ -141,33 +144,33 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
                   maxzoom: 22,
                 },
               ],
-            })
-            setIsMapLoaded(true)
-            setStyleLoading(false)
+            });
+            setIsMapLoaded(true);
+            setStyleLoading(false);
           }
-        }, 3000)
+        }, 3000);
 
         map.once("style.load", () => {
-          clearTimeout(tileLoadTimeout)
-          map.setPitch(newStyle === "3d" ? 60 : 0)
+          clearTimeout(tileLoadTimeout);
+          map.setPitch(newStyle === "3d" ? 60 : 0);
           if (newStyle === "3d") {
             map.addSource("maplibre-terrain", {
               type: "raster-dem",
               tiles: ["https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.png"],
               tileSize: 256,
-            })
-            map.setTerrain({ source: "maplibre-terrain", exaggeration: 1.5 })
+            });
+            map.setTerrain({ source: "maplibre-terrain", exaggeration: 1.5 });
           }
-          map.resize()
-          map.triggerRepaint()
-          setIsMapLoaded(true)
-          setStyleLoading(false)
-          setTileLoadStatus(newStyle === "satellite" && map.isStyleLoaded() && map.areTilesLoaded() ? "success" : "failed")
+          map.resize();
+          map.triggerRepaint();
+          setIsMapLoaded(true);
+          setStyleLoading(false);
+          setTileLoadStatus(newStyle === "satellite" && map.isStyleLoaded() && map.areTilesLoaded() ? "success" : "failed");
           if (routeGeoJSON) {
             map.addSource("route", {
               type: "geojson",
               data: routeGeoJSON,
-            })
+            });
             map.addLayer({
               id: "route-line",
               type: "line",
@@ -177,25 +180,25 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
                 "line-width": 5,
                 "line-opacity": 0.8,
               },
-            })
+            });
           }
           if (userMarkerRef.current) {
-            userMarkerRef.current.addTo(map)
+            userMarkerRef.current.addTo(map);
           }
           if (destination && routeInfo) {
             map.easeTo({
               center: destination,
               zoom: 15,
               duration: 1000,
-            })
+            });
           }
-        })
+        });
 
         map.on("error", (e) => {
-          console.error("Map error:", e.error)
+          console.error("Map error:", e.error);
           if (newStyle === "satellite") {
-            console.warn("Satellite tile error, using Esri World Imagery")
-            setTileLoadStatus("failed")
+            console.warn("Satellite tile error, using Esri World Imagery");
+            setTileLoadStatus("failed");
             map.setStyle({
               version: 8,
               sources: {
@@ -215,9 +218,9 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
                   maxzoom: 22,
                 },
               ],
-            })
-            setIsMapLoaded(true)
-            setStyleLoading(false)
+            });
+            setIsMapLoaded(true);
+            setStyleLoading(false);
           } else {
             map.setStyle({
               version: 8,
@@ -238,14 +241,14 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
                   maxzoom: 22,
                 },
               ],
-            })
-            setIsMapLoaded(true)
-            setStyleLoading(false)
-            setTileLoadStatus("failed")
+            });
+            setIsMapLoaded(true);
+            setStyleLoading(false);
+            setTileLoadStatus("failed");
           }
-        })
+        });
       } catch (error) {
-        console.error("Error switching map style:", error)
+        console.error("Error switching map style:", error);
         mapInstanceRef.current.setStyle(
           newStyle === "satellite"
             ? {
@@ -288,28 +291,24 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
                   },
                 ],
               }
-        )
-        setIsMapLoaded(true)
-        setStyleLoading(false)
-        setTileLoadStatus("failed")
+        );
+        setIsMapLoaded(true);
+        setStyleLoading(false);
+        setTileLoadStatus("failed");
       }
     }
-  }
+  };
 
   return (
     <motion.div
-      className={`absolute top-4 left-4 z-10 rounded-full p-1 ${
-        darkMode ? "bg-[#0A2A43]/80" : "bg-white/80"
-      } backdrop-blur-sm shadow-md`}
+      className={`absolute top-4 left-4 z-10 rounded-[40px] p-1 ${cardBg} backdrop-blur-sm shadow-md transition-all duration-300 border-none outline-none`}
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <motion.button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className={`px-3 py-2 rounded-full flex items-center justify-center text-sm font-medium ${
-          darkMode ? "text-[#0A2A43] hover:bg-[#1E3A8A]/50" : "text-[#1E3A8A] hover:bg-[#1E3A8A]/50"
-        }`}
+        className={`px-3 py-2 rounded-xl flex items-center justify-center text-sm font-medium ${textColor} ${hoverBg} focus:ring-2 focus:ring-[#00C2CB]`}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         aria-expanded={isMenuOpen}
@@ -324,9 +323,7 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
       <AnimatePresence>
         {isMenuOpen && (
           <motion.ul
-            className={`absolute top-16 left-4 w-32 rounded-lg shadow-lg overflow-hidden ${
-              darkMode ? "bg-[#0A2A43] border-gray-600" : "bg-white border-gray-300"
-            }`}
+            className={`absolute top-16 left-4 w-32 rounded-[40px] shadow-lg overflow-hidden ${cardBg} ${textColor} border-none outline-none`}
             initial={{ opacity: 0, scaleY: 0, transformOrigin: "top" }}
             animate={{ opacity: 1, scaleY: 1, transformOrigin: "top" }}
             exit={{ opacity: 0, scaleY: 0, transformOrigin: "top" }}
@@ -336,16 +333,8 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
               <motion.li
                 key={style}
                 onClick={() => handleStyleChange(style)}
-                className={`p-3 text-sm font-medium cursor-pointer ${
-                  mapStyle === style
-                    ? darkMode
-                      ? "bg-[#1E3A8A] text-white"
-                      : "bg-[#1E3A8A] text-white"
-                    : darkMode
-                    ? "text-[#0A2A43] hover:bg-[#1E3A8A]/50 hover:text-white"
-                    : "text-[#1E3A8A] hover:bg-[#1E3A8A]/50 hover:text-white"
-                }`}
-                whileHover={{ backgroundColor: darkMode ? "#1E3A8A" : "#F3F4F6" }}
+                className={`p-3 text-sm font-medium cursor-pointer ${mapStyle === style ? "bg-[#00C2CB] text-white" : `${textColor} ${hoverBg}`}`}
+                whileHover={{ backgroundColor: darkMode ? "#00C2CB" : "#E5E7EB" }}
                 role="menuitem"
                 aria-label={`Switch to ${style === "2d" ? "2D" : style === "3d" ? "3D" : "Satellite"} view`}
               >
@@ -356,34 +345,38 @@ const MapStyleSwitcher = ({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
         )}
       </AnimatePresence>
     </motion.div>
-  )
+  );
 }
 
 function Emergency() {
-  const { darkMode } = useContext(DarkModeContext)
-  const mapRef = useRef(null)
-  const mapInstanceRef = useRef(null)
-  const userMarkerRef = useRef(null)
-  const [location, setLocation] = useState(null)
-  const [heading, setHeading] = useState(null)
-  const [hospitals, setHospitals] = useState([])
-  const [routeGeoJSON, setRouteGeoJSON] = useState(null)
-  const [routeInfo, setRouteInfo] = useState(null)
-  const [mapStyle, setMapStyle] = useState("2d")
-  const [destination, setDestination] = useState(null)
-  const [isTracking, setIsTracking] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
-  const [isMapLoaded, setIsMapLoaded] = useState(false)
-  const [styleLoading, setStyleLoading] = useState(false)
-  const [tileLoadStatus, setTileLoadStatus] = useState("loading")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [searchSuggestions, setSearchSuggestions] = useState([])
-  const [isSearchActive, setIsSearchActive] = useState(false)
-  const lastLocationRef = useRef(null)
-  const lastSpokenStepRef = useRef(-1)
-  const lastUpdateTimeRef = useRef(0)
-  const lastDistanceUpdateRef = useRef(0)
-  const lastClosestIndexRef = useRef(0)
+  const { darkMode } = useContext(DarkModeContext);
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const userMarkerRef = useRef(null);
+  const [location, setLocation] = useState(null);
+  const [heading, setHeading] = useState(null);
+  const [hospitals, setHospitals] = useState([]);
+  const [routeGeoJSON, setRouteGeoJSON] = useState(null);
+  const [routeInfo, setRouteInfo] = useState(null);
+  const [mapStyle, setMapStyle] = useState("2d");
+  const [destination, setDestination] = useState(null);
+  const [isTracking, setIsTracking] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [styleLoading, setStyleLoading] = useState(false);
+  const [tileLoadStatus, setTileLoadStatus] = useState("loading");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const lastLocationRef = useRef(null);
+  const lastSpokenStepRef = useRef(-1);
+  const lastUpdateTimeRef = useRef(0);
+  const lastDistanceUpdateRef = useRef(0);
+  const lastClosestIndexRef = useRef(0);
+
+  const cardBg = darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50";
+  const hoverBg = darkMode ? "hover:bg-[#0A2A43]/90" : "hover:bg-gray-100";
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
 
   const emergencyServices = [
     { name: "Edhi Ambulance", phone: "115", icon: Ambulance },
@@ -393,7 +386,7 @@ function Emergency() {
     { name: "Fire Brigade", phone: "16", icon: Phone },
     { name: "Bomb Disposal", phone: "1717", icon: Phone },
     { name: "Poison Control", phone: "(021) 99215718", icon: Phone },
-  ]
+  ];
 
   const emergencyGuides = {
     cpr: {
@@ -426,93 +419,93 @@ function Emergency() {
         "Call emergency services.",
       ],
     },
-  }
+  };
 
   const getDistance = (loc1, loc2) => {
-    const toRad = (x) => (x * Math.PI) / 180
-    const R = 6371e3
-    const lat1 = loc1[1], lon1 = loc1[0], lat2 = loc2[1], lon2 = loc2[0]
-    const dLat = toRad(lat2 - lat1)
-    const dLon = toRad(lon2 - lon1)
+    const toRad = (x) => (x * Math.PI) / 180;
+    const R = 6371e3;
+    const lat1 = loc1[1], lon1 = loc1[0], lat2 = loc2[1], lon2 = loc2[0];
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-    return R * c
-  }
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
   const getBearing = (loc1, loc2) => {
-    const toRad = (x) => (x * Math.PI) / 180
-    const toDeg = (x) => (x * 180) / Math.PI
-    const lat1 = toRad(loc1[1]), lon1 = toRad(loc1[0])
-    const lat2 = toRad(loc2[1]), lon2 = toRad(loc2[0])
-    const dLon = lon2 - lon1
-    const y = Math.sin(dLon) * Math.cos(lat2)
-    const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon)
-    return (toDeg(Math.atan2(y, x)) + 360) % 360
-  }
+    const toRad = (x) => (x * Math.PI) / 180;
+    const toDeg = (x) => (x * 180) / Math.PI;
+    const lat1 = toRad(loc1[1]), lon1 = toRad(loc1[0]);
+    const lat2 = toRad(loc2[1]), lon2 = toRad(loc2[0]);
+    const dLon = lon2 - lon1;
+    const y = Math.sin(dLon) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+    return (toDeg(Math.atan2(y, x)) + 360) % 360;
+  };
 
   const speakDirection = (text) => {
-    if (isMuted) return
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = "en-US"
-    utterance.volume = 1.0
-    window.speechSynthesis.speak(utterance)
-  }
+    if (isMuted) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.volume = 1.0;
+    window.speechSynthesis.speak(utterance);
+  };
 
   const cancelRoute = () => {
-    window.speechSynthesis.cancel()
-    setDestination(null)
-    setRouteGeoJSON(null)
-    setRouteInfo(null)
-    setIsTracking(false)
+    window.speechSynthesis.cancel();
+    setDestination(null);
+    setRouteGeoJSON(null);
+    setRouteInfo(null);
+    setIsTracking(false);
     if (mapInstanceRef.current && mapInstanceRef.current.getSource("route")) {
-      mapInstanceRef.current.removeLayer("route-line")
-      mapInstanceRef.current.removeSource("route")
+      mapInstanceRef.current.removeLayer("route-line");
+      mapInstanceRef.current.removeSource("route");
     }
     if (mapInstanceRef.current && location) {
       mapInstanceRef.current.easeTo({
         center: location,
         zoom: 15,
         duration: 1000,
-      })
+      });
     }
-  }
+  };
 
   useEffect(() => {
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
-        const now = Date.now()
-        if (now - lastUpdateTimeRef.current < 15000) return
-        const { latitude, longitude, heading } = pos.coords
-        const newLocation = [longitude, latitude]
+        const now = Date.now();
+        if (now - lastUpdateTimeRef.current < 15000) return;
+        const { latitude, longitude, heading } = pos.coords;
+        const newLocation = [longitude, latitude];
         if (!lastLocationRef.current || getDistance(lastLocationRef.current, newLocation) > 150) {
-          setLocation(newLocation)
-          if (heading !== null) setHeading(heading)
-          lastLocationRef.current = newLocation
-          lastUpdateTimeRef.current = now
+          setLocation(newLocation);
+          if (heading !== null) setHeading(heading);
+          lastLocationRef.current = newLocation;
+          lastUpdateTimeRef.current = now;
         }
       },
       (err) => {
-        console.error("Geolocation error:", err)
-        alert("Location access denied. Please enable location services.")
+        console.error("Geolocation error:", err);
+        alert("Location access denied. Please enable location services.");
       },
       { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-    )
-    return () => navigator.geolocation.clearWatch(watchId)
-  }, [])
+    );
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, []);
 
   useEffect(() => {
-    if (!location || !mapRef.current) return
+    if (!location || !mapRef.current) return;
 
     const initializeMap = () => {
       if (!mapRef.current || !document.body.contains(mapRef.current)) {
-        console.error("Map container is not available or not in DOM")
-        setIsMapLoaded(false)
-        return
+        console.error("Map container is not available or not in DOM");
+        setIsMapLoaded(false);
+        return;
       }
 
-      let map
+      let map;
       try {
         map = new maplibregl.Map({
           container: mapRef.current,
@@ -568,13 +561,13 @@ function Emergency() {
           pitch: mapStyle === "3d" ? 60 : 0,
           bearing: 0,
           attributionControl: false,
-        })
-        mapInstanceRef.current = map
+        });
+        mapInstanceRef.current = map;
 
         const tileLoadTimeout = setTimeout(() => {
           if (mapStyle === "satellite" && (!map.isStyleLoaded() || !map.areTilesLoaded())) {
-            console.warn("Initial satellite tiles failed to load, switching to Esri World Imagery")
-            setTileLoadStatus("failed")
+            console.warn("Initial satellite tiles failed to load, switching to Esri World Imagery");
+            setTileLoadStatus("failed");
             map.setStyle({
               version: 8,
               sources: {
@@ -594,17 +587,17 @@ function Emergency() {
                   maxzoom: 22,
                 },
               ],
-            })
-            setIsMapLoaded(true)
-            setStyleLoading(false)
+            });
+            setIsMapLoaded(true);
+            setStyleLoading(false);
           }
-        }, 3000)
+        }, 3000);
 
         map.on("error", (e) => {
-          console.error("Map error:", e.error)
+          console.error("Map error:", e.error);
           if (mapStyle === "satellite") {
-            console.warn("Satellite tile error, using Esri World Imagery")
-            setTileLoadStatus("failed")
+            console.warn("Satellite tile error, using Esri World Imagery");
+            setTileLoadStatus("failed");
             map.setStyle({
               version: 8,
               sources: {
@@ -624,9 +617,9 @@ function Emergency() {
                   maxzoom: 22,
                 },
               ],
-            })
-            setIsMapLoaded(true)
-            setStyleLoading(false)
+            });
+            setIsMapLoaded(true);
+            setStyleLoading(false);
           } else {
             map.setStyle({
               version: 8,
@@ -647,74 +640,74 @@ function Emergency() {
                   maxzoom: 22,
                 },
               ],
-            })
-            setIsMapLoaded(true)
-            setStyleLoading(false)
-            setTileLoadStatus("failed")
+            });
+            setIsMapLoaded(true);
+            setStyleLoading(false);
+            setTileLoadStatus("failed");
           }
-        })
+        });
 
         map.on("load", () => {
-          clearTimeout(tileLoadTimeout)
-          setIsMapLoaded(true)
-          setStyleLoading(false)
-          setTileLoadStatus(mapStyle === "satellite" && map.isStyleLoaded() && map.areTilesLoaded() ? "success" : "failed")
-          map.resize()
-          map.triggerRepaint()
+          clearTimeout(tileLoadTimeout);
+          setIsMapLoaded(true);
+          setStyleLoading(false);
+          setTileLoadStatus(mapStyle === "satellite" && map.isStyleLoaded() && map.areTilesLoaded() ? "success" : "failed");
+          map.resize();
+          map.triggerRepaint();
 
           if (mapStyle === "3d") {
             map.addSource("maplibre-terrain", {
               type: "raster-dem",
               tiles: ["https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.png"],
               tileSize: 256,
-            })
-            map.setTerrain({ source: "maplibre-terrain", exaggeration: 1.5 })
+            });
+            map.setTerrain({ source: "maplibre-terrain", exaggeration: 1.5 });
           }
 
-          map.addControl(new maplibregl.NavigationControl(), "top-right")
+          map.addControl(new maplibregl.NavigationControl(), "top-right");
           map.addControl(
             new maplibregl.GeolocateControl({
               positionOptions: { enableHighAccuracy: true },
               trackUserLocation: true,
             })
-          )
+          );
 
           userMarkerRef.current = new maplibregl.Marker({ color: "blue" })
             .setLngLat(location)
             .setPopup(new maplibregl.Popup().setText("You are here"))
-            .addTo(map)
+            .addTo(map);
 
           const fetchHospitals = async () => {
-            const [lon, lat] = location
+            const [lon, lat] = location;
             const query = `
 [out:json][timeout:25];
 (
   node["amenity"="hospital"](around:10000,${lat},${lon});
   node["amenity"="clinic"](around:10000,${lat},${lon});
 );
-out body;`
+out body;`;
             try {
               const res = await fetch("https://overpass-api.de/api/interpreter", {
                 method: "POST",
                 body: query,
-              })
-              if (!res.ok) throw new Error(`HTTP error ${res.status}`)
-              const json = await res.json()
+              });
+              if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+              const json = await res.json();
               const sortedHospitals = json.elements
                 .map(h => ({
                   ...h,
                   distance: getDistance([lon, lat], [h.lon, h.lat])
                 }))
-                .sort((a, b) => a.distance - b.distance)
-              setHospitals(sortedHospitals)
+                .sort((a, b) => a.distance - b.distance);
+              setHospitals(sortedHospitals);
 
               sortedHospitals.forEach((h) => {
-                const el = document.createElement("div")
-                el.className = "hospital-marker"
-                el.style.backgroundColor = "red"
-                el.style.width = "12px"
-                el.style.height = "12px"
-                el.style.borderRadius = "50%"
+                const el = document.createElement("div");
+                el.className = "hospital-marker";
+                el.style.backgroundColor = "red";
+                el.style.width = "12px";
+                el.style.height = "12px";
+                el.style.borderRadius = "50%";
 
                 new maplibregl.Marker(el)
                   .setLngLat([h.lon, h.lat])
@@ -724,22 +717,22 @@ out body;`
                       <button onclick="window.getRoute(${h.lon}, ${h.lat}, '${h.tags.name || "Hospital/Clinic"}')">Lock & Route</button>
                     `)
                   )
-                  .addTo(map)
-              })
+                  .addTo(map);
+              });
 
               window.getRoute = async (lon, lat, name) => {
-                setDestination([lon, lat])
-                setIsTracking(false)
+                setDestination([lon, lat]);
+                setIsTracking(false);
                 if (mapInstanceRef.current) {
                   mapInstanceRef.current.easeTo({
                     center: [lon, lat],
                     zoom: 15,
                     duration: 1000,
-                  })
+                  });
                 }
-                const modes = ["driving-car", "cycling-regular", "foot-walking"]
-                const routeData = {}
-                const directions = {}
+                const modes = ["driving-car", "cycling-regular", "foot-walking"];
+                const routeData = {};
+                const directions = {};
                 for (const mode of modes) {
                   try {
                     const response = await axios.post(
@@ -751,32 +744,32 @@ out body;`
                           "Content-Type": "application/json",
                         },
                       }
-                    )
-                    routeData[mode] = response.data
-                    directions[mode] = response.data.features[0]?.properties.segments[0]?.steps || []
+                    );
+                    routeData[mode] = response.data;
+                    directions[mode] = response.data.features[0]?.properties.segments[0]?.steps || [];
                   } catch (error) {
-                    console.error(`Error fetching ${mode} route:`, error.message)
+                    console.error(`Error fetching ${mode} route:`, error.message);
                   }
                 }
-                setRouteGeoJSON(routeData["driving-car"])
+                setRouteGeoJSON(routeData["driving-car"]);
                 setRouteInfo({
                   name,
                   car: routeData["driving-car"]?.features[0]?.properties.segments[0],
                   bike: routeData["cycling-regular"]?.features[0]?.properties.segments[0],
                   foot: routeData["foot-walking"]?.features[0]?.properties.segments[0],
                   directions,
-                })
-                lastSpokenStepRef.current = -1
-                lastDistanceUpdateRef.current = 0
+                });
+                lastSpokenStepRef.current = -1;
+                lastDistanceUpdateRef.current = 0;
 
                 if (mapInstanceRef.current && routeData["driving-car"]) {
                   if (mapInstanceRef.current.getSource("route")) {
-                    mapInstanceRef.current.getSource("route").setData(routeData["driving-car"])
+                    mapInstanceRef.current.getSource("route").setData(routeData["driving-car"]);
                   } else {
                     mapInstanceRef.current.addSource("route", {
                       type: "geojson",
                       data: routeData["driving-car"],
-                    })
+                    });
                     mapInstanceRef.current.addLayer({
                       id: "route-line",
                       type: "line",
@@ -786,27 +779,27 @@ out body;`
                         "line-width": 5,
                         "line-opacity": 0.8,
                       },
-                    })
+                    });
                   }
                 }
-              }
+              };
             } catch (error) {
-              console.error("Error fetching hospitals:", error)
-              alert("Failed to load hospitals: " + error.message)
+              console.error("Error fetching hospitals:", error);
+              alert("Failed to load hospitals: " + error.message);
             }
-          }
+          };
 
-          fetchHospitals()
+          fetchHospitals();
           if (destination && routeInfo && routeGeoJSON) {
             map.easeTo({
               center: destination,
               zoom: 15,
               duration: 1000,
-            })
+            });
             map.addSource("route", {
               type: "geojson",
               data: routeGeoJSON,
-            })
+            });
             map.addLayer({
               id: "route-line",
               type: "line",
@@ -816,14 +809,14 @@ out body;`
                 "line-width": 5,
                 "line-opacity": 0.8,
               },
-            })
+            });
           }
-        })
+        });
       } catch (error) {
-        console.error("Map initialization error:", error)
-        setIsMapLoaded(true)
-        setStyleLoading(false)
-        setTileLoadStatus("failed")
+        console.error("Map initialization error:", error);
+        setIsMapLoaded(true);
+        setStyleLoading(false);
+        setTileLoadStatus("failed");
         mapInstanceRef.current = new maplibregl.Map({
           container: mapRef.current,
           style: {
@@ -849,79 +842,79 @@ out body;`
           center: location,
           zoom: 15,
           attributionControl: false,
-        })
+        });
       }
-    }
+    };
 
     const observer = new MutationObserver(() => {
       if (mapRef.current && document.body.contains(mapRef.current)) {
-        const timeout = setTimeout(initializeMap, 500)
-        observer.disconnect()
-        return () => clearTimeout(timeout)
+        const timeout = setTimeout(initializeMap, 500);
+        observer.disconnect();
+        return () => clearTimeout(timeout);
       }
-    })
-    observer.observe(document.body, { childList: true, subtree: true })
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove()
-        mapInstanceRef.current = null
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
       }
-      setIsMapLoaded(false)
-      setStyleLoading(false)
-      setTileLoadStatus("loading")
-      observer.disconnect()
-    }
-  }, [location, mapStyle])
+      setIsMapLoaded(false);
+      setStyleLoading(false);
+      setTileLoadStatus("loading");
+      observer.disconnect();
+    };
+  }, [location, mapStyle]);
 
   useEffect(() => {
-    if (!location || !mapInstanceRef.current) return
+    if (!location || !mapInstanceRef.current) return;
 
     if (userMarkerRef.current) {
-      userMarkerRef.current.setLngLat(location)
+      userMarkerRef.current.setLngLat(location);
       if (isTracking) {
-        userMarkerRef.current.remove()
-        const arrowEl = document.createElement("div")
-        arrowEl.style.width = "24px"
-        arrowEl.style.height = "24px"
-        arrowEl.style.backgroundColor = "blue"
-        arrowEl.style.clipPath = "polygon(50% 0%, 100% 100%, 0% 100%)"
-        arrowEl.style.border = "1px solid white"
-        let arrowHeading = heading
+        userMarkerRef.current.remove();
+        const arrowEl = document.createElement("div");
+        arrowEl.style.width = "24px";
+        arrowEl.style.height = "24px";
+        arrowEl.style.backgroundColor = "blue";
+        arrowEl.style.clipPath = "polygon(50% 0%, 100% 100%, 0% 100%)";
+        arrowEl.style.border = "1px solid white";
+        let arrowHeading = heading;
         if (arrowHeading === null && routeGeoJSON && routeGeoJSON.features[0].geometry.coordinates.length > 1) {
-          const nextPoint = routeGeoJSON.features[0].geometry.coordinates[1]
-          arrowHeading = getBearing(location, nextPoint)
+          const nextPoint = routeGeoJSON.features[0].geometry.coordinates[1];
+          arrowHeading = getBearing(location, nextPoint);
         }
         if (arrowHeading !== null) {
-          arrowEl.style.transform = `rotate(${arrowHeading}deg)`
+          arrowEl.style.transform = `rotate(${arrowHeading}deg)`;
         }
         userMarkerRef.current = new maplibregl.Marker(arrowEl)
           .setLngLat(location)
-          .addTo(mapInstanceRef.current)
+          .addTo(mapInstanceRef.current);
       } else if (!isTracking && userMarkerRef.current.getElement().style.clipPath) {
-        userMarkerRef.current.remove()
+        userMarkerRef.current.remove();
         userMarkerRef.current = new maplibregl.Marker({ color: "blue" })
           .setLngLat(location)
           .setPopup(new maplibregl.Popup().setText("You are here"))
-          .addTo(mapInstanceRef.current)
+          .addTo(mapInstanceRef.current);
       }
     }
 
-    if (!destination) return
+    if (!destination) return;
 
-    const distanceToDest = getDistance(location, destination)
+    const distanceToDest = getDistance(location, destination);
     if (distanceToDest < 50) {
-      speakDirection("You have arrived at your destination.")
-      window.speechSynthesis.cancel()
-      setDestination(null)
-      setRouteGeoJSON(null)
-      setRouteInfo(null)
-      setIsTracking(false)
+      speakDirection("You have arrived at your destination.");
+      window.speechSynthesis.cancel();
+      setDestination(null);
+      setRouteGeoJSON(null);
+      setRouteInfo(null);
+      setIsTracking(false);
       if (mapInstanceRef.current.getSource("route")) {
-        mapInstanceRef.current.removeLayer("route-line")
-        mapInstanceRef.current.removeSource("route")
+        mapInstanceRef.current.removeLayer("route-line");
+        mapInstanceRef.current.removeSource("route");
       }
-      return
+      return;
     }
 
     if (isTracking) {
@@ -929,30 +922,30 @@ out body;`
         center: location,
         zoom: 16,
         duration: 1000,
-      })
+      });
 
-      window.getRoute(destination[0], destination[1], routeInfo?.name || "Hospital/Clinic")
+      window.getRoute(destination[0], destination[1], routeInfo?.name || "Hospital/Clinic");
 
-      const now = Date.now()
+      const now = Date.now();
       if (now - lastDistanceUpdateRef.current > 30000) {
-        const distanceKm = (distanceToDest / 1000).toFixed(2)
-        speakDirection(`${distanceKm} kilometers to your destination.`)
-        lastDistanceUpdateRef.current = now
+        const distanceKm = (distanceToDest / 1000).toFixed(2);
+        speakDirection(`${distanceKm} kilometers to your destination.`);
+        lastDistanceUpdateRef.current = now;
       }
 
       if (routeGeoJSON && routeGeoJSON.features[0].geometry.coordinates.length > 1) {
-        const coords = routeGeoJSON.features[0].geometry.coordinates
-        let closestIndex = 0
-        let minDistance = getDistance(location, coords[0])
+        const coords = routeGeoJSON.features[0].geometry.coordinates;
+        let closestIndex = 0;
+        let minDistance = getDistance(location, coords[0]);
         for (let i = 1; i < coords.length; i++) {
-          const dist = getDistance(location, coords[i])
+          const dist = getDistance(location, coords[i]);
           if (dist < minDistance) {
-            minDistance = dist
-            closestIndex = i
+            minDistance = dist;
+            closestIndex = i;
           }
         }
         if (Math.abs(closestIndex - lastClosestIndexRef.current) > 2) {
-          const trimmedCoords = coords.slice(closestIndex)
+          const trimmedCoords = coords.slice(closestIndex);
           const trimmedGeoJSON = {
             ...routeGeoJSON,
             features: [
@@ -964,65 +957,68 @@ out body;`
                 },
               },
             ],
-          }
+          };
           if (mapInstanceRef.current.getSource("route")) {
-            mapInstanceRef.current.getSource("route").setData(trimmedGeoJSON)
+            mapInstanceRef.current.getSource("route").setData(trimmedGeoJSON);
           }
-          lastClosestIndexRef.current = closestIndex
+          lastClosestIndexRef.current = closestIndex;
         }
       }
 
       if (routeInfo?.directions?.["driving-car"] && !isMuted) {
-        const steps = routeInfo.directions["driving-car"]
+        const steps = routeInfo.directions["driving-car"];
         steps.forEach((step, index) => {
-          if (index <= lastSpokenStepRef.current) return
-          const stepCoord = routeGeoJSON.features[0].geometry.coordinates[step.way_points[0]]
-          const distance = getDistance(location, stepCoord)
+          if (index <= lastSpokenStepRef.current) return;
+          const stepCoord = routeGeoJSON.features[0].geometry.coordinates[step.way_points[0]];
+          const distance = getDistance(location, stepCoord);
           if (distance < 150) {
-            speakDirection(step.instruction)
-            lastSpokenStepRef.current = index
+            speakDirection(step.instruction);
+            lastSpokenStepRef.current = index;
           }
-        })
+        });
       }
     }
-  }, [location, heading, isTracking, destination, routeInfo, routeGeoJSON])
+  }, [location, heading, isTracking, destination, routeInfo, routeGeoJSON]);
 
   useEffect(() => {
     if (!searchQuery) {
-      setSearchSuggestions([])
-      return
+      setSearchSuggestions([]);
+      return;
     }
     const filtered = hospitals
       .filter(h => 
         (h.tags.name || "Hospital/Clinic").toLowerCase().includes(searchQuery.toLowerCase())
       )
-      .slice(0, 5)
-    setSearchSuggestions(filtered)
-  }, [searchQuery, hospitals])
+      .slice(0, 5);
+    setSearchSuggestions(filtered);
+  }, [searchQuery, hospitals]);
 
   const handleSearchSelect = (lon, lat, name) => {
-    setSearchQuery("")
-    setSearchSuggestions([])
-    setIsSearchActive(false)
+    setSearchQuery("");
+    setSearchSuggestions([]);
+    setIsSearchActive(false);
     if (mapInstanceRef.current) {
       mapInstanceRef.current.easeTo({
         center: [lon, lat],
         zoom: 15,
         duration: 1000,
-      })
+      });
     }
-    window.getRoute(lon, lat, name)
-  }
+    window.getRoute(lon, lat, name);
+  };
 
   return (
     <>
+      <Header />
       <Helmet>
         <title>Emergency Services - MediCare</title>
         <meta name="description" content="Emergency guides & live map with nearby hospitals/clinics." />
       </Helmet>
 
-      <div className={`max-w-5xl mx-auto px-4 py-8 ${darkMode ? "text-[#FDFBFB]" : "text-[#1E3A8A]"}`}>
-        <motion.h1 className="text-3xl font-bold mb-6 text-center">Emergency Services</motion.h1>
+      <div className={`max-w-5xl mx-auto px-4 py-8 ${textColor} bg-transparent rounded-[40px] shadow-md transition-all duration-300 border-none outline-none`}>
+        <motion.h1 className="text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500">
+          Emergency Services
+        </motion.h1>
 
         <motion.p className="text-xl mb-8 text-center">
           Call emergency numbers. Use guides & location map below.
@@ -1032,9 +1028,7 @@ out body;`
           {emergencyServices.map((s) => (
             <motion.div
               key={s.name}
-              className={`p-6 rounded-lg shadow-md text-center ${
-                darkMode ? "bg-[#0A2A43] text-[#FDFBFB]" : "bg-white text-[#1E3A8A]"
-              }`}
+              className={`p-6 rounded-[40px] shadow-md text-center ${cardBg} ${hoverBg} ${textColor} transition-all duration-300 overflow-hidden border-none outline-none`}
             >
               <s.icon className="w-12 h-12 mx-auto mb-4" />
               <h2 className="text-xl font-semibold mb-2">{s.name}</h2>
@@ -1056,16 +1050,14 @@ out body;`
           <h2 className="text-2xl mb-4 text-center">Nearby Hospitals & Clinics</h2>
           <div className="relative mb-4 sticky top-0 z-20" role="search">
             <motion.div
-              className={`flex items-center rounded-full overflow-hidden ${
-                darkMode ? "bg-[#0A2A43]/80" : "bg-white/80"
-              } backdrop-blur-sm shadow-md`}
+              className={`flex items-center rounded-[40px] overflow-hidden ${cardBg} backdrop-blur-sm shadow-md border-none outline-none`}
               initial={{ width: isSearchActive ? "100%" : 40 }}
               animate={{ width: isSearchActive ? "100%" : 40 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <motion.button
                 onClick={() => setIsSearchActive(!isSearchActive)}
-                className="p-3"
+                className={`p-3 rounded-xl ${hoverBg} ${textColor} focus:ring-2 focus:ring-[#00C2CB]`}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 aria-label={isSearchActive ? "Close search" : "Open search"}
@@ -1084,9 +1076,7 @@ out body;`
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search hospitals or clinics..."
-                    className={`flex-1 p-3 bg-transparent focus:outline-none ${
-                      darkMode ? "text-[#FDFBFB] placeholder-gray-400" : "text-[#1E3A8A] placeholder-gray-500"
-                    }`}
+                    className={`flex-1 p-3 bg-transparent focus:outline-none rounded-xl border-none ${textColor} placeholder-gray-400 focus:ring-2 focus:ring-[#00C2CB]`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
@@ -1100,9 +1090,7 @@ out body;`
               {searchSuggestions.length > 0 && isSearchActive && (
                 <motion.ul
                   key="search-suggestions"
-                  className={`absolute z-10 w-full mt-1 rounded-lg shadow-lg overflow-hidden ${
-                    darkMode ? "bg-[#0A2A43] text-[#0A2A43] border-gray-600" : "bg-white text-[#1E3A8A] border-gray-300"
-                  }`}
+                  className={`absolute z-10 w-full mt-1 rounded-[40px] shadow-lg overflow-hidden ${cardBg} ${textColor} border-none outline-none`}
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
@@ -1112,10 +1100,8 @@ out body;`
                     <motion.li
                       key={h.id}
                       onClick={() => handleSearchSelect(h.lon, h.lat, h.tags.name || "Hospital/Clinic")}
-                      className={`p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer ${
-                        darkMode ? "text-[#0A2A43]" : "text-[#1E3A8A]"
-                      }`}
-                      whileHover={{ backgroundColor: darkMode ? "#1E3A8A" : "#F3F4F6" }}
+                      className={`p-3 cursor-pointer ${hoverBg} ${textColor}`}
+                      whileHover={{ backgroundColor: darkMode ? "#00C2CB" : "#E5E7EB" }}
                     >
                       {h.tags.name || "Hospital/Clinic"} ({(h.distance / 1000).toFixed(2)} km)
                     </motion.li>
@@ -1126,18 +1112,18 @@ out body;`
           </div>
           <div
             ref={mapRef}
-            className="h-[600px] w-full min-h-[600px] max-w-full rounded-lg shadow-lg bg-gray-200 dark:bg-gray-800 relative z-0 overflow-hidden"
+            className={`h-[600px] w-full min-h-[600px] max-w-full rounded-[40px] shadow-lg bg-gray-200 dark:bg-gray-800 relative z-0 overflow-hidden border-none outline-none`}
           >
             {!isMapLoaded && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-800">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#1E3A8A]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#00C2CB]"></div>
                 {styleLoading && (
-                  <p className={`mt-4 ${darkMode ? "text-[#FDFBFB]" : "text-[#1E3A8A]"}`}>Switching style...</p>
+                  <p className={`mt-4 ${textColor}`}>Switching style...</p>
                 )}
               </div>
             )}
             {tileLoadStatus === "failed" && mapStyle === "satellite" && (
-              <div className={`absolute top-4 right-4 z-10 p-2 rounded-lg bg-red-600 text-white`}>
+              <div className={`absolute top-4 right-4 z-10 p-2 rounded-[40px] bg-red-600 ${darkMode ? "text-[#FDFBFB]" : "text-white"} border-none outline-none`}>
                 Failed to load satellite imagery, using fallback
               </div>
             )}
@@ -1155,7 +1141,7 @@ out body;`
             />
           </div>
           {routeInfo && (
-            <div className={`mt-4 text-center ${darkMode ? "text-[#0A2A43]" : "text-[#1E3A8A]"}`}>
+            <div className={`mt-4 p-6 rounded-[40px] shadow-md ${cardBg} ${textColor} border-none outline-none`}>
               <p><strong>Route to {routeInfo.name}</strong></p>
               <p>Car: {(routeInfo.car?.distance / 1000).toFixed(2)} km, {Math.round(routeInfo.car?.duration / 60)} min</p>
               <p>Bike: {(routeInfo.bike?.distance / 1000).toFixed(2)} km, {Math.round(routeInfo.bike?.duration / 60)} min</p>
@@ -1163,26 +1149,20 @@ out body;`
               <div className="mt-2 flex justify-center space-x-4">
                 <button
                   onClick={() => setIsTracking(!isTracking)}
-                  className={`px-4 py-2 rounded-lg ${
-                    darkMode ? "bg-[#1E3A8A] text-[#FDFBFB]" : "bg-[#1E3A8A] text-white"
-                  } hover:bg-opacity-80`}
+                  className={`px-4 py-2 rounded-xl ${darkMode ? "bg-[#00C2CB] text-[#FDFBFB]" : "bg-[#00C2CB] text-white"} hover:bg-[#0097A7] focus:ring-2 focus:ring-[#00C2CB]`}
                 >
                   {isTracking ? "Stop Tracking" : "Start Tracking"}
                 </button>
                 <button
                   onClick={() => setIsMuted(!isMuted)}
-                  className={`px-4 py-2 rounded-lg ${
-                    darkMode ? "bg-[#1E3A8A] text-[#FDFBFB]" : "bg-[#1E3A8A] text-white"
-                  } hover:bg-opacity-80`}
+                  className={`px-4 py-2 rounded-xl ${darkMode ? "bg-[#00C2CB] text-[#FDFBFB]" : "bg-[#00C2CB] text-white"} hover:bg-[#0097A7] focus:ring-2 focus:ring-[#00C2CB]`}
                 >
                   {isMuted ? <VolumeX className="inline mr-2" /> : <Volume2 className="inline mr-2" />}
                   {isMuted ? "Unmute Voice" : "Mute Voice"}
                 </button>
                 <button
                   onClick={cancelRoute}
-                  className={`px-4 py-2 rounded-lg ${
-                    darkMode ? "bg-red-600 text-[#FDFBFB]" : "bg-red-600 text-white"
-                  } hover:bg-opacity-80`}
+                  className={`px-4 py-2 rounded-xl bg-red-600 ${darkMode ? "text-[#FDFBFB]" : "text-white"} hover:bg-red-700 focus:ring-2 focus:ring-red-500`}
                 >
                   Cancel Route
                 </button>
@@ -1200,11 +1180,7 @@ out body;`
         </motion.div>
       </div>
     </>
-  )
+  );
 }
 
-
-
-
-
-export default Emergency
+export default Emergency;
