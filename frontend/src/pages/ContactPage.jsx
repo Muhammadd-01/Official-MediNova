@@ -1,85 +1,109 @@
-import React, { useState, useContext } from "react";
-import { Helmet } from "react-helmet-async";
-import { DarkModeContext } from "../App";
+"use client";
 
-function ContactPage() {
-  const [feedback, setFeedback] = useState("");
-  const { darkMode } = useContext(DarkModeContext);
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Mail, User, MessageSquare } from "lucide-react"; // optional icons
+
+export default function Contact() {
+  const [form, setForm] = useState({ name: "", email: "", message: "" });
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert("Thank you for your feedback!");
-    setFeedback("");
+    console.log("Form submitted:", form);
   };
 
   return (
-    <>
-      <Helmet>
-        <title>Contact Us - MediNova</title>
-        <meta
-          name="description"
-          content="Get in touch with MediNova. We'd love to hear your feedback and help you with any queries."
-        />
-        <link rel="canonical" href="https://www.MediNova.com/contact" />
-        <meta property="og:title" content="Contact Us - MediNova" />
-        <meta
-          property="og:description"
-          content="Get in touch with MediNova. We'd love to hear from you."
-        />
-        <meta property="og:url" content="https://www.MediNova.com/contact" />
-        <meta property="og:type" content="website" />
-      </Helmet>
+    <div className="min-h-screen flex items-center justify-center px-6 py-12 
+      bg-gradient-to-br from-[#0A2A43] to-[#081F5C] text-[#FDFBFB] transition-colors duration-500">
 
-      <div className="min-h-screen flex items-center justify-center py-16 px-4">
-        <div
-          className={`w-full max-w-2xl rounded-3xl shadow-lg p-10 transition duration-300 ease-in-out ${
-            darkMode ? "bg-white" : "bg-[#0A2A43]"
-          }`}
-        >
-          <h1
-            className={`text-3xl font-bold mb-6 text-center ${
-              darkMode ? "text-[#0D3B66]" : "text-[#FDFBFB]"
-            }`}
-          >
-            Contact Us
-          </h1>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label
-                htmlFor="feedback"
-                className={`block mb-2 font-semibold ${
-                  darkMode ? "text-[#0D3B66]" : "text-[#FDFBFB]"
-                }`}
-              >
-                Your Feedback:
-              </label>
-              <textarea
-                id="feedback"
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                rows="6"
-                placeholder="Write your feedback here..."
-                className={`w-full p-4 rounded-2xl text-sm resize-none focus:outline-none focus:ring-2 ${
-                  darkMode
-                    ? "bg-white border border-gray-300 text-gray-800 placeholder-gray-500 focus:ring-[#0D3B66]"
-                    : "bg-[#0A2A43] border border-[#274f6d] text-[#FDFBFB] placeholder-gray-400 focus:ring-[#00C2CB]"
-                }`}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3 px-4 bg-[#00C2CB] text-white font-semibold rounded-xl hover:bg-[#00b3ba] transition-all"
-            >
-              Submit Feedback
-            </button>
-          </form>
+      {/* Main Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-4xl grid md:grid-cols-2 gap-8 
+        bg-[#0A2A43] rounded-3xl shadow-2xl overflow-hidden p-8"
+      >
+        {/* Left Side - Info */}
+        <div className="flex flex-col justify-center space-y-6">
+          <h1 className="text-4xl font-bold">Contact Us</h1>
+          <p className="text-gray-300">
+            We’d love to hear from you 💬 Whether you have a question, feedback, 
+            or just want to say hi — drop us a message and we’ll get back to you.
+          </p>
+          <div className="space-y-3">
+            <p className="flex items-center gap-2 text-sm">
+              <Mail className="w-5 h-5 text-blue-400" /> support@medinova.com
+            </p>
+            <p className="flex items-center gap-2 text-sm">
+              📍 Lahore, Pakistan
+            </p>
+          </div>
         </div>
-      </div>
-    </>
+
+        {/* Right Side - Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Name */}
+          <div className="bg-[#081F5C] rounded-xl p-3 shadow-inner flex items-center gap-3">
+            <User className="w-5 h-5 text-blue-400" />
+            <input
+              type="text"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              className="w-full bg-transparent border-none focus:ring-0 
+              text-white placeholder-gray-400"
+              placeholder="Enter your name"
+              required
+            />
+          </div>
+
+          {/* Email */}
+          <div className="bg-[#081F5C] rounded-xl p-3 shadow-inner flex items-center gap-3">
+            <Mail className="w-5 h-5 text-blue-400" />
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              className="w-full bg-transparent border-none focus:ring-0 
+              text-white placeholder-gray-400"
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+
+          {/* Message */}
+          <div className="bg-[#081F5C] rounded-xl p-3 shadow-inner flex items-start gap-3">
+            <MessageSquare className="w-5 h-5 text-blue-400 mt-1" />
+            <textarea
+              name="message"
+              rows="4"
+              value={form.message}
+              onChange={handleChange}
+              className="w-full bg-transparent border-none focus:ring-0 
+              text-white placeholder-gray-400 resize-none"
+              placeholder="Write your message..."
+              required
+            ></textarea>
+          </div>
+
+          {/* Button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            type="submit"
+            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 
+            transition-colors font-semibold text-white shadow-md"
+          >
+            Send Message
+          </motion.button>
+        </form>
+      </motion.div>
+    </div>
   );
 }
-
-export default ContactPage;
