@@ -138,70 +138,105 @@ function Home() {
             <HealthTips />
           </motion.div>
 
-          {/* Why MediNova */}
-          <motion.div
-            className={`rounded-[40px] p-8 backdrop-blur-2xl ${cardBg} mb-16 transition-all duration-500`}
-            {...fadeInUp}
-          >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center">
-              Why Choose MediNova?
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                {
-                  title: "Expert Medical Advice",
-                  description:
-                    "All content is reviewed by qualified healthcare providers following WHO and CDC guidelines.",
-                },
-                {
-                  title: "Personalized Care",
-                  description:
-                    "Get treatment paths based on AI + doctor-reviewed diagnostics tailored to your symptoms and history.",
-                },
-                {
-                  title: "24/7 Accessibility",
-                  description:
-                    "Use MediNova anytime from home or travel — all services are mobile-optimized and secure.",
-                },
-                {
-                  title: "E-Prescription Support",
-                  description:
-                    "Doctors can issue digital prescriptions that can be filled from our verified pharmacy partners.",
-                },
-              ].map((item, index) => (
-                <motion.div
-                  key={item.title}
-                  className={`p-6 rounded-2xl backdrop-blur-2xl ${cardBg} transition-all duration-500`}
-                  whileHover={{ scale: 1.01 }}
-                  {...fadeInUp}
-                  transition={{ delay: 0.1 * (index + 1) }}
-                >
-                  <h3 className="text-lg sm:text-xl font-semibold mb-3">
-                    {item.title}
-                  </h3>
-                  <p className="text-sm sm:text-base">{item.description}</p>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+         {/* Why MediNova */}
+<motion.div
+  className="mb-16"
+  initial={{ opacity: 0, y: 30 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6, ease: "easeOut" }}
+  role="region"
+  aria-label="Why Choose MediNova Section"
+>
+  <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center tracking-wide">
+    Why Choose MediNova?
+  </h2>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {[
+      {
+        title: "Expert Medical Advice",
+        description:
+          "All content is reviewed by qualified healthcare providers following WHO and CDC guidelines.",
+      },
+      {
+        title: "Personalized Care",
+        description:
+          "Get treatment paths based on AI + doctor-reviewed diagnostics tailored to your symptoms and history.",
+      },
+      {
+        title: "24/7 Accessibility",
+        description:
+          "Use MediNova anytime from home or travel — all services are mobile-optimized and secure.",
+      },
+      {
+        title: "E-Prescription Support",
+        description:
+          "Doctors can issue digital prescriptions that can be filled from our verified pharmacy partners.",
+      },
+    ].map((item, index) => (
+      <motion.div
+        key={item.title}
+        className={`flex flex-col p-6 rounded-3xl ${
+          darkMode
+            ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB] hover:bg-[#0A2A43]/50"
+            : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62] hover:bg-white/50"
+        } backdrop-blur-2xl transition-all duration-500`}
+        initial={{ opacity: 0, x: -40 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: index * 0.1 }}
+        whileHover={{ scale: 1.02 }}
+      >
+        <h3 className="text-lg sm:text-xl font-semibold mb-3">{item.title}</h3>
+        <p className="text-sm sm:text-base leading-relaxed">{item.description}</p>
+      </motion.div>
+    ))}
+  </div>
+</motion.div>
 
           {/* Trust Section */}
-          <motion.div
-            className={`rounded-[40px] p-8 backdrop-blur-2xl ${cardBg} mb-16 transition-all duration-500`}
-            {...fadeInUp}
-          >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center">
-              Trusted by Healthcare Professionals
-            </h2>
-            <p className="text-base sm:text-lg text-center mb-4">
-              Used by 1,200+ licensed practitioners and recommended by 40+
-              clinics nationwide.
-            </p>
-            <p className="text-sm sm:text-md text-center">
-              MediNova complies with HIPAA, HIMS-Pakistan, and ICD-11 medical
-              data standards.
-            </p>
-          </motion.div>
+<motion.div
+  className="mb-16"
+  initial={{ opacity: 0, y: 30 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6, ease: "easeOut" }}
+  role="region"
+  aria-label="Trusted by Healthcare Professionals Section"
+>
+  <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center tracking-wide">
+    Trusted by Healthcare Professionals
+  </h2>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {[
+      {
+        title: "Used by 1,200+ licensed practitioners",
+        description:
+          "Recommended by 40+ clinics nationwide.",
+      },
+      {
+        title: "Compliant with medical standards",
+        description:
+          "MediNova complies with HIPAA, HIMS-Pakistan, and ICD-11 medical data standards.",
+      },
+    ].map((item, index) => (
+      <motion.div
+        key={item.title}
+        className={`flex flex-col p-6 rounded-3xl ${
+          darkMode
+            ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB] hover:bg-[#0A2A43]/50"
+            : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62] hover:bg-white/50"
+        } backdrop-blur-2xl transition-all duration-500`}
+        initial={{ opacity: 0, x: -40 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: index * 0.1 }}
+        whileHover={{ scale: 1.02 }}
+      >
+        <h3 className="text-lg sm:text-xl font-semibold mb-3">{item.title}</h3>
+        <p className="text-sm sm:text-base leading-relaxed">{item.description}</p>
+      </motion.div>
+    ))}
+  </div>
+</motion.div>
+
 
           {/* Sponsors */}
           <motion.div

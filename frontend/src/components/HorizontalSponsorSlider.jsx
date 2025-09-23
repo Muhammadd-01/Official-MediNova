@@ -4,6 +4,7 @@ import { useState, useEffect, useContext } from "react";
 import { motion } from "framer-motion";
 import { DarkModeContext } from "../App";
 
+// Updated medical company logos (high-quality, transparent PNGs if possible)
 const sponsors = [
   {
     name: "Johnson & Johnson",
@@ -37,15 +38,18 @@ const HorizontalSponsorSlider = () => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentIndex(prev => (prev + 1) % sponsors.length);
+      setCurrentIndex((prev) => (prev + 1) % sponsors.length);
     }, 3000);
     return () => clearInterval(timer);
   }, []);
 
-  const logoWrapperBg = darkMode ? "bg-[#0A2A43]" : "bg-[#FDFBFB]";
-  const borderColor = darkMode
-    ? "border border-[#FDFBFB]/20"
-    : "border border-[#0A2A43]/10";
+  // Base and hover glass styles for inner circles
+  const baseGlass = darkMode
+    ? "bg-[#0A2A43]/30 border border-white/20"
+    : "bg-white/30 border border-[#0A3D62]/20";
+  const hoverGlass = darkMode
+    ? "hover:bg-[#0A2A43]/50"
+    : "hover:bg-white/50";
 
   return (
     <div className="relative w-full overflow-hidden h-32">
@@ -60,14 +64,14 @@ const HorizontalSponsorSlider = () => {
             className="flex-shrink-0 w-1/5 flex items-center justify-center"
           >
             <motion.div
-              className={`rounded-full p-2 shadow-md ${logoWrapperBg} ${borderColor}`}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+              className={`rounded-full p-4 backdrop-blur-3xl shadow-lg ${baseGlass} ${hoverGlass} transition-all duration-500 flex items-center justify-center`}
+              whileHover={{ scale: 1.15 }}
+              whileTap={{ scale: 0.95 }}
             >
               <img
                 src={sponsor.logo}
                 alt={sponsor.name}
-                className="h-20 w-20 object-contain rounded-full"
+                className="h-16 w-16 object-contain rounded-full"
               />
             </motion.div>
           </div>
