@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { AuthContext, DarkModeContext } from "../App";
 import { FcGoogle } from "react-icons/fc";
-import { FaGithub, FaTwitter } from "react-icons/fa";
+import { FaFacebook, FaTwitter } from "react-icons/fa";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -18,7 +18,10 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", { email, password });
+      const res = await axios.post("http://localhost:5000/api/auth/login", {
+        email,
+        password,
+      });
       alert(res.data.msg);
       login({ email });
       navigate("/");
@@ -28,13 +31,20 @@ function Login() {
   };
 
   const handleSocialLogin = (provider) => {
-    window.location.href = `http://localhost:5000/auth/${provider}`;
+    const urls = {
+      google: "http://localhost:5000/auth/google",
+      facebook: "http://localhost:5000/auth/facebook",
+      twitter: "http://localhost:5000/auth/twitter",
+    };
+    window.location.href = urls[provider];
   };
 
-  const bgColor = darkMode ? "bg-[#0A2A43]" : "bg-white bg-opacity-90 backdrop-blur-md";
+  const bgColor = darkMode
+    ? "bg-[#0A2A43]/70 backdrop-blur-lg"
+    : "bg-white/60 backdrop-blur-lg";
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]";
-  const inputDark = "border-[#395B75] bg-[#0A2A43] text-[#FDFBFB] placeholder-gray-300";
-  const inputLight = "border-gray-300 bg-white text-[#0D3B66] placeholder-gray-500";
+  const inputGlass =
+    "w-full px-4 py-3 border rounded-xl sm:text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#00C2CB] border-gray-300/40 bg-white/30 backdrop-blur-lg shadow-inner placeholder-gray-500 text-[#0D3B66] dark:bg-[#0A2A43]/60 dark:text-[#FDFBFB] dark:placeholder-gray-300";
 
   return (
     <>
@@ -45,37 +55,39 @@ function Login() {
 
       <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <motion.div
-          className={`max-w-md w-full space-y-8 p-10 rounded-3xl shadow-xl transition-all duration-300 ${bgColor} ${textColor}`}
+          className={`max-w-md w-full space-y-8 p-10 rounded-2xl shadow-xl border border-gray-200/20 ${bgColor} ${textColor}`}
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold">
-              Sign in to your account
-            </h2>
-          </div>
+          <h2 className="text-center text-3xl font-extrabold tracking-tight">
+            Sign in to your account
+          </h2>
 
           {/* Social Buttons */}
           <div className="space-y-3">
             <button
               type="button"
               onClick={() => handleSocialLogin("google")}
-              className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-xl text-sm font-medium text-[#0D3B66] bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0D3B66]"
+              className="w-full flex items-center justify-center py-2 px-4 rounded-xl text-sm font-medium 
+              text-[#0D3B66] bg-white/50 backdrop-blur-md border border-gray-200/30 
+              hover:bg-white/70 hover:scale-105 transition-all shadow-md"
             >
               <FcGoogle className="mr-2 h-5 w-5" /> Sign in with Google
             </button>
             <button
               type="button"
-              onClick={() => handleSocialLogin("github")}
-              className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-xl text-sm font-medium text-[#0D3B66] bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0D3B66]"
+              onClick={() => handleSocialLogin("facebook")}
+              className="w-full flex items-center justify-center py-2 px-4 rounded-xl text-sm font-medium 
+              text-white bg-[#1877F2] hover:bg-[#0D65D9] hover:scale-105 transition-all shadow-md"
             >
-              <FaGithub className="mr-2 h-5 w-5" /> Sign in with GitHub
+              <FaFacebook className="mr-2 h-5 w-5" /> Sign in with Facebook
             </button>
             <button
               type="button"
               onClick={() => handleSocialLogin("twitter")}
-              className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-xl text-sm font-medium text-[#0D3B66] bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0D3B66]"
+              className="w-full flex items-center justify-center py-2 px-4 rounded-xl text-sm font-medium 
+              text-white bg-[#1DA1F2] hover:bg-[#0D8DD9] hover:scale-105 transition-all shadow-md"
             >
               <FaTwitter className="mr-2 h-5 w-5" /> Sign in with Twitter
             </button>
@@ -84,12 +96,12 @@ function Login() {
           {/* Divider */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-gray-300/40"></div>
             </div>
             <div className="relative flex justify-center text-sm">
               <span
-                className={`px-2 ${
-                  darkMode ? "bg-[#0A2A43] text-[#FDFBFB]" : "bg-white text-[#0D3B66]"
+                className={`px-3 rounded-xl text-sm shadow-sm ${
+                  darkMode ? "bg-[#0A2A43]/70" : "bg-white/60"
                 }`}
               >
                 Or sign in with email
@@ -98,58 +110,61 @@ function Login() {
           </div>
 
           {/* Form */}
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="email-address" className="block text-sm font-medium mb-1">
-                  Email address
-                </label>
-                <input
-                  id="email-address"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className={`appearance-none relative block w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-[#0D3B66] focus:border-[#0D3B66] focus:z-10 sm:text-sm ${
-                    darkMode ? inputDark : inputLight
-                  }`}
-                  placeholder="Email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium mb-1">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className={`appearance-none relative block w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-[#0D3B66] focus:border-[#0D3B66] focus:z-10 sm:text-sm ${
-                    darkMode ? inputDark : inputLight
-                  }`}
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
+          <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+            {/* Email */}
+            <div>
+              <label
+                htmlFor="email-address"
+                className="block text-sm font-semibold mb-1"
+              >
+                Email address
+              </label>
+              <input
+                id="email-address"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                placeholder="Email address"
+                className={inputGlass}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
 
-            {/* Remember + Forgot */}
+            {/* Password */}
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-semibold mb-1"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                placeholder="Password"
+                className={inputGlass}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+
+            {/* Remember me + Forgot */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-[#0D3B66] focus:ring-[#0D3B66] border-gray-300 rounded"
+                  className="h-4 w-4 text-[#00C2CB] focus:ring-[#00C2CB] border-gray-300 rounded"
                 />
                 <label
                   htmlFor="remember-me"
-                  className={`ml-2 block text-sm ${darkMode ? "text-gray-300" : "text-[#0D3B66]"}`}
+                  className="ml-2 block text-sm text-gray-200 dark:text-gray-300"
                 >
                   Remember me
                 </label>
@@ -157,7 +172,7 @@ function Login() {
               <div className="text-sm">
                 <a
                   href="#"
-                  className="font-medium text-[#0D3B66] hover:text-[#00C2CB] transition-colors"
+                  className="font-medium text-[#00C2CB] hover:text-[#0D3B66] transition-colors"
                 >
                   Forgot your password?
                 </a>
@@ -168,7 +183,9 @@ function Login() {
             <div>
               <button
                 type="submit"
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-[#0D3B66] hover:bg-[#00C2CB] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0D3B66] transition-all"
+                className="w-full flex justify-center py-3 px-4 text-sm font-semibold rounded-xl 
+                text-white bg-gradient-to-r from-blue-600 to-blue-400 
+                hover:scale-105 hover:shadow-lg transition-all"
               >
                 Sign in
               </button>
