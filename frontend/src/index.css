@@ -106,3 +106,32 @@ main {
 .fixed.inset-0.pointer-events-none {
   pointer-events: auto;
 }
+
+.glass-hover {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-hover::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: rgba(255, 255, 255, 0.1);
+  transform: rotate(25deg);
+  transition: all 0.6s ease;
+  opacity: 0;
+}
+
+.glass-hover:hover::before {
+  left: 100%;
+  opacity: 1;
+}
+
+.glass-hover {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}

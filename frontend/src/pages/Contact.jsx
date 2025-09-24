@@ -1,55 +1,53 @@
-import React, { useState, useContext } from "react"
-import { Helmet } from "react-helmet-async"
-import { motion } from "framer-motion"
-import { DarkModeContext } from "../App" // make sure this is correctly imported
+import React, { useState, useContext } from "react";
+import { Helmet } from "react-helmet-async";
+import { motion } from "framer-motion";
+import { DarkModeContext } from "../App";
 
 function Contact() {
-  const { darkMode } = useContext(DarkModeContext)
+  const { darkMode } = useContext(DarkModeContext);
 
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [message, setMessage] = useState("")
-  const [feedback, setFeedback] = useState("")
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [feedback, setFeedback] = useState("");
 
   const handleContactSubmit = (e) => {
-    e.preventDefault()
-    console.log("Contact form submitted:", { name, email, message })
-    alert("Thank you for contacting us. We will get back to you soon!")
-    setName("")
-    setEmail("")
-    setMessage("")
-  }
+    e.preventDefault();
+    alert("Thank you for contacting us. We will get back to you soon!");
+    setName("");
+    setEmail("");
+    setMessage("");
+  };
 
   const handleFeedbackSubmit = (e) => {
-    e.preventDefault()
-    console.log("Feedback submitted:", feedback)
-    alert("Thank you for your feedback!")
-    setFeedback("")
-  }
+    e.preventDefault();
+    alert("Thank you for your feedback!");
+    setFeedback("");
+  };
 
-  const cardStyle = darkMode
-    ? "bg-[#0A2A43] text-white"
-    : "bg-white text-gray-800"
-
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
+  const cardBg = darkMode
+    ? "bg-[#0A2A43]/60 backdrop-blur-xl text-[#FDFBFB]"
+    : "bg-white/40 backdrop-blur-xl text-[#0A3D62]";
   const inputStyle = darkMode
-    ? "bg-[#081F5C] text-white border border-blue-300"
-    : "bg-white text-gray-700 border border-gray-300"
+    ? "bg-[#081F5C]/50 text-white border border-blue-300/40 focus:border-blue-400"
+    : "bg-white/50 text-gray-800 border border-gray-300 focus:border-blue-500";
+  const buttonStyle =
+    "mt-4 px-6 py-3 rounded-2xl bg-[#0A3D62] text-white hover:bg-[#081F5C] hover:shadow-lg transition-all duration-300";
 
   return (
     <>
       <Helmet>
         <title>Contact Us - MediNova</title>
-        <meta name="description" content="Get in touch with MediNova. We're here to answer your questions and provide support." />
-        <link rel="canonical" href="https://www.MediNova.com/contact" />
-        <meta property="og:title" content="Contact MediNova - Get in Touch" />
-        <meta property="og:description" content="Contact our team for any questions or support regarding our medical services." />
-        <meta property="og:url" content="https://www.MediNova.com/contact" />
-        <meta property="og:type" content="website" />
+        <meta
+          name="description"
+          content="Get in touch with MediNova. We're here to answer your questions and provide support."
+        />
       </Helmet>
 
       <div className="container mx-auto px-4 py-16">
         <motion.h1
-          className="text-5xl font-bold mb-12 text-center text-white"
+          className="text-4xl font-bold mb-12 text-center"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -60,12 +58,13 @@ function Contact() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
           {/* Contact Form */}
           <motion.div
-            className={`${cardStyle} rounded-lg shadow-lg p-8`}
+            className={`p-8 rounded-[40px] ${cardBg} shadow-md hover:shadow-xl transition-all duration-300`}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
+            whileHover={{ scale: 1.02 }}
           >
-            <h2 className="text-3xl font-bold mb-6">Get in Touch</h2>
+            <h2 className="text-2xl font-bold mb-6">Get in Touch</h2>
             <form onSubmit={handleContactSubmit}>
               <div className="mb-4">
                 <label htmlFor="name" className="block font-bold mb-2">
@@ -76,7 +75,7 @@ function Contact() {
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:border-blue-500 ${inputStyle}`}
+                  className={`w-full px-3 py-2 rounded-2xl focus:outline-none ${inputStyle}`}
                   required
                 />
               </div>
@@ -89,7 +88,7 @@ function Contact() {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:border-blue-500 ${inputStyle}`}
+                  className={`w-full px-3 py-2 rounded-2xl focus:outline-none ${inputStyle}`}
                   required
                 />
               </div>
@@ -101,15 +100,12 @@ function Contact() {
                   id="message"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:border-blue-500 ${inputStyle}`}
+                  className={`w-full px-3 py-2 rounded-2xl focus:outline-none ${inputStyle}`}
                   rows="6"
                   required
                 ></textarea>
               </div>
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300"
-              >
+              <button type="submit" className={buttonStyle}>
                 Send Message
               </button>
             </form>
@@ -117,25 +113,26 @@ function Contact() {
 
           {/* Location Info */}
           <motion.div
-            className={`${cardStyle} rounded-lg shadow-lg p-8`}
+            className={`p-8 rounded-[40px] ${cardBg} shadow-md hover:shadow-xl transition-all duration-300`}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
+            whileHover={{ scale: 1.02 }}
           >
-            <h2 className="text-3xl font-bold mb-6">Our Location</h2>
-            <div className="mb-6">
-              <p className="mb-2">123 Medical Street</p>
-              <p className="mb-2">Health City, HC 12345</p>
-              <p className="mb-2">Phone: (123) 456-7890</p>
-              <p className="mb-2">Email: info@MediNova.com</p>
+            <h2 className="text-2xl font-bold mb-6">Our Location</h2>
+            <div className="mb-6 space-y-2">
+              <p>123 Medical Street</p>
+              <p>Health City, HC 12345</p>
+              <p>Phone: (123) 456-7890</p>
+              <p>Email: info@MediNova.com</p>
             </div>
-            <div className="aspect-w-16 aspect-h-9">
+            <div className="w-full h-64 md:h-80 rounded-2xl overflow-hidden">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.1422937950147!2d-73.98731968482413!3d40.75889497932681!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25855c6480299%3A0x55194ec5a1ae072e!2sTimes+Square!5e0!3m2!1sen!2sus!4v1510579767645"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
-                allowFullScreen=""
+                allowFullScreen
                 loading="lazy"
               ></iframe>
             </div>
@@ -144,12 +141,13 @@ function Contact() {
 
         {/* Feedback Form */}
         <motion.div
-          className={`${cardStyle} rounded-lg shadow-lg p-8 max-w-3xl mx-auto`}
+          className={`p-8 rounded-[40px] ${cardBg} shadow-md hover:shadow-xl transition-all duration-300 max-w-3xl mx-auto mb-16`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
+          whileHover={{ scale: 1.02 }}
         >
-          <h2 className="text-3xl font-bold mb-6">Provide Feedback</h2>
+          <h2 className="text-2xl font-bold mb-6">Provide Feedback</h2>
           <form onSubmit={handleFeedbackSubmit}>
             <label htmlFor="feedback" className="block font-bold mb-2">
               Your Feedback:
@@ -158,21 +156,53 @@ function Contact() {
               id="feedback"
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
-              className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:border-blue-500 ${inputStyle}`}
+              className={`w-full px-3 py-2 rounded-2xl focus:outline-none ${inputStyle}`}
               rows="6"
               required
             ></textarea>
-            <button
-              type="submit"
-              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300"
-            >
+            <button type="submit" className={buttonStyle}>
               Submit Feedback
             </button>
           </form>
         </motion.div>
+
+        {/* Quick Support Section */}
+        <motion.div
+          className={`p-8 rounded-[40px] ${cardBg} shadow-md hover:shadow-xl transition-all duration-300 max-w-3xl mx-auto text-center`}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.8 }}
+          whileHover={{ scale: 1.02 }}
+        >
+          <h2 className="text-2xl font-bold mb-4">Quick Support</h2>
+          <p className="mb-6">
+            Need urgent help? Reach out directly through our quick support
+            channels.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <a
+              href="mailto:support@medinova.com"
+              className={`${buttonStyle} inline-block`}
+            >
+              Email Support
+            </a>
+            <a
+              href="tel:+1234567890"
+              className={`${buttonStyle} inline-block`}
+            >
+              Call Us
+            </a>
+            <a
+              href="/faq"
+              className={`${buttonStyle} inline-block`}
+            >
+              Visit FAQ
+            </a>
+          </div>
+        </motion.div>
       </div>
     </>
-  )
+  );
 }
 
-export default Contact
+export default Contact;
