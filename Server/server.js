@@ -1,21 +1,40 @@
 const express = require("express");
 const cors = require("cors");
+const bodyParser = require("body-parser");
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+const PORT = 5000;
 
-// Mock payment processing endpoint
-app.post("/process-payment", (req, res) => {
-  const { items, paymentMethod, paymentDetails, total } = req.body;
-  console.log("Received order:", { items, paymentMethod, paymentDetails, total });
-  
-  // Simulate successful payment processing
-  res.json({
-    success: true,
-    message: `Payment processed successfully via ${paymentMethod}`,
-    orderId: `ORD-${Math.random().toString(36).slice(2, 10).toUpperCase()}`,
-  });
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+
+// Test route
+app.get("/", (req, res) => {
+  res.send("Pharmacy API running 🚀");
 });
 
-app.listen(3000, () => console.log("Server running on port 3000"));
+// Checkout route
+app.post("/api/checkout", (req, res) => {
+  const { user, items, total } = req.body;
+
+  if (!items || items.length === 0) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Cart is empty" });
+  }
+
+  console.log("🛒 New Order Received:");
+  console.log("User Info:", user);
+  console.log("Items:", items);
+  console.log("Total:", total);
+
+  // TODO: Save order in DB here
+
+  res.json({ success: true, message: "Order placed successfully!" });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
+});

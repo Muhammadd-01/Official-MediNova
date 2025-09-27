@@ -21,7 +21,7 @@ const itemVariants = {
   exit: { opacity: 0, x: 20 },
 };
 
-export default function CartSidebar({ isOpen, onClose }) {
+export default function CartSidebar({ isOpen, onClose, openPaymentModal }) {
   const { cartItems, removeFromCart, totalPrice } = useContext(CartContext);
 
   return (
@@ -76,7 +76,7 @@ export default function CartSidebar({ isOpen, onClose }) {
                     <div>
                       <h3 className="font-semibold">{item.name}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Qty: {item.quantity} | ${item.price * item.quantity}
+                        Qty: {item.quantity} | ${(item.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
                     <button
@@ -97,9 +97,16 @@ export default function CartSidebar({ isOpen, onClose }) {
                   <span className="font-semibold">Total:</span>
                   <span className="font-bold">${totalPrice.toFixed(2)}</span>
                 </div>
-                <button className="w-full bg-[#0D3B66] hover:bg-[#081F5C] text-white py-2 rounded-xl font-semibold transition-all">
-                  Checkout
-                </button>
+                <motion.button
+                  onClick={() => {
+                    onClose();
+                    openPaymentModal();
+                  }}
+                  className="w-full bg-[#0D3B66] hover:bg-[#081F5C] text-white py-2 rounded-xl font-semibold transition-all"
+                  whileHover={{ scale: 1.02 }}
+                >
+                  Proceed to Checkout
+                </motion.button>
               </div>
             )}
           </motion.div>

@@ -19,7 +19,7 @@ const pakistaniBanks = [
 
 function Pharmacy() {
   const { darkMode } = useContext(DarkModeContext);
-  const { cartItems, addToCart } = useContext(CartContext);
+  const { cartItems, addToCart, totalPrice } = useContext(CartContext);
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
 
@@ -27,8 +27,9 @@ function Pharmacy() {
   const [pharmacies, setPharmacies] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [medicines, setMedicines] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState("USA"); // Default to USA
+  const [selectedCountry, setSelectedCountry] = useState("USA");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentForm, setPaymentForm] = useState({
     cardHolder: "",
@@ -45,6 +46,7 @@ function Pharmacy() {
   const [bankLoading, setBankLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [bankQuery, setBankQuery] = useState("");
+  const [paymentError, setPaymentError] = useState(null);
 
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
   const bgColor = darkMode
@@ -58,7 +60,6 @@ function Pharmacy() {
   useEffect(() => {
     if (!mapRef.current && mapContainerRef.current) {
       mapRef.current = L.map(mapContainerRef.current).setView([30.3753, 69.3451], 13);
-
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; <a href="https://osm.org">OpenStreetMap</a> contributors',
       }).addTo(mapRef.current);
@@ -70,12 +71,10 @@ function Pharmacy() {
           const { latitude, longitude } = pos.coords;
           setUserLocation([latitude, longitude]);
           mapRef.current.setView([latitude, longitude], 15);
-
           L.marker([latitude, longitude])
             .addTo(mapRef.current)
             .bindPopup("You are here")
             .openPopup();
-
           fetchNearbyPharmacies(latitude, longitude);
         },
         (error) => console.error("Geolocation error:", error)
@@ -116,15 +115,19 @@ function Pharmacy() {
   const fetchMedicines = async (query, country) => {
     if (!query) {
       setMedicines([]);
+      setIsLoading(false);
       return;
     }
+    setIsLoading(true);
     try {
-      // Primary query: search across brand_name and generic_name
-      let url = `https://api.fda.gov/drug/label.json?search=${encodeURIComponent(query)}&limit=10`;
+      // Primary query: search brand and generic names
+      let url = `https://api.fda.gov/drug/label.json?search=openfda.brand_name:${encodeURIComponent(
+        query
+      )}+openfda.generic_name:${encodeURIComponent(query)}&limit=10`;
       console.log("Fetching medicines with URL:", url);
       let res = await fetch(url);
       let data = await res.json();
-      
+
       // Fallback query if no results
       if (!data.results || data.results.length === 0) {
         console.warn("No results for primary query, trying fallback...");
@@ -138,16 +141,21 @@ function Pharmacy() {
         const enriched = data.results
           .filter((med) => {
             if (country !== "USA") return true; // Show all for "Other"
-            // Relaxed filter for USA: include if manufacturer exists
-            return med.openfda?.manufacturer_name?.[0];
+            return med.openfda?.manufacturer_name?.[0]; // Relaxed USA filter
           })
           .map((med) => ({
-            ...med,
+            id: med.id || Math.random().toString(36).slice(2), // Ensure unique ID
+            name: med.openfda?.brand_name?.[0] || med.openfda?.generic_name?.[0] || "Unknown",
             price: (Math.random() * 45 + 5).toFixed(2),
+            quantity: 1,
             discount: Math.floor(Math.random() * 20),
             stock: Math.floor(Math.random() * 100),
-            image: `https://via.placeholder.com/150?text=${med.openfda?.brand_name?.[0] || med.openfda?.generic_name?.[0] || "Medicine"}`,
-            country: country, // Add country to medicine data
+            image: `https://via.placeholder.com/150?text=${
+              med.openfda?.brand_name?.[0] || med.openfda?.generic_name?.[0] || "Medicine"
+            }`,
+            country: country,
+            generic_name: med.openfda?.generic_name?.[0] || "Unknown",
+            manufacturer: med.openfda?.manufacturer_name?.[0] || "Unknown",
           }));
         setMedicines(enriched);
         console.log("Processed medicines:", enriched);
@@ -158,6 +166,8 @@ function Pharmacy() {
     } catch (err) {
       console.error("Medicine fetch error:", err);
       setMedicines([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -255,57 +265,84 @@ function Pharmacy() {
     }
   };
 
-  const handleCheckout = (e) => {
+  const handleCheckout = async (e) => {
     e.preventDefault();
     if (!paymentMethod) {
       alert("Please select a payment method.");
       return;
     }
-    if (paymentMethod === "card") {
-      if (!paymentForm.cardHolder || !paymentForm.cardNumber || !paymentForm.cardExpiry || !paymentForm.cardCVV) {
-        alert("Please provide complete card details.");
-        return;
-      }
-      if (!cardDetails || cardDetails.includes("Invalid")) {
-        alert("Please verify card details.");
-        return;
-      }
-    }
-    if (paymentMethod === "bank") {
-      if (!paymentForm.bankName || !paymentForm.accountNumber || !paymentForm.transactionId) {
-        alert("Please fill all bank transfer details.");
-        return;
-      }
-      if (!pakistaniBanks.some((b) => b.name.toLowerCase() === paymentForm.bankName.toLowerCase())) {
-        alert("Please select a valid Pakistani bank from the list.");
-        return;
-      }
-      if (!bankDetails || bankDetails.includes("Invalid")) {
-        alert("Please verify bank details.");
-        return;
-      }
-    }
-    // Mock checkout process
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-      setCartOpen(false);
-      setPaymentMethod("");
-      setPaymentForm({
-        cardHolder: "",
-        cardNumber: "",
-        cardExpiry: "",
-        cardCVV: "",
-        bankName: "",
-        accountNumber: "",
-        transactionId: "",
-      });
-    }, 3000);
-  };
+    setPaymentError(null);
 
-  const totalPrice = cartItems
-    .reduce((sum, item) => sum + item.qty * item.price * (1 - item.discount / 100), 0)
-    .toFixed(2);
+    try {
+      if (paymentMethod === "card") {
+        if (!paymentForm.cardHolder || !paymentForm.cardNumber || !paymentForm.cardExpiry || !paymentForm.cardCVV) {
+          alert("Please provide complete card details.");
+          return;
+        }
+        if (!cardDetails || cardDetails.includes("Invalid")) {
+          alert("Please verify card details.");
+          return;
+        }
+      } else if (paymentMethod === "bank") {
+        if (!paymentForm.bankName || !paymentForm.accountNumber || !paymentForm.transactionId) {
+          alert("Please fill all bank transfer details.");
+          return;
+        }
+        if (!pakistaniBanks.some((b) => b.name.toLowerCase() === paymentForm.bankName.toLowerCase())) {
+          alert("Please select a valid Pakistani bank from the list.");
+          return;
+        }
+        if (!bankDetails || bankDetails.includes("Invalid")) {
+          alert("Please verify bank details.");
+          return;
+        }
+      }
+
+      // Send order to local server
+      const response = await fetch("http://localhost:3000/process-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cartItems,
+          paymentMethod,
+          paymentDetails: paymentMethod === "card" ? {
+            cardHolder: paymentForm.cardHolder,
+            cardNumber: paymentForm.cardNumber,
+            cardExpiry: paymentForm.cardExpiry,
+            cardCVV: paymentForm.cardCVV,
+          } : paymentMethod === "bank" ? {
+            bankName: paymentForm.bankName,
+            accountNumber: paymentForm.accountNumber,
+            transactionId: paymentForm.transactionId,
+          } : {},
+          total: totalPrice,
+        }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          setCartOpen(false);
+          setPaymentMethod("");
+          setPaymentForm({
+            cardHolder: "",
+            cardNumber: "",
+            cardExpiry: "",
+            cardCVV: "",
+            bankName: "",
+            accountNumber: "",
+            transactionId: "",
+          });
+        }, 3000);
+      } else {
+        setPaymentError("Payment processing failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      setPaymentError("Failed to process payment. Please try again.");
+    }
+  };
 
   return (
     <>
@@ -377,7 +414,16 @@ function Pharmacy() {
         {/* Medicine Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <AnimatePresence>
-            {medicines.length === 0 && searchQuery ? (
+            {isLoading ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="col-span-full text-center"
+              >
+                <Loader2 className="w-8 h-8 animate-spin mx-auto" />
+                <p>Loading medicines...</p>
+              </motion.div>
+            ) : medicines.length === 0 && searchQuery ? (
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 No medicines found...
               </motion.p>
@@ -393,26 +439,18 @@ function Pharmacy() {
                 >
                   <img
                     src={med.image}
-                    alt={med.openfda?.brand_name?.[0] || med.openfda?.generic_name?.[0] || "Medicine"}
+                    alt={med.name}
                     className="w-full h-32 object-cover rounded-2xl mb-3"
                   />
-                  <h2 className="text-lg font-semibold mb-2 line-clamp-2">
-                    {med.openfda?.brand_name?.[0] || med.openfda?.generic_name?.[0] || "Unknown"}
-                  </h2>
-                  <p className="text-sm mb-1 line-clamp-2">
-                    Generic: {med.openfda?.generic_name?.[0] || "Unknown"}
-                  </p>
-                  <p className="text-sm mb-1">
-                    Manufacturer: {med.openfda?.manufacturer_name?.[0] || "Unknown"}
-                  </p>
-                  <p className="text-sm mb-1">
-                    Country: {med.country}
-                  </p>
+                  <h2 className="text-lg font-semibold mb-2 line-clamp-2">{med.name}</h2>
+                  <p className="text-sm mb-1 line-clamp-2">Generic: {med.generic_name}</p>
+                  <p className="text-sm mb-1">Manufacturer: {med.manufacturer}</p>
+                  <p className="text-sm mb-1">Country: {med.country}</p>
                   <p className="text-sm mb-1">
                     Price: ${med.price} | Discount: {med.discount}% | Stock: {med.stock}
                   </p>
                   <button
-                    onClick={() => addToCart({ ...med, qty: 1 })}
+                    onClick={() => addToCart(med)}
                     className="mt-2 px-4 py-2 rounded-[40px] bg-[#0A3D62] text-white hover:bg-[#08253A] hover:shadow-lg transition-all duration-300"
                   >
                     Add to Cart
@@ -443,64 +481,79 @@ function Pharmacy() {
                 <p>Cart is empty</p>
               ) : (
                 <>
-                  {cartItems.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="mb-4 p-3 rounded-2xl bg-white/20 dark:bg-[#0A2A43]/50 backdrop-blur-xl"
+                  {cartItems.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      className="mb-4 p-3 rounded-xl bg-[#081F5C] dark:bg-[#081F5C]"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
                     >
-                      <p className="font-semibold">{item.openfda?.brand_name?.[0] || item.openfda?.generic_name?.[0]}</p>
+                      <p className="font-semibold">{item.name}</p>
+                      <p className="text-sm">Qty: {item.quantity}</p>
                       <p className="text-sm">
-                        Qty: {item.qty}
+                        Price: ${(item.price * item.quantity * (1 - item.discount / 100)).toFixed(2)}
                       </p>
-                      <p className="text-sm">
-                        Price: ${(item.price * item.qty * (1 - item.discount / 100)).toFixed(2)}
-                      </p>
-                    </div>
+                    </motion.div>
                   ))}
-                  <p className="font-bold mt-4">Total: ${totalPrice}</p>
+                  <p className="font-bold mt-4">Total: ${totalPrice.toFixed(2)}</p>
+
+                  {/* Checkout Button */}
+                  {!paymentMethod && (
+                    <motion.button
+                      type="button"
+                      onClick={() => setPaymentMethod("select")}
+                      className="w-full mt-4 py-2 rounded-xl bg-[#0D3B66] text-white hover:bg-[#081F5C] transition-all"
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      Checkout
+                    </motion.button>
+                  )}
 
                   {/* Payment Method Selection */}
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-2">Payment Method</h3>
-                    <div className="grid grid-cols-1 gap-2">
-                      <motion.button
-                        type="button"
-                        onClick={() => setPaymentMethod("cod")}
-                        className={`p-3 rounded-[20px] ${
-                          paymentMethod === "cod" ? "bg-[#0A3D62] text-white" : bgColor
-                        } flex items-center justify-center transition-all duration-300`}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <FiDollarSign className="w-5 h-5 mr-2" />
-                        Cash on Delivery
-                      </motion.button>
-                      <motion.button
-                        type="button"
-                        onClick={() => setPaymentMethod("card")}
-                        className={`p-3 rounded-[20px] ${
-                          paymentMethod === "card" ? "bg-[#0A3D62] text-white" : bgColor
-                        } flex items-center justify-center transition-all duration-300`}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <FiCreditCard className="w-5 h-5 mr-2" />
-                        Credit/Debit Card
-                      </motion.button>
-                      <motion.button
-                        type="button"
-                        onClick={() => setPaymentMethod("bank")}
-                        className={`p-3 rounded-[20px] ${
-                          paymentMethod === "bank" ? "bg-[#0A3D62] text-white" : bgColor
-                        } flex items-center justify-center transition-all duration-300`}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Banknote className="w-5 h-5 mr-2" />
-                        Bank Transfer
-                      </motion.button>
+                  {paymentMethod === "select" && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold mb-2">Payment Method</h3>
+                      <div className="grid grid-cols-1 gap-2">
+                        <motion.button
+                          type="button"
+                          onClick={() => setPaymentMethod("cod")}
+                          className={`p-3 rounded-xl ${
+                            paymentMethod === "cod" ? "bg-[#0D3B66] text-white" : bgColor
+                          } flex items-center justify-center transition-all duration-300`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <FiDollarSign className="w-5 h-5 mr-2" />
+                          Cash on Delivery
+                        </motion.button>
+                        <motion.button
+                          type="button"
+                          onClick={() => setPaymentMethod("card")}
+                          className={`p-3 rounded-xl ${
+                            paymentMethod === "card" ? "bg-[#0D3B66] text-white" : bgColor
+                          } flex items-center justify-center transition-all duration-300`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <FiCreditCard className="w-5 h-5 mr-2" />
+                          Credit/Debit Card
+                        </motion.button>
+                        <motion.button
+                          type="button"
+                          onClick={() => setPaymentMethod("bank")}
+                          className={`p-3 rounded-xl ${
+                            paymentMethod === "bank" ? "bg-[#0D3B66] text-white" : bgColor
+                          } flex items-center justify-center transition-all duration-300`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Banknote className="w-5 h-5 mr-2" />
+                          Bank Transfer
+                        </motion.button>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Payment Form */}
                   <AnimatePresence>
@@ -522,7 +575,7 @@ function Pharmacy() {
                             name="cardHolder"
                             value={paymentForm.cardHolder}
                             onChange={handlePaymentChange}
-                            className={`w-full p-3 rounded-[20px] ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`}
+                            className={`w-full p-3 rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0D3B66] dark:focus:ring-[#FDFBFB]`}
                             placeholder="Enter cardholder name"
                             required
                           />
@@ -532,13 +585,13 @@ function Pharmacy() {
                             Card Number *
                           </label>
                           <div className="relative">
-                            <FiCreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#0A3D62]" />
+                            <FiCreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#0D3B66]" />
                             <input
                               type="text"
                               name="cardNumber"
                               value={paymentForm.cardNumber}
                               onChange={handlePaymentChange}
-                              className={`w-full pl-10 pr-4 py-3 rounded-[20px] ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`}
+                              className={`w-full pl-10 pr-4 py-3 rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0D3B66] dark:focus:ring-[#FDFBFB]`}
                               placeholder="1234 5678 9012 3456"
                               required
                             />
@@ -573,7 +626,7 @@ function Pharmacy() {
                               name="cardExpiry"
                               value={paymentForm.cardExpiry}
                               onChange={handlePaymentChange}
-                              className={`w-full p-3 rounded-[20px] ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`}
+                              className={`w-full p-3 rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0D3B66] dark:focus:ring-[#FDFBFB]`}
                               placeholder="MM/YY"
                               required
                             />
@@ -587,7 +640,7 @@ function Pharmacy() {
                               name="cardCVV"
                               value={paymentForm.cardCVV}
                               onChange={handlePaymentChange}
-                              className={`w-full p-3 rounded-[20px] ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`}
+                              className={`w-full p-3 rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0D3B66] dark:focus:ring-[#FDFBFB]`}
                               placeholder="123"
                               required
                             />
@@ -596,7 +649,7 @@ function Pharmacy() {
                         <motion.button
                           type="button"
                           onClick={() => verifyCard(paymentForm.cardNumber)}
-                          className="w-full py-2 rounded-[20px] bg-[#0A3D62] text-white hover:bg-[#08253A] transition-all duration-300 flex items-center justify-center"
+                          className="w-full py-2 rounded-xl bg-[#0D3B66] text-white hover:bg-[#081F5C] transition-all duration-300 flex items-center justify-center"
                           whileHover={{ scale: 1.02 }}
                           disabled={cardLoading}
                         >
@@ -612,6 +665,9 @@ function Pharmacy() {
                             </>
                           )}
                         </motion.button>
+                        {paymentError && (
+                          <p className="text-red-500 text-sm">{paymentError}</p>
+                        )}
                       </motion.form>
                     )}
                     {paymentMethod === "bank" && (
@@ -628,13 +684,13 @@ function Pharmacy() {
                             Bank Name *
                           </label>
                           <div className="relative">
-                            <Banknote className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#0A3D62]" />
+                            <Banknote className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#0D3B66]" />
                             <input
                               type="text"
                               name="bankName"
                               value={paymentForm.bankName}
                               onChange={handlePaymentChange}
-                              className={`w-full pl-10 pr-4 py-3 rounded-[20px] ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`}
+                              className={`w-full pl-10 pr-4 py-3 rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0D3B66] dark:focus:ring-[#FDFBFB]`}
                               placeholder="Search for a bank"
                               required
                               list="banks"
@@ -650,7 +706,7 @@ function Pharmacy() {
                               initial={{ opacity: 0, y: -10 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -10 }}
-                              className={`absolute z-10 w-full mt-1 rounded-[20px] ${bgColor} shadow-lg max-h-40 overflow-y-auto`}
+                              className={`absolute z-10 w-full mt-1 rounded-xl ${bgColor} shadow-lg max-h-40 overflow-y-auto`}
                             >
                               {pakistaniBanks
                                 .filter((b) => b.name.toLowerCase().includes(bankQuery.toLowerCase()))
@@ -662,10 +718,10 @@ function Pharmacy() {
                                       setBankQuery("");
                                       verifyBank(b.name, paymentForm.accountNumber);
                                     }}
-                                    className={`p-3 text-sm cursor-pointer ${textColor} hover:bg-[#0A3D62]/20 flex items-center`}
-                                    whileHover={{ backgroundColor: darkMode ? "#0A3D62/30" : "#0A3D62/20" }}
+                                    className={`p-3 text-sm cursor-pointer ${textColor} hover:bg-[#0D3B66]/20 flex items-center`}
+                                    whileHover={{ backgroundColor: darkMode ? "#0D3B66/30" : "#0D3B66/20" }}
                                   >
-                                    <Banknote className="w-4 h-4 mr-2 text-[#0A3D62]" />
+                                    <Banknote className="w-4 h-4 mr-2 text-[#0D3B66]" />
                                     {b.name}
                                   </motion.li>
                                 ))}
@@ -677,13 +733,13 @@ function Pharmacy() {
                             Account Number *
                           </label>
                           <div className="relative">
-                            <Banknote className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#0A3D62]" />
+                            <Banknote className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#0D3B66]" />
                             <input
                               type="text"
                               name="accountNumber"
                               value={paymentForm.accountNumber}
                               onChange={handlePaymentChange}
-                              className={`w-full pl-10 pr-4 py-3 rounded-[20px] ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`}
+                              className={`w-full pl-10 pr-4 py-3 rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0D3B66] dark:focus:ring-[#FDFBFB]`}
                               placeholder="Enter account number"
                               required
                             />
@@ -717,7 +773,7 @@ function Pharmacy() {
                             name="transactionId"
                             value={paymentForm.transactionId}
                             onChange={handlePaymentChange}
-                            className={`w-full p-3 rounded-[20px] ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`}
+                            className={`w-full p-3 rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0D3B66] dark:focus:ring-[#FDFBFB]`}
                             placeholder="Enter transaction ID"
                             required
                           />
@@ -725,7 +781,7 @@ function Pharmacy() {
                         <motion.button
                           type="button"
                           onClick={() => verifyBank(paymentForm.bankName, paymentForm.accountNumber)}
-                          className="w-full py-2 rounded-[20px] bg-[#0A3D62] text-white hover:bg-[#08253A] transition-all duration-300 flex items-center justify-center"
+                          className="w-full py-2 rounded-xl bg-[#0D3B66] text-white hover:bg-[#081F5C] transition-all duration-300 flex items-center justify-center"
                           whileHover={{ scale: 1.02 }}
                           disabled={bankLoading}
                         >
@@ -741,17 +797,20 @@ function Pharmacy() {
                             </>
                           )}
                         </motion.button>
+                        {paymentError && (
+                          <p className="text-red-500 text-sm">{paymentError}</p>
+                        )}
                       </motion.form>
                     )}
-                    {paymentMethod && (
+                    {paymentMethod && paymentMethod !== "select" && (
                       <motion.button
                         type="submit"
                         onClick={handleCheckout}
-                        className="w-full mt-4 py-2 rounded-[20px] bg-[#0A3D62] text-white hover:bg-[#08253A] transition-all duration-300"
+                        className="w-full mt-4 py-2 rounded-xl bg-[#0D3B66] text-white hover:bg-[#081F5C] transition-all duration-300"
                         whileHover={{ scale: 1.02 }}
                         disabled={cardLoading || bankLoading}
                       >
-                        {cardLoading || bankLoading ? "Processing..." : "Checkout"}
+                        {cardLoading || bankLoading ? "Processing..." : "Confirm Payment"}
                       </motion.button>
                     )}
                   </AnimatePresence>
@@ -765,7 +824,7 @@ function Pharmacy() {
         <AnimatePresence>
           {showSuccess && (
             <motion.div
-              className={`fixed top-4 right-4 z-50 w-full max-w-sm p-6 rounded-[20px] ${bgColor} shadow-2xl`}
+              className={`fixed top-4 right-4 z-50 w-full max-w-sm p-6 rounded-xl ${bgColor} shadow-2xl`}
               initial={{ opacity: 0, scale: 0.8, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: -20 }}
@@ -774,25 +833,25 @@ function Pharmacy() {
               aria-live="assertive"
             >
               <div className="flex items-start">
-                <CheckCircle className="w-6 h-6 text-[#0A3D62] mr-3" />
+                <CheckCircle className="w-6 h-6 text-[#0D3B66] mr-3" />
                 <div className="flex-1">
                   <h3 className={`text-lg font-bold ${textColor}`}>Order Confirmed ✅</h3>
                   <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"} mt-1`}>
                     Thank you! Your order has been placed successfully.
                   </p>
                   <ul className={`text-sm ${textColor} mt-2 space-y-1`}>
-                    <li><strong>Total:</strong> ${totalPrice}</li>
+                    <li><strong>Total:</strong> ${totalPrice.toFixed(2)}</li>
                     <li><strong>Payment:</strong> {paymentMethod === "cod" ? "Cash on Delivery" : paymentMethod === "card" ? "Credit/Debit Card" : "Bank Transfer"}</li>
                   </ul>
                 </div>
                 <motion.button
                   onClick={() => setShowSuccess(false)}
-                  className="p-1 rounded-full bg-[#0A3D62]/20 hover:bg-[#0A3D62]/30 transition-all duration-300"
+                  className="p-1 rounded-full bg-[#0D3B66]/20 hover:bg-[#0D3B66]/30 transition-all duration-300"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   aria-label="Close notification"
                 >
-                  <X className="w-5 h-5 text-[#0A3D62]" />
+                  <X className="w-5 h-5 text-[#0D3B66]" />
                 </motion.button>
               </div>
             </motion.div>
