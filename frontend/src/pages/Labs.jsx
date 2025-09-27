@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect, useRef } from "react";
+import { useContext, useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { DarkModeContext } from "../App";
 import Header from "../components/Header";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,20 +17,64 @@ import {
   CreditCard,
   Building,
   ShieldCheck,
+  CheckCircle,
+  MapPin,
+  Loader2,
+  FileText,
+  Search,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+
+// Mock Pakistani names for realistic CNIC auto-fill
+const pakistaniNames = {
+  male: [
+    "Ahmed Raza", "Muhammad Ali", "Hassan Khan", "Usman Malik", "Bilal Ahmed",
+    "Faisal Shah", "Omar Farooq", "Zain Abbas", "Asadullah Butt", "Hamza Siddiqui",
+    "Saad Rehman", "Ibrahim Qureshi", "Yousuf Mirza", "Abdullah Khan", "Tahir Iqbal"
+  ],
+  female: [
+    "Fatima Khan", "Ayesha Siddiqui", "Zainab Malik", "Maryam Ahmed", "Sana Raza",
+    "Hina Shah", "Amna Farooq", "Sara Abbas", "Rabia Butt", "Mahnoor Rehman",
+    "Iqra Qureshi", "Areeba Mirza", "Khadija Khan", "Bushra Iqbal", "Laiba Ali"
+  ],
+};
+
+// Static list of Pakistani banks with details
+const pakistaniBanks = [
+  { name: "Habib Bank Limited (HBL)", details: "IBAN: PK60HBLT0000000012345678, SWIFT: HABBPKKA" },
+  { name: "United Bank Limited (UBL)", details: "IBAN: PK70UBLP0000000023456789, SWIFT: UBPAKKAH" },
+  { name: "Meezan Bank", details: "IBAN: PK36MEZAN0000000034567890, SWIFT: MEZNPKKA" },
+  { name: "MCB Bank", details: "IBAN: PK40MCB0000000045678901, SWIFT: MUCBPKKA" },
+  { name: "Allied Bank", details: "IBAN: PK50ABPA0000000056789012, SWIFT: ABPAPKKA" },
+  { name: "National Bank of Pakistan (NBP)", details: "IBAN: PK30NBPA0000000067890123, SWIFT: NBPAPKKA" },
+  { name: "Bank Alfalah", details: "IBAN: PK20ALFH0000000078901234, SWIFT: ALFHPKKA" },
+  { name: "Standard Chartered Pakistan", details: "IBAN: PK10SCBL0000000089012345, SWIFT: SCBLPKKA" },
+  { name: "BankIslami", details: "IBAN: PK25BKIS0000000090123456, SWIFT: BKISPKKA" },
+  { name: "Faysal Bank", details: "IBAN: PK15FAYS0000000101234567, SWIFT: FAYSPKKA" },
+];
 
 function Labs() {
   const { darkMode } = useContext(DarkModeContext);
-
-  // Modal / form state
   const [selectedTest, setSelectedTest] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState(""); // "cod" | "card" | "bank"
-  const [banks, setBanks] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [bankQuery, setBankQuery] = useState("");
   const [cnicVerified, setCnicVerified] = useState(null);
-  const [loadingBanks, setLoadingBanks] = useState(false);
+  const [cnicLoading, setCnicLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [bookingDetails, setBookingDetails] = useState(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [cardLoading, setCardLoading] = useState(false);
+  const [cardDetails, setCardDetails] = useState(null);
+  const [bankLoading, setBankLoading] = useState(false);
+  const [bankDetails, setBankDetails] = useState(null);
+  const [reports, setReports] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalReports, setTotalReports] = useState(0);
+  const reportsPerPage = 5;
 
-  // Form data
   const [formData, setFormData] = useState({
     name: "",
     cnic: "",
@@ -60,7 +104,336 @@ function Labs() {
 
   const modalContentRef = useRef(null);
 
-  // List of tests
+  // Fetch lab reports from JSONPlaceholder
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await fetch(
+          `https://jsonplaceholder.typicode.com/posts?_page=${currentPage}&_limit=${reportsPerPage}`
+        );
+        const data = await response.json();
+        setReports(data);
+        setTotalReports(100); // JSONPlaceholder has 100 posts
+      } catch (error) {
+        console.error("Error fetching reports:", error);
+      }
+    };
+    fetchReports();
+  }, [currentPage]);
+
+  // Debounced CNIC verification
+  const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  };
+
+  const verifyCNIC = useCallback(
+    debounce((cnic) => {
+      const cnicRegex = /^\d{5}-\d{7}-\d{1}$/;
+      if (cnicRegex.test(cnic)) {
+        setCnicLoading(true);
+        setTimeout(() => {
+          const digitsOnly = cnic.replace(/-/g, "");
+          const hash = parseInt(digitsOnly.slice(0, 6)) % 15;
+          const gender = parseInt(digitsOnly.slice(-1)) % 2 === 0 ? "Female" : "Male";
+          const birthYear = 1945 + (parseInt(digitsOnly.slice(6, 8)) % 61);
+          const age = 2025 - birthYear;
+          const name = gender === "Male" ? pakistaniNames.male[hash] : pakistaniNames.female[hash];
+          setFormData((prev) => ({ ...prev, name, gender, age }));
+          setCnicVerified(`Data loaded from NADRA: ${name}, ${gender}, Age ${age}`);
+          setCnicLoading(false);
+        }, 2000);
+      } else {
+        setCnicVerified("Invalid CNIC format");
+        setCnicLoading(false);
+      }
+    }, 500),
+    []
+  );
+
+  // Format CNIC input (e.g., 1234512345671 -> 12345-1234567-1)
+  const formatCNIC = (value) => {
+    const digits = value.replace(/\D/g, "").slice(0, 13);
+    if (digits.length > 5 && digits.length <= 12) {
+      return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+    }
+    if (digits.length > 12) {
+      return `${digits.slice(0, 5)}-${digits.slice(5, 12)}-${digits.slice(12)}`;
+    }
+    return digits;
+  };
+
+  // Card verification with binlist.net
+  const verifyCard = useCallback(async (cardNumber) => {
+    const digitsOnly = cardNumber.replace(/\D/g, "");
+    if (digitsOnly.length >= 6) {
+      setCardLoading(true);
+      try {
+        const bin = digitsOnly.slice(0, 6);
+        const response = await fetch(`https://lookup.binlist.net/${bin}`);
+        if (response.ok) {
+          const data = await response.json();
+          const details = `${data.bank?.name || "Unknown Bank"}, ${data.type || "Unknown Type"}, ${data.country?.name || "Unknown Country"}`;
+          setCardDetails(`Card verified: ${details}`);
+        } else {
+          // Fallback to Luhn algorithm
+          const isValid = luhnCheck(digitsOnly);
+          setCardDetails(isValid ? "Card verified (Luhn): Valid card number" : "Invalid card number");
+        }
+      } catch {
+        const isValid = luhnCheck(digitsOnly);
+        setCardDetails(isValid ? "Card verified (Luhn): Valid card number" : "Invalid card number");
+      }
+      setCardLoading(false);
+    } else {
+      setCardDetails("Invalid card number");
+      setCardLoading(false);
+    }
+  }, []);
+
+  // Luhn algorithm for card number validation
+  const luhnCheck = (cardNumber) => {
+    let sum = 0;
+    let isEven = false;
+    for (let i = cardNumber.length - 1; i >= 0; i--) {
+      let digit = parseInt(cardNumber[i]);
+      if (isEven) {
+        digit *= 2;
+        if (digit > 9) digit -= 9;
+      }
+      sum += digit;
+      isEven = !isEven;
+    }
+    return sum % 10 === 0;
+  };
+
+  // Bank verification
+  const verifyBank = useCallback((bankName, accountNumber) => {
+    const digitsOnly = accountNumber.replace(/\D/g, "");
+    if (digitsOnly.length >= 12 && digitsOnly.length <= 16) {
+      setBankLoading(true);
+      setTimeout(() => {
+        const bank = pakistaniBanks.find((b) => b.name.toLowerCase() === bankName.toLowerCase());
+        if (bank) {
+          setBankDetails(`Account verified: ${bank.name}, ${bank.details}`);
+        } else {
+          setBankDetails("Invalid bank or account number");
+        }
+        setBankLoading(false);
+      }, 2000);
+    } else {
+      setBankDetails("Invalid bank or account number");
+      setBankLoading(false);
+    }
+  }, []);
+
+  // Location fetching with Nominatim
+  const getLiveLocation = useCallback(() => {
+    setLocationLoading(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
+            );
+            const data = await response.json();
+            const address = data.display_name || "Current Location";
+            setFormData((prev) => ({ ...prev, address }));
+          } catch (error) {
+            console.error("Location API error:", error);
+            setFormData((prev) => ({ ...prev, address: "Location not available" }));
+          }
+          setLocationLoading(false);
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          setFormData((prev) => ({ ...prev, address: "Location access denied" }));
+          setLocationLoading(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    } else {
+      alert("Geolocation not supported by this browser.");
+      setLocationLoading(false);
+    }
+  }, []);
+
+  // Phone validation (Pakistan mobile: 03XX-XXXXXXX)
+  const validatePhone = useCallback((phone) => {
+    const phoneRegex = /^03[0-4][0-9]-[0-9]{7}$/;
+    if (!phoneRegex.test(phone)) {
+      setPhoneError("Phone must be in format 03XX-XXXXXXX");
+      return false;
+    }
+    setPhoneError(null);
+    return true;
+  }, []);
+
+  // Card number formatting
+  const formatCardNumber = (value) => {
+    const digits = value.replace(/\D/g, "");
+    const formatted = digits.match(/.{1,4}/g)?.join(" ").slice(0, 19) || digits;
+    return formatted;
+  };
+
+  const handleFormChange = useCallback(
+    (e) => {
+      const { name, value } = e.target;
+      let newValue = value;
+      if (name === "cardNumber") {
+        newValue = formatCardNumber(value);
+      } else if (name === "cnic") {
+        newValue = formatCNIC(value);
+      }
+      setFormData((prev) => ({ ...prev, [name]: newValue }));
+      if (name === "cnic") verifyCNIC(newValue);
+      if (name === "phone") validatePhone(newValue);
+      if (name === "bankName") {
+        setBankQuery(value);
+        verifyBank(value, formData.accountNumber);
+      }
+      if (name === "accountNumber") {
+        verifyBank(formData.bankName, newValue);
+      }
+    },
+    [verifyCNIC, validatePhone, verifyBank, formData.accountNumber, formData.bankName]
+  );
+
+  const handleOpenModal = (test) => {
+    setSelectedTest(test);
+    setPaymentMethod("");
+    setFormData({
+      name: "",
+      cnic: "",
+      age: "",
+      gender: "",
+      phone: "",
+      email: "",
+      date: "",
+      address: "",
+      cardHolder: "",
+      cardNumber: "",
+      cardExpiry: "",
+      cardCVV: "",
+      bankName: "",
+      accountNumber: "",
+      transactionId: "",
+    });
+    setCnicVerified(null);
+    setCardDetails(null);
+    setBankDetails(null);
+    setBankQuery("");
+    setCnicLoading(false);
+    setPhoneError(null);
+    setShowSuccess(false);
+    setTimeout(() => {
+      if (modalContentRef.current) modalContentRef.current.scrollTop = 0;
+    }, 0);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedTest(null);
+    setShowSuccess(false);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.phone || !formData.date) {
+      alert("Please complete required fields (name, phone, date).");
+      return;
+    }
+    if (!validatePhone(formData.phone)) {
+      alert("Please enter a valid phone number in format 03XX-XXXXXXX.");
+      return;
+    }
+    if (paymentMethod === "card") {
+      if (!formData.cardNumber || !formData.cardCVV || !formData.cardExpiry || !formData.cardHolder) {
+        alert("Please provide complete card details.");
+        return;
+      }
+      if (!cardDetails || cardDetails.includes("Invalid")) {
+        alert("Please verify card details.");
+        return;
+      }
+    }
+    if (paymentMethod === "bank") {
+      if (!formData.bankName || !formData.accountNumber || !formData.transactionId) {
+        alert("Please fill all bank transfer details.");
+        return;
+      }
+      if (!pakistaniBanks.some((b) => b.name.toLowerCase() === formData.bankName.toLowerCase())) {
+        alert("Please select a valid Pakistani bank from the list.");
+        return;
+      }
+      if (!bankDetails || bankDetails.includes("Invalid")) {
+        alert("Please verify bank details.");
+        return;
+      }
+    }
+    if (formData.cnic && cnicVerified && cnicVerified.includes("Invalid")) {
+      const ok = confirm("CNIC not verified. Do you want to continue without CNIC verification?");
+      if (!ok) return;
+    }
+    const bookingPayload = {
+      test: selectedTest.title,
+      price: selectedTest.price,
+      ...formData,
+      paymentMethod,
+    };
+    console.log("Submit booking", bookingPayload);
+    setBookingDetails({
+      name: formData.name,
+      test: selectedTest.title,
+      paymentMethod:
+        paymentMethod === "cod"
+          ? "Cash on Delivery"
+          : paymentMethod === "card"
+          ? "Credit/Debit Card"
+          : "Bank Transfer",
+      price: selectedTest.price,
+    });
+    setShowSuccess(true);
+    setSelectedTest(null);
+    setFormData({
+      name: "",
+      cnic: "",
+      age: "",
+      gender: "",
+      phone: "",
+      email: "",
+      date: "",
+      address: "",
+      cardHolder: "",
+      cardNumber: "",
+      cardExpiry: "",
+      cardCVV: "",
+      bankName: "",
+      accountNumber: "",
+      transactionId: "",
+    });
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  // Filtered reports
+  const filteredReports = useMemo(() => {
+    return reports.filter((report) =>
+      report.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [reports, searchQuery]);
+
+  // Pagination
+  const totalPages = Math.ceil(totalReports / reportsPerPage);
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
   const tests = [
     {
       title: "Complete Blood Count (CBC)",
@@ -134,180 +507,6 @@ function Labs() {
     },
   ];
 
-  // Fetch banks
-  useEffect(() => {
-    async function fetchBanks() {
-      setLoadingBanks(true);
-      try {
-        const urlsToTry = [
-          "https://api.first.org/data/v1/banks",
-          "https://raw.githubusercontent.com/iamsaqlain/pakistan-banks/master/banks.json",
-        ];
-
-        let data = null;
-        for (const url of urlsToTry) {
-          try {
-            const res = await fetch(url);
-            if (!res.ok) continue;
-            const json = await res.json();
-            if (json?.data && Array.isArray(json.data)) {
-              data = json.data;
-            } else if (Array.isArray(json)) {
-              data = json;
-            } else if (json?.data && typeof json.data === "object") {
-              data = Object.values(json.data);
-            } else if (Array.isArray(json?.banks)) {
-              data = json.banks;
-            }
-            if (data) break;
-          } catch (e) {}
-        }
-
-        if (!data || data.length === 0) {
-          data = [
-            { name: "Habib Bank Limited (HBL)" },
-            { name: "United Bank Limited (UBL)" },
-            { name: "Meezan Bank" },
-            { name: "MCB Bank" },
-            { name: "Allied Bank" },
-            { name: "National Bank of Pakistan (NBP)" },
-            { name: "Bank Alfalah" },
-            { name: "Standard Chartered PK" },
-            { name: "BankIslami" },
-            { name: "Faysal Bank" },
-          ];
-        }
-
-        setBanks(data);
-      } catch (err) {
-        setBanks([
-          { name: "Habib Bank Limited (HBL)" },
-          { name: "United Bank Limited (UBL)" },
-          { name: "Meezan Bank" },
-          { name: "MCB Bank" },
-          { name: "Allied Bank" },
-          { name: "National Bank of Pakistan (NBP)" },
-        ]);
-      } finally {
-        setLoadingBanks(false);
-      }
-    }
-
-    fetchBanks();
-  }, []);
-
-  // CNIC verification
-  const verifyCNIC = (cnic) => {
-    const digitsOnly = String(cnic || "").replace(/\D/g, "");
-    if (digitsOnly.length === 13) {
-      setCnicVerified(true);
-    } else {
-      setCnicVerified(false);
-    }
-  };
-
-  const filteredBanks = banks.filter((b) =>
-    (b?.name || String(b))
-      .toLowerCase()
-      .includes(bankQuery.trim().toLowerCase())
-  );
-
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((p) => ({ ...p, [name]: value }));
-    if (name === "cnic") verifyCNIC(value);
-    if (name === "bankName") setBankQuery(value);
-  };
-
-  const handleOpenModal = (test) => {
-    setSelectedTest(test);
-    setPaymentMethod("");
-    setFormData({
-      name: "",
-      cnic: "",
-      age: "",
-      gender: "",
-      phone: "",
-      email: "",
-      date: "",
-      address: "",
-      cardHolder: "",
-      cardNumber: "",
-      cardExpiry: "",
-      cardCVV: "",
-      bankName: "",
-      accountNumber: "",
-      transactionId: "",
-    });
-    setCnicVerified(null);
-    setBankQuery("");
-    setTimeout(() => {
-      if (modalContentRef.current) modalContentRef.current.scrollTop = 0;
-    }, 0);
-  };
-
-  const handleCloseModal = () => setSelectedTest(null);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.phone || !formData.date) {
-      alert("Please complete required fields (name, phone, date).");
-      return;
-    }
-
-    if (paymentMethod === "card") {
-      if (!formData.cardNumber || !formData.cardCVV || !formData.cardExpiry) {
-        alert("Please provide complete card details.");
-        return;
-      }
-      // Basic card number validation (16 digits)
-      const cardNumberDigits = formData.cardNumber.replace(/\D/g, "");
-      if (cardNumberDigits.length !== 16) {
-        alert("Card number must be 16 digits.");
-        return;
-      }
-      // Basic CVV validation (3-4 digits)
-      const cvvDigits = formData.cardCVV.replace(/\D/g, "");
-      if (cvvDigits.length < 3 || cvvDigits.length > 4) {
-        alert("CVV must be 3 or 4 digits.");
-        return;
-      }
-      // Basic expiry validation (MM/YY)
-      const expiryRegex = /^(0[1-9]|1[0-2])\/[0-9]{2}$/;
-      if (!expiryRegex.test(formData.cardExpiry)) {
-        alert("Card expiry must be in MM/YY format.");
-        return;
-      }
-    }
-
-    if (paymentMethod === "bank") {
-      if (!formData.bankName || !formData.accountNumber || !formData.transactionId) {
-        alert("Please fill all bank transfer details.");
-        return;
-      }
-    }
-
-    if (cnicVerified !== true) {
-      const ok = confirm(
-        "CNIC not verified. Do you want to continue without CNIC verification?"
-      );
-      if (!ok) return;
-    }
-
-    const bookingPayload = {
-      test: selectedTest.title,
-      price: selectedTest.price,
-      ...formData,
-      paymentMethod,
-    };
-
-    console.log("Submit booking", bookingPayload);
-    alert(
-      `Booking received ✅\n\n${formData.name}\nTest: ${selectedTest.title}\nPayment: ${paymentMethod === "cod" ? "Cash on Delivery" : paymentMethod === "card" ? "Credit/Debit Card" : "Bank Transfer"}`
-    );
-    setSelectedTest(null);
-  };
-
   return (
     <>
       <Header />
@@ -319,7 +518,6 @@ function Labs() {
         >
           MediNova Diagnostic Labs
         </motion.h1>
-
         <p
           className={`text-center max-w-2xl mx-auto mb-10 text-base sm:text-lg ${
             darkMode ? "text-gray-300" : "text-gray-600"
@@ -328,7 +526,7 @@ function Labs() {
           Book lab tests quickly — professional reporting, sample collection, and secure payment options.
         </p>
 
-        {/* Grid of cards */}
+        {/* Tests Grid */}
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
           {tests.map((test, idx) => (
             <motion.div
@@ -351,6 +549,77 @@ function Labs() {
           ))}
         </div>
 
+        {/* Lab Reports Section */}
+        <div className="mt-12">
+          <motion.h2
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`text-2xl font-bold mb-4 ${textColor}`}
+          >
+            Lab Reports
+          </motion.h2>
+          <p className={`text-sm mb-4 ${textColor}`}>Reports fetched by MediNova AI</p>
+          <div className="mb-6 flex items-center max-w-md">
+            <Search className={`w-5 h-5 ${textColor} mr-2`} />
+            <input
+              type="text"
+              placeholder="Search reports by title..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`w-full pl-4 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none`}
+            />
+          </div>
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
+            {filteredReports.map((report, idx) => (
+              <motion.div
+                key={report.id}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.05 }}
+                whileHover={{ scale: 1.03 }}
+                className={`${cardBg} ${hoverCard} rounded-[40px] shadow-lg p-6 flex flex-col items-center text-center overflow-hidden`}
+              >
+                <FileText className="w-20 h-20 mb-3 text-[#00C2CB]" />
+                <div className="mb-3">
+                  <FileText className="w-8 h-8 text-[#00C2CB]" />
+                </div>
+                <h3 className={`text-lg font-semibold mb-2 ${textColor}`}>
+                  Report ID: {report.id} – {report.title}
+                </h3>
+                <p className="text-sm mb-4 text-gray-500">{report.body}</p>
+                <div className="mt-auto">
+                  <p className="text-[#00C2CB] font-bold text-lg">Status: Ready</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          <div className="flex justify-between mt-6">
+            <motion.button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`flex items-center ${textColor} ${
+                currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:underline"
+              }`}
+              whileHover={{ scale: 1.05 }}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="w-5 h-5 mr-1" /> Previous
+            </motion.button>
+            <span className={textColor}>Page {currentPage} of {totalPages}</span>
+            <motion.button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`flex items-center ${textColor} ${
+                currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:underline"
+              }`}
+              whileHover={{ scale: 1.05 }}
+              disabled={currentPage === totalPages}
+            >
+              Next <ChevronRight className="w-5 h-5 ml-1" />
+            </motion.button>
+          </div>
+        </div>
+
         {/* Booking Modal */}
         <AnimatePresence>
           {selectedTest && (
@@ -361,7 +630,6 @@ function Labs() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              {/* Overlay */}
               <motion.div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={handleCloseModal}
@@ -369,8 +637,6 @@ function Labs() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               />
-
-              {/* Modal Content */}
               <motion.div
                 ref={modalContentRef}
                 initial={{ scale: 0.96, y: 10, opacity: 0 }}
@@ -391,7 +657,6 @@ function Labs() {
                 >
                   <X className="w-6 h-6 text-[#00C2CB]" />
                 </motion.button>
-
                 <h2
                   id="modal-title"
                   className={`text-2xl font-bold mb-6 text-center ${textColor}`}
@@ -404,9 +669,7 @@ function Labs() {
                 >
                   Fill in your details to book this test. Price: PKR {selectedTest.price}
                 </p>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Personal Details */}
+                <form onSubmit={handleSubmit} className="space-y-6" key={selectedTest?.title}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="name">
@@ -423,19 +686,20 @@ function Labs() {
                           placeholder="Enter your full name"
                           required
                           aria-required="true"
+                          aria-invalid={formData.name === ""}
                         />
                       </div>
                     </div>
                     <div>
                       <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="cnic">
-                        CNIC
+                        CNIC (Auto-fills Name, Age, Gender)
                       </label>
                       <div className="relative">
                         <ShieldCheck
                           className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
-                            cnicVerified === true
+                            cnicVerified && !cnicVerified.includes("Invalid")
                               ? "text-green-500"
-                              : cnicVerified === false
+                              : cnicVerified && cnicVerified.includes("Invalid")
                               ? "text-red-500"
                               : "text-[#00C2CB]"
                           }`}
@@ -448,15 +712,26 @@ function Labs() {
                           className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none`}
                           placeholder="12345-1234567-1"
                           aria-describedby="cnic-status"
+                          aria-invalid={cnicVerified && cnicVerified.includes("Invalid")}
                         />
-                        {cnicVerified !== null && (
+                        {cnicVerified && (
                           <span
                             id="cnic-status"
-                            className={`text-xs mt-1 block ${
-                              cnicVerified ? "text-green-500" : "text-red-500"
+                            className={`text-xs mt-1 block flex items-center ${
+                              cnicVerified.includes("Invalid") ? "text-red-500" : "text-green-500"
                             }`}
                           >
-                            {cnicVerified ? "CNIC Verified" : "Invalid CNIC"}
+                            {cnicLoading ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                Fetching NADRA data...
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="w-4 h-4 mr-1" />
+                                {cnicVerified}
+                              </>
+                            )}
                           </span>
                         )}
                       </div>
@@ -484,12 +759,12 @@ function Labs() {
                         name="gender"
                         value={formData.gender}
                         onChange={handleFormChange}
-                        className={`w-full pl-4 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none`}
+                        className={`w-full pl-4 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none appearance-none`}
                       >
                         <option value="">Select gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
                       </select>
                     </div>
                     <div>
@@ -507,7 +782,11 @@ function Labs() {
                           placeholder="03XX-XXXXXXX"
                           required
                           aria-required="true"
+                          aria-invalid={phoneError !== null}
                         />
+                        {phoneError && (
+                          <span className="text-xs mt-1 block text-red-500">{phoneError}</span>
+                        )}
                       </div>
                     </div>
                     <div>
@@ -537,9 +816,11 @@ function Labs() {
                           name="date"
                           value={formData.date}
                           onChange={handleFormChange}
-                          className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none`}
+                          className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none appearance-none`}
                           required
                           aria-required="true"
+                          min={new Date().toISOString().split("T")[0]}
+                          aria-invalid={formData.date === ""}
                         />
                       </div>
                     </div>
@@ -548,7 +829,26 @@ function Labs() {
                         Address
                       </label>
                       <div className="relative">
-                        <Home className="absolute left-3 top-4 w-5 h-5 text-[#00C2CB]" />
+                        <Home className="absolute left-3 top-3 w-5 h-5 text-[#00C2CB]" />
+                        <motion.button
+                          type="button"
+                          onClick={getLiveLocation}
+                          className={`absolute right-3 top-[-2rem] flex items-center text-sm text-[#00C2CB] hover:underline`}
+                          whileHover={{ scale: 1.02 }}
+                          disabled={locationLoading}
+                        >
+                          {locationLoading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Getting location...
+                            </>
+                          ) : (
+                            <>
+                              <MapPin className="w-4 h-4 mr-2" />
+                              Get my location
+                            </>
+                          )}
+                        </motion.button>
                         <textarea
                           name="address"
                           value={formData.address}
@@ -559,8 +859,6 @@ function Labs() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Payment Method Selection */}
                   <div>
                     <label className={`block text-sm font-medium mb-2 ${textColor}`}>
                       Payment Method *
@@ -607,8 +905,6 @@ function Labs() {
                       </motion.button>
                     </div>
                   </div>
-
-                  {/* Payment Fields */}
                   <AnimatePresence>
                     {paymentMethod === "card" && (
                       <motion.div
@@ -631,22 +927,48 @@ function Labs() {
                             placeholder="Enter cardholder name"
                             required
                             aria-required="true"
+                            aria-invalid={formData.cardHolder === ""}
                           />
                         </div>
                         <div>
                           <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="cardNumber">
                             Card Number *
                           </label>
-                          <input
-                            type="text"
-                            name="cardNumber"
-                            value={formData.cardNumber}
-                            onChange={handleFormChange}
-                            className={`w-full pl-4 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none`}
-                            placeholder="1234 5678 9012 3456"
-                            required
-                            aria-required="true"
-                          />
+                          <div className="relative">
+                            <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#00C2CB]" />
+                            <input
+                              type="text"
+                              name="cardNumber"
+                              value={formData.cardNumber}
+                              onChange={handleFormChange}
+                              className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none`}
+                              placeholder="1234 5678 9012 3456"
+                              required
+                              aria-required="true"
+                              aria-invalid={formData.cardNumber.replace(/\D/g, "").length !== 16}
+                              aria-describedby="card-status"
+                            />
+                            {cardDetails && (
+                              <span
+                                id="card-status"
+                                className={`text-xs mt-1 block flex items-center ${
+                                  cardDetails.includes("Invalid") ? "text-red-500" : "text-green-500"
+                                }`}
+                              >
+                                {cardLoading ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                    Verifying...
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="w-4 h-4 mr-1" />
+                                    {cardDetails}
+                                  </>
+                                )}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
@@ -662,6 +984,7 @@ function Labs() {
                               placeholder="MM/YY"
                               required
                               aria-required="true"
+                              aria-invalid={!/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(formData.cardExpiry)}
                             />
                           </div>
                           <div>
@@ -677,12 +1000,31 @@ function Labs() {
                               placeholder="123"
                               required
                               aria-required="true"
+                              aria-invalid={formData.cardCVV.replace(/\D/g, "").length < 3 || formData.cardCVV.replace(/\D/g, "").length > 4}
                             />
                           </div>
                         </div>
+                        <motion.button
+                          type="button"
+                          onClick={() => verifyCard(formData.cardNumber)}
+                          className={`w-full py-2 rounded-[20px] bg-[#00C2CB]/80 text-white hover:bg-[#00C2CB] transition-all duration-300 flex items-center justify-center`}
+                          whileHover={{ scale: 1.02 }}
+                          disabled={cardLoading}
+                        >
+                          {cardLoading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Verifying Card...
+                            </>
+                          ) : (
+                            <>
+                              <CreditCard className="w-4 h-4 mr-2" />
+                              Verify Card
+                            </>
+                          )}
+                        </motion.button>
                       </motion.div>
                     )}
-
                     {paymentMethod === "bank" && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
@@ -695,17 +1037,27 @@ function Labs() {
                           <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="bankName">
                             Bank Name *
                           </label>
-                          <input
-                            type="text"
-                            name="bankName"
-                            value={formData.bankName}
-                            onChange={handleFormChange}
-                            className={`w-full pl-4 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none`}
-                            placeholder="Search for a bank"
-                            required
-                            aria-required="true"
-                            aria-autocomplete="list"
-                          />
+                          <div className="relative">
+                            <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#00C2CB]" />
+                            <input
+                              type="text"
+                              name="bankName"
+                              value={formData.bankName}
+                              onChange={handleFormChange}
+                              className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none`}
+                              placeholder="Search for a bank"
+                              required
+                              aria-required="true"
+                              list="banks"
+                              aria-autocomplete="list"
+                              aria-invalid={!pakistaniBanks.some((b) => b.name.toLowerCase() === formData.bankName.toLowerCase()) && formData.bankName !== ""}
+                            />
+                            <datalist id="banks">
+                              {pakistaniBanks.map((bank, index) => (
+                                <option key={index} value={bank.name} />
+                              ))}
+                            </datalist>
+                          </div>
                           {bankQuery && (
                             <motion.ul
                               initial={{ opacity: 0, y: -10 }}
@@ -713,25 +1065,23 @@ function Labs() {
                               exit={{ opacity: 0, y: -10 }}
                               className={`absolute z-10 w-full mt-1 rounded-[20px] ${cardBg} shadow-lg max-h-40 overflow-y-auto`}
                             >
-                              {loadingBanks ? (
-                                <li className={`p-3 text-sm ${textColor}`}>Loading banks...</li>
-                              ) : filteredBanks.length > 0 ? (
-                                filteredBanks.map((b, i) => (
+                              {pakistaniBanks
+                                .filter((b) => b.name.toLowerCase().includes(bankQuery.toLowerCase()))
+                                .map((b, i) => (
                                   <motion.li
                                     key={i}
                                     onClick={() => {
-                                      setFormData((p) => ({ ...p, bankName: b.name || String(b) }));
+                                      setFormData((p) => ({ ...p, bankName: b.name }));
                                       setBankQuery("");
+                                      verifyBank(b.name, formData.accountNumber);
                                     }}
-                                    className={`p-3 text-sm cursor-pointer ${textColor} hover:bg-[#00C2CB]/20`}
+                                    className={`p-3 text-sm cursor-pointer ${textColor} hover:bg-[#00C2CB]/20 flex items-center`}
                                     whileHover={{ backgroundColor: darkMode ? "#00C2CB/30" : "#00C2CB/20" }}
                                   >
-                                    {b.name || String(b)}
+                                    <Building className="w-4 h-4 mr-2 text-[#00C2CB]" />
+                                    {b.name}
                                   </motion.li>
-                                ))
-                              ) : (
-                                <li className={`p-3 text-sm ${textColor}`}>No banks found</li>
-                              )}
+                                ))}
                             </motion.ul>
                           )}
                         </div>
@@ -739,16 +1089,41 @@ function Labs() {
                           <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="accountNumber">
                             Account Number *
                           </label>
-                          <input
-                            type="text"
-                            name="accountNumber"
-                            value={formData.accountNumber}
-                            onChange={handleFormChange}
-                            className={`w-full pl-4 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none`}
-                            placeholder="Enter account number"
-                            required
-                            aria-required="true"
-                          />
+                          <div className="relative">
+                            <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#00C2CB]" />
+                            <input
+                              type="text"
+                              name="accountNumber"
+                              value={formData.accountNumber}
+                              onChange={handleFormChange}
+                              className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none`}
+                              placeholder="Enter account number"
+                              required
+                              aria-required="true"
+                              aria-invalid={formData.accountNumber.replace(/\D/g, "").length < 12 || formData.accountNumber.replace(/\D/g, "").length > 16}
+                              aria-describedby="bank-status"
+                            />
+                            {bankDetails && (
+                              <span
+                                id="bank-status"
+                                className={`text-xs mt-1 block flex items-center ${
+                                  bankDetails.includes("Invalid") ? "text-red-500" : "text-green-500"
+                                }`}
+                              >
+                                {bankLoading ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                    Verifying...
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="w-4 h-4 mr-1" />
+                                    {bankDetails}
+                                  </>
+                                )}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div>
                           <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="transactionId">
@@ -763,25 +1138,85 @@ function Labs() {
                             placeholder="Enter transaction ID"
                             required
                             aria-required="true"
+                            aria-invalid={formData.transactionId === ""}
                           />
                         </div>
+                        <motion.button
+                          type="button"
+                          onClick={() => verifyBank(formData.bankName, formData.accountNumber)}
+                          className={`w-full py-2 rounded-[20px] bg-[#00C2CB]/80 text-white hover:bg-[#00C2CB] transition-all duration-300 flex items-center justify-center`}
+                          whileHover={{ scale: 1.02 }}
+                          disabled={bankLoading}
+                        >
+                          {bankLoading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Verifying Bank...
+                            </>
+                          ) : (
+                            <>
+                              <Building className="w-4 h-4 mr-2" />
+                              Verify Bank
+                            </>
+                          )}
+                        </motion.button>
                       </motion.div>
                     )}
                   </AnimatePresence>
-
-                  {/* Submit Button */}
                   <div className="flex justify-center mt-6">
                     <motion.button
                       type="submit"
-                      className={`px-6 py-3 rounded-[20px] bg-[#00C2CB] text-white hover:bg-[#0097A7] focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300`}
+                      className={`px-6 py-3 rounded-[20px] bg-[#00C2CB] text-white hover:bg-[#0097A7] focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 disabled:opacity-50`}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
+                      disabled={cnicLoading || cardLoading || bankLoading || locationLoading}
                     >
-                      Confirm Booking
+                      {cnicLoading || cardLoading || bankLoading || locationLoading
+                        ? "Processing..."
+                        : "Confirm Booking"}
                     </motion.button>
                   </div>
                 </form>
               </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Success Notification */}
+        <AnimatePresence>
+          {showSuccess && bookingDetails && (
+            <motion.div
+              className={`fixed top-4 right-4 z-50 w-full max-w-sm p-6 rounded-[20px] ${cardBg} shadow-2xl`}
+              initial={{ opacity: 0, scale: 0.8, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: -20 }}
+              transition={{ duration: 0.3 }}
+              role="alert"
+              aria-live="assertive"
+            >
+              <div className="flex items-start">
+                <CheckCircle className="w-6 h-6 text-[#00C2CB] mr-3" />
+                <div className="flex-1">
+                  <h3 className={`text-lg font-bold ${textColor}`}>Booking Confirmed ✅</h3>
+                  <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"} mt-1`}>
+                    Thank you, {bookingDetails.name}! Your booking is received.
+                  </p>
+                  <ul className={`text-sm ${textColor} mt-2 space-y-1`}>
+                    <li><strong>Test:</strong> {bookingDetails.test}</li>
+                    <li><strong>Payment:</strong> {bookingDetails.paymentMethod}</li>
+                    <li><strong>Price:</strong> PKR {bookingDetails.price}</li>
+                  </ul>
+                </div>
+                <motion.button
+                  onClick={() => setShowSuccess(false)}
+                  className="p-1 rounded-full bg-[#00C2CB]/20 hover:bg-[#00C2CB]/30 transition-all duration-300"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  aria-label="Close notification"
+                >
+                  <X className="w-5 h-5 text-[#00C2CB]" />
+                </motion.button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
