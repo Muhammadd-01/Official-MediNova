@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "anime": "^0.1.2",
     "bcryptjs": "^3.0.2",
     "mongoose": "^8.18.1",
     "passport": "^0.7.0",
