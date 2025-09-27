@@ -25,38 +25,167 @@ const mapboxKey = process.env.REACT_APP_MAPBOX_KEY || "";
 function EmergencyGuide({ title, steps }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { darkMode } = useContext(DarkModeContext);
-  const cardBg = darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50";
-  const hoverBg = darkMode ? "hover:bg-[#0A2A43]/90" : "hover:bg-gray-100";
-  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
+  const cardBg = darkMode
+    ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB] hover:bg-[#0A2A43]/50"
+    : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62] hover:bg-white/50";
 
   return (
-    <div className="mb-4">
-      <button
+    <motion.div className="mb-4" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+      <motion.button
         onClick={() => setIsExpanded(!isExpanded)}
-        className={`flex justify-between items-center w-full p-4 rounded-[40px] ${cardBg} ${hoverBg} ${textColor} shadow-md transition-all duration-300 border-none outline-none`}
+        className={`flex justify-between items-center w-full p-4 rounded-[40px] ${cardBg} shadow-md transition-all duration-500 backdrop-blur-2xl border-none outline-none`}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.98 }}
       >
         <h3 className="text-lg font-semibold">{title}</h3>
         {isExpanded ? <ChevronUp /> : <ChevronDown />}
-      </button>
+      </motion.button>
       {isExpanded && (
-        <ol
-          className={`list-decimal list-inside mt-2 p-4 rounded-[40px] space-y-1 text-sm ${cardBg} ${textColor} shadow-md border-none outline-none`}
+        <motion.ol
+          className={`list-decimal list-inside mt-2 p-4 rounded-[40px] space-y-1 text-sm ${cardBg} shadow-md transition-all duration-500 backdrop-blur-2xl border-none outline-none`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
         >
           {steps.map((step, i) => (
             <li key={i}>{step}</li>
           ))}
-        </ol>
+        </motion.ol>
       )}
-    </div>
+    </motion.div>
   );
 }
 
 function MapStyleSwitcher({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON, userMarkerRef, setIsMapLoaded, setStyleLoading, destination, routeInfo, setTileLoadStatus }) {
   const { darkMode } = useContext(DarkModeContext);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const cardBg = darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50";
-  const hoverBg = darkMode ? "hover:bg-[#0A2A43]/90" : "hover:bg-gray-100";
-  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
+  const cardBg = darkMode
+    ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB] hover:bg-[#0A2A43]/50"
+    : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62] hover:bg-white/50";
+
+  const defaultStyle = {
+    version: 8,
+    sources: {
+      osm: {
+        type: "raster",
+        tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+        tileSize: 256,
+        attribution: "",
+      },
+    },
+    layers: [
+      {
+        id: "osm-tiles",
+        type: "raster",
+        source: "osm",
+        minzoom: 0,
+        maxzoom: 22,
+      },
+    ],
+  };
+
+  const googleStyle = {
+    version: 8,
+    sources: {
+      osm: {
+        type: "raster",
+        tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+        tileSize: 256,
+        attribution: "",
+      },
+      vector: {
+        type: "vector",
+        tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.pbf"],
+        minzoom: 0,
+        maxzoom: 14,
+      },
+    },
+    layers: [
+      {
+        id: "background",
+        type: "background",
+        paint: { "background-color": darkMode ? "#0A2A43" : "#F5F5F5" },
+      },
+      {
+        id: "land",
+        type: "fill",
+        source: "vector",
+        "source-layer": "landuse",
+        filter: ["==", "class", "park"],
+        paint: {
+          "fill-color": "#34C759",
+          "fill-opacity": 0.6,
+        },
+      },
+      {
+        id: "water",
+        type: "fill",
+        source: "vector",
+        "source-layer": "water",
+        paint: {
+          "fill-color": "#A1C2F1",
+          "fill-opacity": 0.8,
+        },
+      },
+      {
+        id: "roads",
+        type: "line",
+        source: "vector",
+        "source-layer": "roads",
+        paint: {
+          "line-color": "#4285F4",
+          "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1, 15, 3],
+          "line-opacity": 0.9,
+        },
+      },
+      {
+        id: "road-labels",
+        type: "symbol",
+        source: "vector",
+        "source-layer": "roads",
+        minzoom: 12,
+        layout: {
+          "text-field": ["get", "name"],
+          "text-font": ["Arial Unicode MS Bold"],
+          "text-size": 12,
+        },
+        paint: {
+          "text-color": darkMode ? "#FFFFFF" : "#333333",
+          "text-halo-color": darkMode ? "#000000" : "#FFFFFF",
+          "text-halo-width": 1,
+        },
+      },
+      {
+        id: "buildings",
+        type: "fill-extrusion",
+        source: "vector",
+        "source-layer": "buildings",
+        minzoom: 12,
+        paint: {
+          "fill-extrusion-color": "#E8ECEF",
+          "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 12, 0, 15, ["get", "height", 10]],
+          "fill-extrusion-opacity": 0.7,
+        },
+      },
+      {
+        id: "building-labels",
+        type: "symbol",
+        source: "vector",
+        "source-layer": "buildings",
+        minzoom: 14,
+        layout: {
+          "text-field": ["get", "name"],
+          "text-font": ["Arial Unicode MS Bold"],
+          "text-size": 10,
+        },
+        paint: {
+          "text-color": darkMode ? "#FFFFFF" : "#333333",
+          "text-halo-color": darkMode ? "#000000" : "#FFFFFF",
+          "text-halo-width": 1,
+        },
+      },
+    ],
+  };
 
   const getMapStyle = (style) => {
     if (style === "satellite") {
@@ -65,11 +194,7 @@ function MapStyleSwitcher({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
         sources: {
           satellite: {
             type: "raster",
-            tiles: [
-              mapboxKey
-                ? `https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg?access_token=${mapboxKey}`
-                : "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-            ],
+            tiles: ["https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
             tileSize: 256,
             attribution: "",
           },
@@ -85,29 +210,7 @@ function MapStyleSwitcher({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
         ],
       };
     }
-    if (mapboxKey) {
-      return `https://api.mapbox.com/styles/v1/mapbox/streets-v11?access_token=${mapboxKey}`;
-    }
-    return {
-      version: 8,
-      sources: {
-        osm: {
-          type: "raster",
-          tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-          tileSize: 256,
-          attribution: "",
-        },
-      },
-      layers: [
-        {
-          id: "osm-tiles",
-          type: "raster",
-          source: "osm",
-          minzoom: 0,
-          maxzoom: 22,
-        },
-      ],
-    };
+    return style === "3d" ? googleStyle : mapboxKey ? `https://api.mapbox.com/styles/v1/mapbox/streets-v11?access_token=${mapboxKey}` : defaultStyle;
   };
 
   const handleStyleChange = (newStyle) => {
@@ -116,56 +219,74 @@ function MapStyleSwitcher({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
     setStyleLoading(true);
     setTileLoadStatus("loading");
     setIsMenuOpen(false);
+
     if (mapInstanceRef.current) {
       try {
         const map = mapInstanceRef.current;
-        map.setStyle(getMapStyle(newStyle));
+        const styleConfig = getMapStyle(newStyle);
+
+        map.setStyle(styleConfig);
 
         const tileLoadTimeout = setTimeout(() => {
-          if (newStyle === "satellite" && (!map.isStyleLoaded() || !map.areTilesLoaded())) {
-            console.warn("Satellite tiles failed to load, switching to Esri World Imagery");
+          if ((newStyle === "satellite" || newStyle === "3d") && (!map.isStyleLoaded() || !map.areTilesLoaded())) {
+            console.warn(`${newStyle} tiles failed to load, switching to OpenStreetMap`);
             setTileLoadStatus("failed");
-            map.setStyle({
-              version: 8,
-              sources: {
-                satellite: {
-                  type: "raster",
-                  tiles: ["https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
-                  tileSize: 256,
-                  attribution: "",
-                },
-              },
-              layers: [
-                {
-                  id: "satellite-tiles",
-                  type: "raster",
-                  source: "satellite",
-                  minzoom: 0,
-                  maxzoom: 22,
-                },
-              ],
-            });
+            map.setStyle(defaultStyle);
             setIsMapLoaded(true);
             setStyleLoading(false);
           }
-        }, 3000);
+        }, 8000);
 
         map.once("style.load", () => {
           clearTimeout(tileLoadTimeout);
-          map.setPitch(newStyle === "3d" ? 60 : 0);
           if (newStyle === "3d") {
-            map.addSource("maplibre-terrain", {
-              type: "raster-dem",
-              tiles: ["https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.png"],
-              tileSize: 256,
-            });
-            map.setTerrain({ source: "maplibre-terrain", exaggeration: 1.5 });
+            map.setPitch(60);
+            try {
+              map.addSource("mapzen-terrain", {
+                type: "raster-dem",
+                tiles: ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],
+                tileSize: 256,
+                encoding: "terrarium",
+                maxzoom: 15,
+              });
+              map.setTerrain({
+                source: "mapzen-terrain",
+                exaggeration: 1.2,
+              });
+              map.setLight({
+                anchor: "viewport",
+                color: "#FFFFFF",
+                intensity: 0.3,
+                position: [1.15, 210, 30],
+              });
+              map.addLayer({
+                id: "sky",
+                type: "sky",
+                paint: {
+                  "sky-type": "gradient",
+                  "sky-color-stops": [[0, "#D1E5FB"], [1, "#FFFFFF"]],
+                },
+              });
+              console.log("3D terrain loaded successfully with Google Maps style");
+            } catch (terrainError) {
+              console.error("Failed to load 3D terrain:", terrainError);
+              setTileLoadStatus("terrain-failed");
+              map.setPitch(0);
+            }
+          } else {
+            map.setPitch(0);
+            if (map.getSource("mapzen-terrain")) {
+              map.setTerrain(null);
+              map.removeSource("mapzen-terrain");
+            }
           }
           map.resize();
           map.triggerRepaint();
           setIsMapLoaded(true);
           setStyleLoading(false);
-          setTileLoadStatus(newStyle === "satellite" && map.isStyleLoaded() && map.areTilesLoaded() ? "success" : "failed");
+          setTileLoadStatus(newStyle === "3d" && map.getTerrain() ? "success" : newStyle === "satellite" && map.isStyleLoaded() && map.areTilesLoaded() ? "success" : "failed");
+
+          // Re-add route and markers
           if (routeGeoJSON) {
             map.addSource("route", {
               type: "geojson",
@@ -176,7 +297,7 @@ function MapStyleSwitcher({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
               type: "line",
               source: "route",
               paint: {
-                "line-color": "#1E90FF",
+                "line-color": "#4285F4",
                 "line-width": 5,
                 "line-opacity": 0.8,
               },
@@ -195,103 +316,15 @@ function MapStyleSwitcher({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
         });
 
         map.on("error", (e) => {
-          console.error("Map error:", e.error);
-          if (newStyle === "satellite") {
-            console.warn("Satellite tile error, using Esri World Imagery");
-            setTileLoadStatus("failed");
-            map.setStyle({
-              version: 8,
-              sources: {
-                satellite: {
-                  type: "raster",
-                  tiles: ["https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
-                  tileSize: 256,
-                  attribution: "",
-                },
-              },
-              layers: [
-                {
-                  id: "satellite-tiles",
-                  type: "raster",
-                  source: "satellite",
-                  minzoom: 0,
-                  maxzoom: 22,
-                },
-              ],
-            });
-            setIsMapLoaded(true);
-            setStyleLoading(false);
-          } else {
-            map.setStyle({
-              version: 8,
-              sources: {
-                osm: {
-                  type: "raster",
-                  tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-                  tileSize: 256,
-                  attribution: "",
-                },
-              },
-              layers: [
-                {
-                  id: "osm-tiles",
-                  type: "raster",
-                  source: "osm",
-                  minzoom: 0,
-                  maxzoom: 22,
-                },
-              ],
-            });
-            setIsMapLoaded(true);
-            setStyleLoading(false);
-            setTileLoadStatus("failed");
-          }
+          console.error("Map style error:", e.error);
+          setTileLoadStatus("failed");
+          map.setStyle(defaultStyle);
+          setIsMapLoaded(true);
+          setStyleLoading(false);
         });
       } catch (error) {
         console.error("Error switching map style:", error);
-        mapInstanceRef.current.setStyle(
-          newStyle === "satellite"
-            ? {
-                version: 8,
-                sources: {
-                  satellite: {
-                    type: "raster",
-                    tiles: ["https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
-                    tileSize: 256,
-                    attribution: "",
-                  },
-                },
-                layers: [
-                  {
-                    id: "satellite-tiles",
-                    type: "raster",
-                    source: "satellite",
-                    minzoom: 0,
-                    maxzoom: 22,
-                  },
-                ],
-              }
-            : {
-                version: 8,
-                sources: {
-                  osm: {
-                    type: "raster",
-                    tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-                    tileSize: 256,
-                    attribution: "",
-                  },
-                },
-                layers: [
-                  {
-                    id: "osm-tiles",
-                    type: "raster",
-                    source: "osm",
-                    minzoom: 0,
-                    maxzoom: 22,
-                  },
-                ],
-              }
-        );
+        mapInstanceRef.current.setStyle(defaultStyle);
         setIsMapLoaded(true);
         setStyleLoading(false);
         setTileLoadStatus("failed");
@@ -301,14 +334,16 @@ function MapStyleSwitcher({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
 
   return (
     <motion.div
-      className={`absolute top-4 left-4 z-10 rounded-[40px] p-1 ${cardBg} backdrop-blur-sm shadow-md transition-all duration-300 border-none outline-none`}
+      className={`absolute top-4 left-4 z-10 rounded-[40px] p-1 ${cardBg} backdrop-blur-2xl shadow-md transition-all duration-500 border-none outline-none`}
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
     >
       <motion.button
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className={`px-3 py-2 rounded-xl flex items-center justify-center text-sm font-medium ${textColor} ${hoverBg} focus:ring-2 focus:ring-[#00C2CB]`}
+        className={`px-3 py-2 rounded-[40px] flex items-center justify-center text-sm font-medium ${cardBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-500 backdrop-blur-2xl border-none outline-none`}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         aria-expanded={isMenuOpen}
@@ -323,7 +358,7 @@ function MapStyleSwitcher({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
       <AnimatePresence>
         {isMenuOpen && (
           <motion.ul
-            className={`absolute top-16 left-4 w-32 rounded-[40px] shadow-lg overflow-hidden ${cardBg} ${textColor} border-none outline-none`}
+            className={`absolute top-16 left-4 w-32 rounded-[40px] shadow-lg overflow-hidden ${cardBg} backdrop-blur-2xl transition-all duration-500 border-none outline-none`}
             initial={{ opacity: 0, scaleY: 0, transformOrigin: "top" }}
             animate={{ opacity: 1, scaleY: 1, transformOrigin: "top" }}
             exit={{ opacity: 0, scaleY: 0, transformOrigin: "top" }}
@@ -333,7 +368,7 @@ function MapStyleSwitcher({ mapStyle, setMapStyle, mapInstanceRef, routeGeoJSON,
               <motion.li
                 key={style}
                 onClick={() => handleStyleChange(style)}
-                className={`p-3 text-sm font-medium cursor-pointer ${mapStyle === style ? "bg-[#00C2CB] text-white" : `${textColor} ${hoverBg}`}`}
+                className={`p-3 text-sm font-medium cursor-pointer ${mapStyle === style ? "bg-[#00C2CB] text-white" : `${cardBg} backdrop-blur-2xl transition-all duration-500`}`}
                 whileHover={{ backgroundColor: darkMode ? "#00C2CB" : "#E5E7EB" }}
                 role="menuitem"
                 aria-label={`Switch to ${style === "2d" ? "2D" : style === "3d" ? "3D" : "Satellite"} view`}
@@ -374,9 +409,9 @@ function Emergency() {
   const lastDistanceUpdateRef = useRef(0);
   const lastClosestIndexRef = useRef(0);
 
-  const cardBg = darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50";
-  const hoverBg = darkMode ? "hover:bg-[#0A2A43]/90" : "hover:bg-gray-100";
-  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
+  const cardBg = darkMode
+    ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB] hover:bg-[#0A2A43]/50"
+    : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62] hover:bg-white/50";
 
   const emergencyServices = [
     { name: "Edhi Ambulance", phone: "115", icon: Ambulance },
@@ -498,6 +533,130 @@ function Emergency() {
   useEffect(() => {
     if (!location || !mapRef.current) return;
 
+    const defaultStyle = {
+      version: 8,
+      sources: {
+        osm: {
+          type: "raster",
+          tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+          tileSize: 256,
+          attribution: "",
+        },
+      },
+      layers: [
+        {
+          id: "osm-tiles",
+          type: "raster",
+          source: "osm",
+          minzoom: 0,
+          maxzoom: 22,
+        },
+      ],
+    };
+
+    const googleStyle = {
+      version: 8,
+      sources: {
+        osm: {
+          type: "raster",
+          tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+          tileSize: 256,
+          attribution: "",
+        },
+        vector: {
+          type: "vector",
+          tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.pbf"],
+          minzoom: 0,
+          maxzoom: 14,
+        },
+      },
+      layers: [
+        {
+          id: "background",
+          type: "background",
+          paint: { "background-color": darkMode ? "#0A2A43" : "#F5F5F5" },
+        },
+        {
+          id: "land",
+          type: "fill",
+          source: "vector",
+          "source-layer": "landuse",
+          filter: ["==", "class", "park"],
+          paint: {
+            "fill-color": "#34C759",
+            "fill-opacity": 0.6,
+          },
+        },
+        {
+          id: "water",
+          type: "fill",
+          source: "vector",
+          "source-layer": "water",
+          paint: {
+            "fill-color": "#A1C2F1",
+            "fill-opacity": 0.8,
+          },
+        },
+        {
+          id: "roads",
+          type: "line",
+          source: "vector",
+          "source-layer": "roads",
+          paint: {
+            "line-color": "#4285F4",
+            "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1, 15, 3],
+            "line-opacity": 0.9,
+          },
+        },
+        {
+          id: "road-labels",
+          type: "symbol",
+          source: "vector",
+          "source-layer": "roads",
+          minzoom: 12,
+          layout: {
+            "text-field": ["get", "name"],
+            "text-font": ["Arial Unicode MS Bold"],
+            "text-size": 12,
+          },
+          paint: {
+            "text-color": darkMode ? "#FFFFFF" : "#333333",
+            "text-halo-color": darkMode ? "#000000" : "#FFFFFF",
+            "text-halo-width": 1,
+          },
+        },
+        {
+          id: "buildings",
+          type: "fill-extrusion",
+          source: "vector",
+          "source-layer": "buildings",
+          minzoom: 12,
+          paint: {
+            "fill-extrusion-color": "#E8ECEF",
+            "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 12, 0, 15, ["get", "height", 10]],
+            "fill-extrusion-opacity": 0.7,
+          },
+        },
+        {
+          id: "building-labels",
+          type: "symbol",
+          source: "vector",
+          "source-layer": "buildings",
+          minzoom: 14,
+          layout: {
+            "text-field": ["get", "name"],
+            "text-font": ["Arial Unicode MS Bold"],
+            "text-size": 10,
+          },
+          paint: {
+            "text-color": darkMode ? "#FFFFFF" : "#333333",
+            "text-halo-color": darkMode ? "#000000" : "#FFFFFF",
+            "text-halo-width": 1,
+          },
+        },
+      ],
+    };
+
     const initializeMap = () => {
       if (!mapRef.current || !document.body.contains(mapRef.current)) {
         console.error("Map container is not available or not in DOM");
@@ -515,11 +674,7 @@ function Emergency() {
                 sources: {
                   satellite: {
                     type: "raster",
-                    tiles: [
-                      mapboxKey
-                        ? `https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg?access_token=${mapboxKey}`
-                        : "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-                    ],
+                    tiles: ["https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
                     tileSize: 256,
                     attribution: "",
                   },
@@ -534,28 +689,11 @@ function Emergency() {
                   },
                 ],
               }
+            : mapStyle === "3d"
+            ? googleStyle
             : mapboxKey
             ? `https://api.mapbox.com/styles/v1/mapbox/streets-v11?access_token=${mapboxKey}`
-            : {
-                version: 8,
-                sources: {
-                  osm: {
-                    type: "raster",
-                    tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-                    tileSize: 256,
-                    attribution: "",
-                  },
-                },
-                layers: [
-                  {
-                    id: "osm-tiles",
-                    type: "raster",
-                    source: "osm",
-                    minzoom: 0,
-                    maxzoom: 22,
-                  },
-                ],
-              },
+            : defaultStyle,
           center: location,
           zoom: 15,
           pitch: mapStyle === "3d" ? 60 : 0,
@@ -564,115 +702,93 @@ function Emergency() {
         });
         mapInstanceRef.current = map;
 
+        // Style map controls
+        const nav = new maplibregl.NavigationControl();
+        map.addControl(nav, "top-right");
+        const navEl = nav._container;
+        navEl.className = `rounded-full bg-white shadow-md p-1`;
+
+        const geo = new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true });
+        map.addControl(geo, "top-right");
+        const geoEl = geo._container;
+        geoEl.className = `rounded-full bg-white shadow-md p-1 mt-2`;
+
         const tileLoadTimeout = setTimeout(() => {
-          if (mapStyle === "satellite" && (!map.isStyleLoaded() || !map.areTilesLoaded())) {
-            console.warn("Initial satellite tiles failed to load, switching to Esri World Imagery");
+          if ((mapStyle === "satellite" || mapStyle === "3d") && (!map.isStyleLoaded() || !map.areTilesLoaded())) {
+            console.warn(`Initial ${mapStyle} tiles failed to load, switching to OpenStreetMap`);
             setTileLoadStatus("failed");
-            map.setStyle({
-              version: 8,
-              sources: {
-                satellite: {
-                  type: "raster",
-                  tiles: ["https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
-                  tileSize: 256,
-                  attribution: "",
-                },
-              },
-              layers: [
-                {
-                  id: "satellite-tiles",
-                  type: "raster",
-                  source: "satellite",
-                  minzoom: 0,
-                  maxzoom: 22,
-                },
-              ],
-            });
+            map.setStyle(defaultStyle);
             setIsMapLoaded(true);
             setStyleLoading(false);
           }
-        }, 3000);
+        }, 8000);
 
         map.on("error", (e) => {
           console.error("Map error:", e.error);
-          if (mapStyle === "satellite") {
-            console.warn("Satellite tile error, using Esri World Imagery");
-            setTileLoadStatus("failed");
-            map.setStyle({
-              version: 8,
-              sources: {
-                satellite: {
-                  type: "raster",
-                  tiles: ["https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
-                  tileSize: 256,
-                  attribution: "",
-                },
-              },
-              layers: [
-                {
-                  id: "satellite-tiles",
-                  type: "raster",
-                  source: "satellite",
-                  minzoom: 0,
-                  maxzoom: 22,
-                },
-              ],
-            });
-            setIsMapLoaded(true);
-            setStyleLoading(false);
-          } else {
-            map.setStyle({
-              version: 8,
-              sources: {
-                osm: {
-                  type: "raster",
-                  tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-                  tileSize: 256,
-                  attribution: "",
-                },
-              },
-              layers: [
-                {
-                  id: "osm-tiles",
-                  type: "raster",
-                  source: "osm",
-                  minzoom: 0,
-                  maxzoom: 22,
-                },
-              ],
-            });
-            setIsMapLoaded(true);
-            setStyleLoading(false);
-            setTileLoadStatus("failed");
-          }
+          setTileLoadStatus("failed");
+          map.setStyle(defaultStyle);
+          setIsMapLoaded(true);
+          setStyleLoading(false);
         });
 
         map.on("load", () => {
           clearTimeout(tileLoadTimeout);
           setIsMapLoaded(true);
           setStyleLoading(false);
-          setTileLoadStatus(mapStyle === "satellite" && map.isStyleLoaded() && map.areTilesLoaded() ? "success" : "failed");
+          setTileLoadStatus((mapStyle === "satellite" || mapStyle === "3d") && map.isStyleLoaded() && map.areTilesLoaded() ? "success" : "failed");
+
+          if (mapStyle === "3d") {
+            try {
+              map.addSource("mapzen-terrain", {
+                type: "raster-dem",
+                tiles: ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],
+                tileSize: 256,
+                encoding: "terrarium",
+                maxzoom: 15,
+              });
+              map.setTerrain({
+                source: "mapzen-terrain",
+                exaggeration: 1.2,
+              });
+              map.setLight({
+                anchor: "viewport",
+                color: "#FFFFFF",
+                intensity: 0.3,
+                position: [1.15, 210, 30],
+              });
+              map.addLayer({
+                id: "sky",
+                type: "sky",
+                paint: {
+                  "sky-type": "gradient",
+                  "sky-color-stops": [[0, "#D1E5FB"], [1, "#FFFFFF"]],
+                },
+              });
+              console.log("3D terrain loaded successfully with Google Maps style");
+            } catch (terrainError) {
+              console.error("Failed to load 3D terrain:", terrainError);
+              setTileLoadStatus("terrain-failed");
+              map.setPitch(0);
+            }
+          }
+
           map.resize();
           map.triggerRepaint();
 
-          if (mapStyle === "3d") {
-            map.addSource("maplibre-terrain", {
-              type: "raster-dem",
-              tiles: ["https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.png"],
-              tileSize: 256,
-            });
-            map.setTerrain({ source: "maplibre-terrain", exaggeration: 1.5 });
-          }
-
-          map.addControl(new maplibregl.NavigationControl(), "top-right");
-          map.addControl(
-            new maplibregl.GeolocateControl({
-              positionOptions: { enableHighAccuracy: true },
-              trackUserLocation: true,
-            })
-          );
-
-          userMarkerRef.current = new maplibregl.Marker({ color: "blue" })
+          userMarkerRef.current = new maplibregl.Marker({
+            element: (() => {
+              const el = document.createElement("div");
+              el.className = "user-marker";
+              el.innerHTML = `
+                <svg width="24" height="36" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 0C5.373 0 0 5.373 0 12c0 8.837 12 24 12 24s12-15.163 12-24C24 5.373 18.627 0 12 0z" fill="#4285F4"/>
+                  <circle cx="12" cy="12" r="6" fill="white"/>
+                </svg>
+              `;
+              el.style.animation = "drop 0.5s ease-out";
+              return el;
+            })(),
+          })
             .setLngLat(location)
             .setPopup(new maplibregl.Popup().setText("You are here"))
             .addTo(map);
@@ -704,17 +820,28 @@ out body;`;
               sortedHospitals.forEach((h) => {
                 const el = document.createElement("div");
                 el.className = "hospital-marker";
-                el.style.backgroundColor = "red";
-                el.style.width = "12px";
-                el.style.height = "12px";
-                el.style.borderRadius = "50%";
+                el.innerHTML = `
+                  <svg width="24" height="36" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 0C5.373 0 0 5.373 0 12c0 8.837 12 24 12 24s12-15.163 12-24C24 5.373 18.627 0 12 0z" fill="#DB4437"/>
+                    <circle cx="12" cy="12" r="6" fill="white"/>
+                  </svg>
+                `;
+                el.style.animation = "drop 0.5s ease-out";
 
-                new maplibregl.Marker(el)
+                new maplibregl.Marker({ element: el })
                   .setLngLat([h.lon, h.lat])
                   .setPopup(
                     new maplibregl.Popup().setHTML(`
-                      <strong>${h.tags.name || "Hospital/Clinic"}</strong><br/>
-                      <button onclick="window.getRoute(${h.lon}, ${h.lat}, '${h.tags.name || "Hospital/Clinic"}')">Lock & Route</button>
+                      <div class="bg-white p-3 rounded-lg shadow-md max-w-xs">
+                        <strong class="text-sm font-semibold text-[#333333]">${h.tags.name || "Hospital/Clinic"}</strong><br/>
+                        <p class="text-xs text-[#666666]">Distance: ${(h.distance / 1000).toFixed(2)} km</p>
+                        <button 
+                          onclick="window.getRoute(${h.lon}, ${h.lat}, '${h.tags.name || "Hospital/Clinic"}')"
+                          class="bg-[#00C2CB] text-white px-3 py-1 rounded-[20px] mt-2 hover:bg-[#0097A7] transition-all duration-300 text-xs"
+                        >
+                          Directions
+                        </button>
+                      </div>
                     `)
                   )
                   .addTo(map);
@@ -775,7 +902,7 @@ out body;`;
                       type: "line",
                       source: "route",
                       paint: {
-                        "line-color": "#1E90FF",
+                        "line-color": "#4285F4",
                         "line-width": 5,
                         "line-opacity": 0.8,
                       },
@@ -805,7 +932,7 @@ out body;`;
               type: "line",
               source: "route",
               paint: {
-                "line-color": "#1E90FF",
+                "line-color": "#4285F4",
                 "line-width": 5,
                 "line-opacity": 0.8,
               },
@@ -819,26 +946,7 @@ out body;`;
         setTileLoadStatus("failed");
         mapInstanceRef.current = new maplibregl.Map({
           container: mapRef.current,
-          style: {
-            version: 8,
-            sources: {
-              osm: {
-                type: "raster",
-                tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-                tileSize: 256,
-                attribution: "",
-              },
-            },
-            layers: [
-              {
-                id: "osm-tiles",
-                type: "raster",
-                source: "osm",
-                minzoom: 0,
-                maxzoom: 22,
-              },
-            ],
-          },
+          style: defaultStyle,
           center: location,
           zoom: 15,
           attributionControl: false,
@@ -875,11 +983,14 @@ out body;`;
       if (isTracking) {
         userMarkerRef.current.remove();
         const arrowEl = document.createElement("div");
-        arrowEl.style.width = "24px";
-        arrowEl.style.height = "24px";
-        arrowEl.style.backgroundColor = "blue";
-        arrowEl.style.clipPath = "polygon(50% 0%, 100% 100%, 0% 100%)";
-        arrowEl.style.border = "1px solid white";
+        arrowEl.className = "user-arrow";
+        arrowEl.innerHTML = `
+          <svg width="24" height="36" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 0C5.373 0 0 5.373 0 12c0 8.837 12 24 12 24s12-15.163 12-24C24 5.373 18.627 0 12 0z" fill="#4285F4"/>
+            <circle cx="12" cy="12" r="6" fill="white"/>
+          </svg>
+        `;
+        arrowEl.style.animation = "drop 0.5s ease-out";
         let arrowHeading = heading;
         if (arrowHeading === null && routeGeoJSON && routeGeoJSON.features[0].geometry.coordinates.length > 1) {
           const nextPoint = routeGeoJSON.features[0].geometry.coordinates[1];
@@ -888,12 +999,25 @@ out body;`;
         if (arrowHeading !== null) {
           arrowEl.style.transform = `rotate(${arrowHeading}deg)`;
         }
-        userMarkerRef.current = new maplibregl.Marker(arrowEl)
+        userMarkerRef.current = new maplibregl.Marker({ element: arrowEl })
           .setLngLat(location)
           .addTo(mapInstanceRef.current);
-      } else if (!isTracking && userMarkerRef.current.getElement().style.clipPath) {
+      } else if (!isTracking && userMarkerRef.current.getElement().className.includes("user-arrow")) {
         userMarkerRef.current.remove();
-        userMarkerRef.current = new maplibregl.Marker({ color: "blue" })
+        userMarkerRef.current = new maplibregl.Marker({
+          element: (() => {
+            const el = document.createElement("div");
+            el.className = "user-marker";
+            el.innerHTML = `
+              <svg width="24" height="36" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 0C5.373 0 0 5.373 0 12c0 8.837 12 24 12 24s12-15.163 12-24C24 5.373 18.627 0 12 0z" fill="#4285F4"/>
+                <circle cx="12" cy="12" r="6" fill="white"/>
+              </svg>
+            `;
+            el.style.animation = "drop 0.5s ease-out";
+            return el;
+          })(),
+        })
           .setLngLat(location)
           .setPopup(new maplibregl.Popup().setText("You are here"))
           .addTo(mapInstanceRef.current);
@@ -1007,28 +1131,64 @@ out body;`;
     window.getRoute(lon, lat, name);
   };
 
+  const handleRetryStyle = () => {
+    setMapStyle(mapStyle); // Trigger reload of current style
+  };
+
+  useEffect(() => {
+    if (tileLoadStatus === "failed" || tileLoadStatus === "terrain-failed") {
+      const timer = setTimeout(() => setTileLoadStatus("success"), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [tileLoadStatus]);
+
   return (
     <>
+      <style>
+        {`
+          @keyframes drop {
+            0% { transform: translateY(-100px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+          }
+        `}
+      </style>
       <Header />
       <Helmet>
         <title>Emergency Services - MediCare</title>
         <meta name="description" content="Emergency guides & live map with nearby hospitals/clinics." />
       </Helmet>
 
-      <div className={`max-w-5xl mx-auto px-4 py-8 ${textColor} bg-transparent rounded-[40px] shadow-md transition-all duration-300 border-none outline-none`}>
-        <motion.h1 className="text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500">
+      <div className="mx-auto px-4 py-8 max-w-5xl">
+        <motion.h1
+          className="text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
           Emergency Services
         </motion.h1>
 
-        <motion.p className="text-xl mb-8 text-center">
+        <motion.p
+          className="text-xl mb-8 text-center text-[#0A3D62] dark:text-[#FDFBFB]"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
           Call emergency numbers. Use guides & location map below.
         </motion.p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
           {emergencyServices.map((s) => (
             <motion.div
               key={s.name}
-              className={`p-6 rounded-[40px] shadow-md text-center ${cardBg} ${hoverBg} ${textColor} transition-all duration-300 overflow-hidden border-none outline-none`}
+              className={`p-6 rounded-[40px] shadow-md text-center ${cardBg} transition-all duration-500 backdrop-blur-2xl border-none outline-none`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               <s.icon className="w-12 h-12 mx-auto mb-4" />
               <h2 className="text-xl font-semibold mb-2">{s.name}</h2>
@@ -1039,25 +1199,38 @@ out body;`;
               </p>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
 
-        <motion.h2 className="text-2xl font-semibold mb-4">Emergency Guides</motion.h2>
+        <motion.h2
+          className="text-2xl font-semibold mb-4 text-[#0A3D62] dark:text-[#FDFBFB]"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
+          Emergency Guides
+        </motion.h2>
         {Object.entries(emergencyGuides).map(([k, g]) => (
           <EmergencyGuide key={k} title={g.title} steps={g.steps} />
         ))}
 
-        <motion.div className="mt-12">
-          <h2 className="text-2xl mb-4 text-center">Nearby Hospitals & Clinics</h2>
+        <motion.div
+          className="mt-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+        >
+          <h2 className="text-2xl mb-4 text-center text-[#0A3D62] dark:text-[#FDFBFB]">Nearby Hospitals & Clinics</h2>
           <div className="relative mb-4 sticky top-0 z-20" role="search">
             <motion.div
-              className={`flex items-center rounded-[40px] overflow-hidden ${cardBg} backdrop-blur-sm shadow-md border-none outline-none`}
+              className={`flex items-center rounded-[40px] overflow-hidden ${cardBg} backdrop-blur-2xl shadow-md transition-all duration-500 border-none outline-none`}
               initial={{ width: isSearchActive ? "100%" : 40 }}
               animate={{ width: isSearchActive ? "100%" : 40 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
+              whileHover={{ scale: 1.02 }}
             >
               <motion.button
                 onClick={() => setIsSearchActive(!isSearchActive)}
-                className={`p-3 rounded-xl ${hoverBg} ${textColor} focus:ring-2 focus:ring-[#00C2CB]`}
+                className={`p-3 rounded-[40px] ${cardBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-500 backdrop-blur-2xl border-none outline-none`}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 aria-label={isSearchActive ? "Close search" : "Open search"}
@@ -1076,7 +1249,7 @@ out body;`;
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search hospitals or clinics..."
-                    className={`flex-1 p-3 bg-transparent focus:outline-none rounded-xl border-none ${textColor} placeholder-gray-400 focus:ring-2 focus:ring-[#00C2CB]`}
+                    className={`flex-1 p-3 bg-transparent focus:outline-none rounded-[40px] border-none ${cardBg} placeholder-gray-400 focus:ring-2 focus:ring-[#00C2CB] transition-all duration-500 backdrop-blur-2xl`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
@@ -1090,7 +1263,7 @@ out body;`;
               {searchSuggestions.length > 0 && isSearchActive && (
                 <motion.ul
                   key="search-suggestions"
-                  className={`absolute z-10 w-full mt-1 rounded-[40px] shadow-lg overflow-hidden ${cardBg} ${textColor} border-none outline-none`}
+                  className={`absolute z-10 w-full mt-1 rounded-[40px] shadow-lg overflow-hidden ${cardBg} backdrop-blur-2xl transition-all duration-500 border-none outline-none`}
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
@@ -1100,7 +1273,7 @@ out body;`;
                     <motion.li
                       key={h.id}
                       onClick={() => handleSearchSelect(h.lon, h.lat, h.tags.name || "Hospital/Clinic")}
-                      className={`p-3 cursor-pointer ${hoverBg} ${textColor}`}
+                      className={`p-3 cursor-pointer ${cardBg} backdrop-blur-2xl transition-all duration-500`}
                       whileHover={{ backgroundColor: darkMode ? "#00C2CB" : "#E5E7EB" }}
                     >
                       {h.tags.name || "Hospital/Clinic"} ({(h.distance / 1000).toFixed(2)} km)
@@ -1110,62 +1283,86 @@ out body;`;
               )}
             </AnimatePresence>
           </div>
-          <div
-            ref={mapRef}
-            className={`h-[600px] w-full min-h-[600px] max-w-full rounded-[40px] shadow-lg bg-gray-200 dark:bg-gray-800 relative z-0 overflow-hidden border-none outline-none`}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isMapLoaded ? 1 : 0 }}
+            transition={{ duration: 0.5 }}
           >
-            {!isMapLoaded && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-800">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#00C2CB]"></div>
-                {styleLoading && (
-                  <p className={`mt-4 ${textColor}`}>Switching style...</p>
-                )}
-              </div>
-            )}
-            {tileLoadStatus === "failed" && mapStyle === "satellite" && (
-              <div className={`absolute top-4 right-4 z-10 p-2 rounded-[40px] bg-red-600 ${darkMode ? "text-[#FDFBFB]" : "text-white"} border-none outline-none`}>
-                Failed to load satellite imagery, using fallback
-              </div>
-            )}
-            <MapStyleSwitcher
-              mapStyle={mapStyle}
-              setMapStyle={setMapStyle}
-              mapInstanceRef={mapInstanceRef}
-              routeGeoJSON={routeGeoJSON}
-              userMarkerRef={userMarkerRef}
-              setIsMapLoaded={setIsMapLoaded}
-              setStyleLoading={setStyleLoading}
-              destination={destination}
-              routeInfo={routeInfo}
-              setTileLoadStatus={setTileLoadStatus}
-            />
-          </div>
+            <div
+              ref={mapRef}
+              className={`h-[600px] w-full min-h-[600px] max-w-full rounded-[40px] shadow-lg bg-gray-200 dark:bg-gray-800 relative z-0 overflow-hidden border-none outline-none`}
+            >
+              {!isMapLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-800">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#00C2CB]"></div>
+                  {styleLoading && (
+                    <p className={`mt-4 ${cardBg} p-3 rounded-[40px] backdrop-blur-2xl transition-all duration-500 text-[#0A3D62] dark:text-[#FDFBFB]`}>Switching style...</p>
+                  )}
+                </div>
+              )}
+              {(tileLoadStatus === "failed" || tileLoadStatus === "terrain-failed") && (
+                <div className={`absolute top-4 right-4 z-10 p-3 rounded-[20px] bg-red-600 ${darkMode ? "text-[#FDFBFB]" : "text-white"} backdrop-blur-2xl shadow-md transition-all duration-500 border-none outline-none flex items-center space-x-2`}>
+                  <span>{tileLoadStatus === "terrain-failed" ? "3D terrain failed, using 2D" : "Map style failed, using fallback"}</span>
+                  <motion.button
+                    onClick={handleRetryStyle}
+                    className="px-2 py-1 bg-white/20 rounded-[20px] text-sm hover:bg-white/30 transition-all duration-300"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    Retry
+                  </motion.button>
+                </div>
+              )}
+              <MapStyleSwitcher
+                mapStyle={mapStyle}
+                setMapStyle={setMapStyle}
+                mapInstanceRef={mapInstanceRef}
+                routeGeoJSON={routeGeoJSON}
+                userMarkerRef={userMarkerRef}
+                setIsMapLoaded={setIsMapLoaded}
+                setStyleLoading={setStyleLoading}
+                destination={destination}
+                routeInfo={routeInfo}
+                setTileLoadStatus={setTileLoadStatus}
+              />
+            </div>
+          </motion.div>
           {routeInfo && (
-            <div className={`mt-4 p-6 rounded-[40px] shadow-md ${cardBg} ${textColor} border-none outline-none`}>
+            <motion.div
+              className={`mt-4 p-6 rounded-[40px] shadow-md ${cardBg} backdrop-blur-2xl transition-all duration-500 border-none outline-none`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
               <p><strong>Route to {routeInfo.name}</strong></p>
               <p>Car: {(routeInfo.car?.distance / 1000).toFixed(2)} km, {Math.round(routeInfo.car?.duration / 60)} min</p>
               <p>Bike: {(routeInfo.bike?.distance / 1000).toFixed(2)} km, {Math.round(routeInfo.bike?.duration / 60)} min</p>
               <p>Foot: {(routeInfo.foot?.distance / 1000).toFixed(2)} km, {Math.round(routeInfo.foot?.duration / 60)} min</p>
               <div className="mt-2 flex justify-center space-x-4">
-                <button
+                <motion.button
                   onClick={() => setIsTracking(!isTracking)}
-                  className={`px-4 py-2 rounded-xl ${darkMode ? "bg-[#00C2CB] text-[#FDFBFB]" : "bg-[#00C2CB] text-white"} hover:bg-[#0097A7] focus:ring-2 focus:ring-[#00C2CB]`}
+                  className={`px-4 py-2 rounded-[40px] ${darkMode ? "bg-[#00C2CB] text-[#FDFBFB]" : "bg-[#00C2CB] text-white"} hover:bg-[#0097A7] focus:ring-2 focus:ring-[#00C2CB] backdrop-blur-2xl transition-all duration-500`}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
                   {isTracking ? "Stop Tracking" : "Start Tracking"}
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   onClick={() => setIsMuted(!isMuted)}
-                  className={`px-4 py-2 rounded-xl ${darkMode ? "bg-[#00C2CB] text-[#FDFBFB]" : "bg-[#00C2CB] text-white"} hover:bg-[#0097A7] focus:ring-2 focus:ring-[#00C2CB]`}
+                  className={`px-4 py-2 rounded-[40px] ${darkMode ? "bg-[#00C2CB] text-[#FDFBFB]" : "bg-[#00C2CB] text-white"} hover:bg-[#0097A7] focus:ring-2 focus:ring-[#00C2CB] backdrop-blur-2xl transition-all duration-500`}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
                   {isMuted ? <VolumeX className="inline mr-2" /> : <Volume2 className="inline mr-2" />}
                   {isMuted ? "Unmute Voice" : "Mute Voice"}
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   onClick={cancelRoute}
-                  className={`px-4 py-2 rounded-xl bg-red-600 ${darkMode ? "text-[#FDFBFB]" : "text-white"} hover:bg-red-700 focus:ring-2 focus:ring-red-500`}
+                  className={`px-4 py-2 rounded-[40px] bg-red-600 ${darkMode ? "text-[#FDFBFB]" : "text-white"} hover:bg-red-700 focus:ring-2 focus:ring-red-500 backdrop-blur-2xl transition-all duration-500`}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
                   Cancel Route
-                </button>
+                </motion.button>
               </div>
               <div className="mt-2">
                 <strong>Directions (Car):</strong>
@@ -1175,7 +1372,7 @@ out body;`;
                   )) || <li>No directions available</li>}
                 </ol>
               </div>
-            </div>
+            </motion.div>
           )}
         </motion.div>
       </div>
