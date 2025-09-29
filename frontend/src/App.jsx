@@ -10,7 +10,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import About from "./pages/About";
-import MedicineSuggestion from "./pages/MediBot";
+import MediBot from "./pages/MediBot";
 import Consultation from "./pages/Consultation";
 import Feedback from "./pages/Feedback";
 import Contact from "./pages/Contact";

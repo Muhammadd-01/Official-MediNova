@@ -59,8 +59,8 @@ function Header() {
     "MediBot",
     "Consultation",
     "Pharmacy",
-    "Articles",
     "Labs",
+    "Articles",
     "Emergency",
     "Contact",
   ];

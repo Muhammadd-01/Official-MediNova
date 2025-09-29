@@ -124,7 +124,7 @@ function Contact() {
               <p>123 Medical Street</p>
               <p>Health City, HC 12345</p>
               <p>Phone: (123) 456-7890</p>
-              <p>Email: info@MediNova.com</p>
+              <p>Email: contact.medinova@gmail.com</p>
             </div>
             <div className="w-full h-64 md:h-80 rounded-2xl overflow-hidden">
               <iframe
@@ -181,16 +181,18 @@ function Contact() {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <a
-              href="mailto:support@medinova.com"
+              href="mailto:contact.medinova@gmail.com"
               className={`${buttonStyle} inline-block`}
             >
               Email Support
             </a>
             <a
-              href="tel:+1234567890"
+              href="https://wa.me/03160212457"
               className={`${buttonStyle} inline-block`}
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              Call Us
+              WhatsApp Us
             </a>
             <a
               href="/faq"
