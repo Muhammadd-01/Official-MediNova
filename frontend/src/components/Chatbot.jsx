@@ -63,7 +63,7 @@ function Chatbot() {
     scrollToBottom();
   }, [messages]);
 
-  // Reset pulse animation after click
+  // Reset toggle button pulse animation
   useEffect(() => {
     if (isPulse) {
       const timer = setTimeout(() => setIsPulse(false), 600);
@@ -173,8 +173,8 @@ function Chatbot() {
     ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB]"
     : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62]";
   const hoverGlass = darkMode
-    ? "hover:bg-[#0A2A43]/50"
-    : "hover:bg-white/50";
+    ? "hover:bg-[#00C2CB]/20 hover:shadow-lg hover:scale-105"
+    : "hover:bg-white/30 hover:shadow-lg hover:scale-105";
 
   return (
     <>
@@ -182,31 +182,29 @@ function Chatbot() {
       <AnimatePresence>
         {showAlert && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className={`fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm`}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className={`fixed top-20 right-4 w-64 max-w-xs rounded-2xl ${baseGlass} backdrop-blur-xl shadow-xl z-50 p-4`}
           >
-            <div className={`p-6 rounded-2xl ${baseGlass} shadow-xl max-w-sm w-full`}>
-              <p className="text-center mb-4">Are you sure you want to clear your chat history?</p>
-              <div className="flex justify-center gap-4">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={confirmClearChat}
-                  className={`px-4 py-2 rounded-full ${hoverGlass} bg-[#0A3D62] text-white`}
-                >
-                  Yes, Clear
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowAlert(false)}
-                  className={`px-4 py-2 rounded-full ${hoverGlass}`}
-                >
-                  Cancel
-                </motion.button>
-              </div>
+            <p className="text-center mb-3 text-sm">Clear chat history?</p>
+            <div className="flex justify-center gap-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={confirmClearChat}
+                className={`px-3 py-1 rounded-full text-sm ${baseGlass} ${hoverGlass} bg-[#0A3D62] text-white`}
+              >
+                Yes, Clear
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowAlert(false)}
+                className={`px-3 py-1 rounded-full text-sm ${baseGlass} ${hoverGlass}`}
+              >
+                Cancel
+              </motion.button>
             </div>
           </motion.div>
         )}
