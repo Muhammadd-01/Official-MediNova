@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect, useRef, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, Send, Trash2, Bot } from "lucide-react";
@@ -8,8 +6,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isPulse, setIsPulse] = useState(false);
   const [messages, setMessages] = useState(() => {
-    // Load from localStorage with welcome message tailored to MediNova
     const saved = JSON.parse(localStorage.getItem("mediNovaChat")) || [];
     if (saved.length === 0) {
       return [
@@ -27,6 +25,7 @@ function Chatbot() {
     { text: "Book Consultation", action: "consult" },
     { text: "Pharmacy Info", action: "pharmacy" },
   ]);
+  const [showAlert, setShowAlert] = useState(false);
   const messagesEndRef = useRef(null);
   const { darkMode } = useContext(DarkModeContext);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +34,7 @@ function Chatbot() {
   const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-  // Full MediNova context: Online hospital with key features
+  // MediNova context
   const mediNovaContext = `
     MediNova is a comprehensive online hospital platform. Core features:
     - AI Form: Users input symptoms, age, gender, allergies; AI suggests primary/alternative OTC medicines with dosages, precautions, and pharmacy sources (e.g., CVS, Walgreens) using FDA/open-source APIs.
@@ -48,11 +47,29 @@ function Chatbot() {
     - Keep responses concise, empathetic, and action-oriented. If unclear, ask for details.
   `;
 
+  // Animation variants for toggle icon
+  const chatIconVariants = {
+    initial: { scale: 1, rotate: 0 },
+    pulse: {
+      scale: [1, 1.2, 1],
+      rotate: [0, 15, -15, 0],
+      transition: { duration: 0.6, ease: "easeInOut" },
+    },
+  };
+
   // Persist messages and scroll
   useEffect(() => {
     localStorage.setItem("mediNovaChat", JSON.stringify(messages));
     scrollToBottom();
   }, [messages]);
+
+  // Reset pulse animation after click
+  useEffect(() => {
+    if (isPulse) {
+      const timer = setTimeout(() => setIsPulse(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isPulse]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -74,9 +91,10 @@ function Chatbot() {
       default:
         query = "What are MediNova's main features?";
     }
-    handleSubmit({ preventDefault: () => {} }, query); // Simulate submit
+    handleSubmit({ preventDefault: () => {} }, query);
   };
 
+  // Handle form submission
   const handleSubmit = async (e, customInput = null) => {
     e?.preventDefault();
     const userInput = customInput || input;
@@ -109,15 +127,13 @@ function Chatbot() {
         const response = await result.response;
         let text = response.text();
 
-        // Auto-disclaimer for medical/escalation
         if (userInput.toLowerCase().match(/symptom|pain|ill|sick|medicine|drug/)) {
           text += "\n\n**Important**: This is not medical advice. Use our AI Form for personalized suggestions or book a consultation. Consult a doctor for serious issues.";
         }
 
         setMessages((prev) => [...prev, { text, sender: "bot" }]);
-        // Basic analytics: Log query type (expand to backend later)
         console.log("Chat Analytics:", { query: userInput, type: "medical" || "app" || "general" });
-        break; // Success, exit retry loop
+        break;
       } catch (error) {
         console.error("API Error (Retry", retries + 1, "):", error);
         retries++;
@@ -130,7 +146,6 @@ function Chatbot() {
             },
           ]);
         } else {
-          // Wait 2s before retry
           await new Promise((resolve) => setTimeout(resolve, 2000));
         }
       }
@@ -138,20 +153,22 @@ function Chatbot() {
     setIsLoading(false);
   };
 
-  // Clear chat
+  // Clear chat with custom alert
   const clearChat = () => {
-    const confirmed = window.confirm("Clear chat history?"); // Simple UX confirm
-    if (confirmed) {
-      setMessages([
-        {
-          text: "Chat reset. Ready to help with MediNova—ask away!",
-          sender: "bot",
-        },
-      ]);
-    }
+    setShowAlert(true);
   };
 
-  // Styles (unchanged for consistency)
+  const confirmClearChat = () => {
+    setMessages([
+      {
+        text: "Chat reset. Ready to help with MediNova—ask away!",
+        sender: "bot",
+      },
+    ]);
+    setShowAlert(false);
+  };
+
+  // Styles
   const baseGlass = darkMode
     ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB]"
     : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62]";
@@ -161,12 +178,51 @@ function Chatbot() {
 
   return (
     <>
+      {/* Custom Alert */}
+      <AnimatePresence>
+        {showAlert && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className={`fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm`}
+          >
+            <div className={`p-6 rounded-2xl ${baseGlass} shadow-xl max-w-sm w-full`}>
+              <p className="text-center mb-4">Are you sure you want to clear your chat history?</p>
+              <div className="flex justify-center gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={confirmClearChat}
+                  className={`px-4 py-2 rounded-full ${hoverGlass} bg-[#0A3D62] text-white`}
+                >
+                  Yes, Clear
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowAlert(false)}
+                  className={`px-4 py-2 rounded-full ${hoverGlass}`}
+                >
+                  Cancel
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Toggle Button */}
       <motion.button
         className={`fixed bottom-4 right-4 p-4 rounded-full backdrop-blur-2xl shadow-lg z-50 flex items-center justify-center ${baseGlass} ${hoverGlass} transition-all duration-500`}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(!isOpen)}
+        animate={isPulse ? "pulse" : "initial"}
+        variants={chatIconVariants}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          setIsPulse(true);
+        }}
         aria-label="Toggle Chatbot"
       >
         {isOpen ? <X size={24} /> : <MessageSquare size={24} />}
@@ -217,7 +273,7 @@ function Chatbot() {
             </div>
 
             {/* Quick Replies */}
-            {!isLoading && messages.length < 3 && ( // Show only on fresh start
+            {!isLoading && messages.length < 3 && (
               <div className="p-4 border-t border-white/20 bg-white/10">
                 <p className="text-xs mb-2 opacity-70">Quick actions:</p>
                 <div className="flex flex-wrap gap-2">
