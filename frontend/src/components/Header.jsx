@@ -60,8 +60,7 @@ function Header() {
   const headerBg =
     "bg-white/20 dark:bg-[#0D3B66]/30 backdrop-blur-xl border border-white/20 dark:border-[#00C2CB]/20 shadow-lg";
   const textColor = darkMode ? "text-white" : "text-[#0D3B66]";
-  const hoverGlass =
-    "transition-all duration-300 hover:bg-white/30 dark:hover:bg-[#00C2CB]/20 hover:shadow-lg hover:scale-105";
+  const hoverGlass = "transition-all duration-300 hover:bg-white/30";
 
   const navItems = [
     "Home",
@@ -136,7 +135,7 @@ function Header() {
                 whileHover="hover"
                 whileTap="tap"
                 animate={cartPulse ? "pulse" : "initial"}
-                className={`h-10 w-10 flex items-center justify-center rounded-full bg-[#0D3B66] text-white border border-white/20 ${hoverGlass}`}
+                className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${darkMode ? "text-white" : "text-[#0D3B66]"} border border-white/20`}
               >
                 <ShoppingCart size={20} />
                 {totalItems > 0 && (
@@ -157,7 +156,7 @@ function Header() {
                   setIsSettingsOpen(!isSettingsOpen);
                   setPulse(true);
                 }}
-                className={`h-10 w-10 flex items-center justify-center rounded-full bg-[#0D3B66] text-white border border-white/20 ${hoverGlass}`}
+                className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${darkMode ? "text-white" : "text-[#0D3B66]"} border border-white/20`}
               >
                 <Settings size={18} />
               </motion.button>
@@ -256,7 +255,7 @@ function Header() {
                   whileHover="hover"
                   whileTap="tap"
                   animate={cartPulse ? "pulse" : "initial"}
-                  className={`w-full flex items-center gap-3 px-5 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}
+                  className={`w-full flex items-center gap-3 px-5 py-2 rounded-full text-sm font-medium bg-white/30 dark:bg-[#0D3B66]/80 ${darkMode ? "text-white" : "text-[#0D3B66]"}`}
                 >
                   <ShoppingCart size={20} />
                   <span>Cart {totalItems > 0 ? `(${totalItems})` : ""}</span>
@@ -272,7 +271,7 @@ function Header() {
                     setIsSettingsOpen(!isSettingsOpen);
                     setPulse(true);
                   }}
-                  className={`w-full flex items-center gap-3 px-5 py-2 rounded-full text-sm font-medium ${hoverGlass}`}
+                  className={`w-full flex items-center gap-3 px-5 py-2 rounded-full text-sm font-medium bg-white/30 dark:bg-[#0D3B66] ${darkMode ? "text-white" : "text-[#0D3B66]"}`}
                 >
                   <Settings size={20} />
                   <span>Settings</span>
