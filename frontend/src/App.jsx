@@ -24,6 +24,7 @@ import BloodStreamBackground from "./components/BackgroundAnimation";
 import Chatbot from "./components/Chatbot";
 import GoToTop from "./components/GoToTop";
 import Labs from "./pages/Labs";
+import FAQ from "./components/FAQ";
 
 // Contexts
 export const DarkModeContext = React.createContext();

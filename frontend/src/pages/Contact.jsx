@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { DarkModeContext } from "../App";
-
+import FAQ from "../components/FAQ";
 function Contact() {
   const { darkMode } = useContext(DarkModeContext);
 
@@ -196,6 +196,7 @@ function Contact() {
             </a>
             <a
               href="/faq"
+
               className={`${buttonStyle} inline-block`}
             >
               Visit FAQ
