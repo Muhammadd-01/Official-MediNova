@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DarkModeContext, AuthContext, CartContext } from "../App";
 import CartSidebar from "./CartSidebar";
 
+// Create motion-enhanced Link
+const MotionLink = motion(Link);
+
 // Animation variants
 const dropdownVariants = {
   hidden: { opacity: 0, y: -10, scale: 0.95 },
@@ -16,6 +19,12 @@ const mobileMenuVariants = {
   hidden: { opacity: 0, height: 0 },
   visible: { opacity: 1, height: "auto" },
   exit: { opacity: 0, height: 0 },
+};
+
+const logoVariants = {
+  initial: { scale: 1 },
+  hover: { scale: 1.05, transition: { type: "spring", stiffness: 300, damping: 15 } },
+  tap: { scale: 0.95 },
 };
 
 const settingsButtonVariants = {
@@ -92,29 +101,32 @@ function Header() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex justify-between items-center">
             {/* Logo */}
-            <Link
+            <MotionLink
               to="/"
-              className={`text-xl sm:text-2xl font-extrabold tracking-wide px-4 py-2 rounded-full ${hoverGlass}`}
+              variants={logoVariants}
+              initial="initial"
+              whileHover="hover"
+              whileTap="tap"
+              className={`text-base sm:text-lg md:text-xl lg:text-2xl font-extrabold tracking-wide px-3 sm:px-4 py-2 rounded-full ${hoverGlass} min-w-max`}
             >
               MediNova
-            </Link>
+            </MotionLink>
 
             {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-2 flex-1 justify-center">
+            <nav className="hidden lg:flex items-center gap-2 flex-1 justify-center">
               {navItems.map((item) => (
-                <motion.div key={item} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                  <Link
-                    to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
-                    className={`px-4 py-2 rounded-full text-sm font-medium ${hoverGlass}`}
-                  >
-                    {item}
-                  </Link>
-                </motion.div>
+                <Link
+                  key={item}
+                  to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
+                  className={`px-3 py-2 rounded-full text-sm font-medium ${hoverGlass} min-w-max`}
+                >
+                  {item}
+                </Link>
               ))}
             </nav>
 
-            {/* Right-side Controls */}
-            <div className="hidden md:flex items-center gap-3 relative">
+            {/* Right-side Controls (Desktop) */}
+            <div className="hidden lg:flex items-center gap-3 relative">
               {/* Cart Icon */}
               <motion.button
                 onClick={handleCartClick}
@@ -123,7 +135,7 @@ function Header() {
                 whileTap="tap"
                 className="relative p-2 rounded-full bg-[#0D3B66] text-white border border-white/20"
               >
-                <ShoppingCart size={24} />
+                <ShoppingCart size={20} />
                 {totalItems > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs text-white font-bold">
                     {totalItems}
@@ -201,27 +213,12 @@ function Header() {
             </div>
 
             {/* Mobile Toggle */}
-            <div className="md:hidden flex items-center gap-2">
-              <motion.button
-                onClick={handleCartClick}
-                variants={cartIconVariants}
-                animate={cartPulse ? "pulse" : "initial"}
-                whileTap="tap"
-                className="relative p-2 rounded-full bg-[#0D3B66] text-white border border-white/20"
-              >
-                <ShoppingCart size={24} />
-                {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs text-white font-bold">
-                    {totalItems}
-                  </span>
-                )}
-              </motion.button>
-
+            <div className="lg:hidden flex items-center gap-2">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className={`p-2 rounded-full ${hoverGlass}`}
               >
-                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
             </div>
           </div>
@@ -235,7 +232,7 @@ function Header() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className={`md:hidden absolute top-full left-0 w-full ${headerBg}`}
+              className={`lg:hidden absolute top-full left-0 w-full ${headerBg}`}
             >
               <div className="px-4 py-4 space-y-3">
                 {navItems.map((item) => (
@@ -243,11 +240,90 @@ function Header() {
                     key={item}
                     to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
                     onClick={() => setIsMenuOpen(false)}
-                    className={`block px-5 py-2 rounded-full text-sm font-medium ${hoverGlass}`}
+                    className={`block px-5 py-2 rounded-full text-sm font-medium ${hoverGlass} min-w-max`}
                   >
                     {item}
                   </Link>
                 ))}
+                {/* Cart in Mobile Menu */}
+                <motion.button
+                  onClick={handleCartClick}
+                  variants={cartIconVariants}
+                  animate={cartPulse ? "pulse" : "initial"}
+                  whileTap="tap"
+                  className={`w-full flex items-center gap-3 px-5 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}
+                >
+                  <ShoppingCart size={20} />
+                  <span>Cart {totalItems > 0 ? `(${totalItems})` : ""}</span>
+                </motion.button>
+                {/* Settings in Mobile Menu */}
+                <motion.button
+                  variants={settingsButtonVariants}
+                  initial="initial"
+                  whileHover="hover"
+                  whileTap="tap"
+                  animate={pulse ? "pulse" : "initial"}
+                  onClick={() => {
+                    setIsSettingsOpen(!isSettingsOpen);
+                    setPulse(true);
+                  }}
+                  className={`w-full flex items-center gap-3 px-5 py-2 rounded-full text-sm font-medium ${hoverGlass}`}
+                >
+                  <Settings size={20} />
+                  <span>Settings</span>
+                </motion.button>
+                {/* Mobile Settings Dropdown */}
+                <AnimatePresence>
+                  {isSettingsOpen && (
+                    <motion.div
+                      variants={dropdownVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="w-full rounded-2xl p-4 space-y-3 bg-white/30 dark:bg-[#0D3B66]/40 backdrop-blur-xl border border-white/20 shadow-xl"
+                    >
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setDarkMode(!darkMode)}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-full text-sm font-medium ${hoverGlass}`}
+                      >
+                        {darkMode ? <Moon size={16} /> : <Sun size={16} />}
+                        <span>{darkMode ? "Light Mode" : "Dark Mode"}</span>
+                      </motion.button>
+                      {isAuthenticated ? (
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={logout}
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-full text-sm font-semibold bg-red-600/80 text-white hover:bg-red-700/90 transition-all"
+                        >
+                          <LogOut size={16} />
+                          Logout
+                        </motion.button>
+                      ) : (
+                        <>
+                          <Link
+                            to="/login"
+                            className={`flex items-center gap-3 w-full px-3 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <LogIn size={16} />
+                            Login
+                          </Link>
+                          <Link
+                            to="/register"
+                            className={`flex items-center gap-3 w-full px-3 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <UserPlus size={16} />
+                            Register
+                          </Link>
+                        </>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
           )}
@@ -255,7 +331,7 @@ function Header() {
       </header>
 
       {/* Spacer */}
-      <div className="h-20 w-full"></div>
+      <div className="h-16 sm:h-20 w-full"></div>
 
       {/* Cart Sidebar */}
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
