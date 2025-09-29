@@ -40,6 +40,7 @@ const settingsButtonVariants = {
 
 const cartIconVariants = {
   initial: { scale: 1 },
+  hover: { scale: 1.1, rotate: 15, transition: { type: "spring", stiffness: 300, damping: 15 } },
   tap: { scale: 0.9, rotate: -15 },
   pulse: { scale: [1, 1.2, 1], rotate: [0, 15, -15, 0], transition: { duration: 0.6 } },
 };
@@ -131,9 +132,11 @@ function Header() {
               <motion.button
                 onClick={handleCartClick}
                 variants={cartIconVariants}
-                animate={cartPulse ? "pulse" : "initial"}
+                initial="initial"
+                whileHover="hover"
                 whileTap="tap"
-                className="relative p-2 rounded-full bg-[#0D3B66] text-white border border-white/20"
+                animate={cartPulse ? "pulse" : "initial"}
+                className={`h-10 w-10 flex items-center justify-center rounded-full bg-[#0D3B66] text-white border border-white/20 ${hoverGlass}`}
               >
                 <ShoppingCart size={20} />
                 {totalItems > 0 && (
@@ -249,8 +252,10 @@ function Header() {
                 <motion.button
                   onClick={handleCartClick}
                   variants={cartIconVariants}
-                  animate={cartPulse ? "pulse" : "initial"}
+                  initial="initial"
+                  whileHover="hover"
                   whileTap="tap"
+                  animate={cartPulse ? "pulse" : "initial"}
                   className={`w-full flex items-center gap-3 px-5 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}
                 >
                   <ShoppingCart size={20} />
