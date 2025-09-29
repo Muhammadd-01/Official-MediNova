@@ -56,7 +56,7 @@ function Header() {
   const navItems = [
     "Home",
     "About",
-    "Medicine Suggestion",
+    "MediBot",
     "Consultation",
     "Pharmacy",
     "Articles",

@@ -10,7 +10,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import About from "./pages/About";
-import MedicineSuggestion from "./pages/MedicineSuggestion";
+import MedicineSuggestion from "./pages/MediBot";
 import Consultation from "./pages/Consultation";
 import Feedback from "./pages/Feedback";
 import Contact from "./pages/Contact";
@@ -104,7 +104,7 @@ function App() {
                     <Routes>
                       <Route path="/" element={<Home />} />
                       <Route path="/about" element={<About />} />
-                      <Route path="/medicine-suggestion" element={<MedicineSuggestion />} />
+                      <Route path="/medibot" element={<MediBot />} />
                       <Route path="/consultation" element={<Consultation />} />
                       <Route path="/feedback" element={<Feedback />} />
                       <Route path="/contact" element={<Contact />} />
