@@ -193,7 +193,9 @@ function Chatbot() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={confirmClearChat}
-                className={`px-3 py-1 rounded-full text-sm ${baseGlass} ${hoverGlass} bg-[#0A3D62] text-white`}
+                className={`px-3 py-1 rounded-full text-sm ${baseGlass} ${hoverGlass} ${
+                  darkMode ? "bg-[#0A3D62] text-[#FDFBFB]" : "bg-[#0A3D62] text-white"
+                }`}
               >
                 Yes, Clear
               </motion.button>
