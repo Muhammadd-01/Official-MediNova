@@ -66,26 +66,42 @@ function Register() {
       [name]: type === "checkbox" ? checked : value,
     }));
   };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!formData.termsAccepted) {
+    alert("Please accept the terms and conditions.");
+    return;
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.termsAccepted) {
-      alert("Please accept the terms and conditions.");
-      return;
-    }
+  try {
+    // ✅ Format date before sending
+    const payload = {
+      ...formData,
+      dateOfBirth: formData.dateOfBirth
+        ? formData.dateOfBirth.toISOString()
+        : null,
+    };
 
-    try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/register",
-        formData
-      );
-      alert(res.data.msg);
-      login({ email: formData.email });
-      navigate("/");
-    } catch (err) {
-      alert(err.response?.data?.msg || "Error while registering ❌");
-    }
-  };
+    // ✅ Send JSON explicitly
+    const res = await axios.post(
+      "http://localhost:5000/api/auth/register",
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true, // optional if your backend needs cookies
+      }
+    );
+
+    alert(res.data.msg);
+    login({ email: formData.email });
+    navigate("/");
+  } catch (err) {
+    console.error(err); // 🔹 Log full error for debugging
+    alert(err.response?.data?.msg || "Error while registering ❌");
+  }
+};
 
   const handleSocialLogin = (provider) => {
     const urls = {
