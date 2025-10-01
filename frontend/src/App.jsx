@@ -76,26 +76,44 @@ function App() {
     }
   }, [darkMode]);
 
+  // ✅ Restore auth from localStorage
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+
+    if (token && storedUser) {
+      setIsAuthenticated(true);
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
   // Auth logic
   const login = (userData) => {
     setIsAuthenticated(true);
     setUser(userData);
+
+    // ✅ Save to localStorage
+    localStorage.setItem("token", userData.token);
+    localStorage.setItem("user", JSON.stringify(userData));
   };
 
   const logout = () => {
     setIsAuthenticated(false);
     setUser(null);
+
+    // ✅ Remove from localStorage
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
   };
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
       <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
-        <CartProvider> {/* ✅ Wrap app with CartProvider */}
+        <CartProvider>
           <HelmetProvider>
             <Router>
               <div className="flex flex-col min-h-screen relative">
                 
-                {/* ✅ Pass darkMode to the background animation */}
                 <BloodStreamBackground darkMode={darkMode} />
                 
                 <div className="relative z-10 flex flex-col min-h-screen pointer-events-auto">

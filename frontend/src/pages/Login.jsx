@@ -16,42 +16,41 @@ function Login() {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post(
-        "http://localhost:4000/api/auth/login", // 🔹 updated port
-        { email, password },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+  e.preventDefault();
+  try {
+    const res = await axios.post(
+      "http://localhost:4000/api/auth/login",
+      { email, password },
+      {
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true,
+      }
+    );
 
-      // 🔹 Save token in localStorage
-      localStorage.setItem("token", res.data.token);
+    // ✅ Save token in localStorage
+    localStorage.setItem("token", res.data.token);
 
-      // 🔹 Login via AuthContext
-      login({
-        email: res.data.user.email,
-        fullName: res.data.user.fullName,
-        token: res.data.token,
-      });
+    // ✅ Update AuthContext (this is the line you asked about)
+    login({
+      email: res.data.user.email,
+      fullName: res.data.user.fullName,
+      token: res.data.token,
+    });
 
-      alert(res.data.msg);
-      navigate("/"); // redirect to home
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.msg || "Error while logging in ❌");
-    }
-  };
+    alert(res.data.msg); // optional alert
+    navigate("/"); // redirect to home
+  } catch (err) {
+    console.error(err);
+    alert(err.response?.data?.msg || "Error while logging in ❌");
+  }
+};
+
 
   const handleSocialLogin = (provider) => {
     const urls = {
-      google: "http://localhost:4000/auth/google",
-      facebook: "http://localhost:4000/auth/facebook",
-      twitter: "http://localhost:4000/auth/twitter",
+      google: "http://localhost:5000/auth/google",
+      facebook: "http://localhost:5000/auth/facebook",
+      twitter: "http://localhost:5000/auth/twitter",
     };
     window.location.href = urls[provider];
   };

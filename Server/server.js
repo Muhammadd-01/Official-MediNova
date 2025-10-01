@@ -31,13 +31,13 @@ app.get("/", (req, res) => {
   res.send("MediNova Backend Running ✅");
 });
 
-// Test ping route
-app.get("/ping", (req, res) => {
-  res.send("pong 🏓");
-});
+
 
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/chat", geminiRoute); 
+import profileRoutes from "./routes/profile.js";
+
+app.use("/api/profile", profileRoutes);
 
 app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
