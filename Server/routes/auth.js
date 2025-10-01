@@ -82,4 +82,45 @@ router.post("/login", async (req, res) => {
   }
 });
 
+
+
+// POST /api/auth/social-login
+router.post("/social-login", async (req, res) => {
+  try {
+    const { fullName, email, authProvider, auth0Id } = req.body;
+
+    if (!email || !auth0Id || !authProvider) {
+      return res.status(400).json({ msg: "Missing social login data" });
+    }
+
+    // Check if user already exists (by Auth0 ID)
+    let user = await User.findOne({ auth0Id });
+    if (!user) {
+      // Create new user
+      user = new User({
+        fullName,
+        email,
+        authProvider, // google/facebook/twitter
+        auth0Id,
+      });
+      await user.save();
+    }
+
+    // Optionally, issue JWT token like normal login
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+    res.status(200).json({
+      msg: "Social login successful",
+      token,
+      user: {
+        fullName: user.fullName,
+        email: user.email,
+      },
+    });
+  } catch (err) {
+    console.error("Social login error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
 export default router;

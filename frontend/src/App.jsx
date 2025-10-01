@@ -26,6 +26,9 @@ import GoToTop from "./components/GoToTop";
 import Labs from "./pages/Labs";
 import FAQ from "./components/FAQ";
 
+// Auth0 Wrapper
+import { Auth0ProviderWrapper } from "./components/Auth0ProviderWrapper";
+
 // Contexts
 export const DarkModeContext = React.createContext();
 export const AuthContext = React.createContext();
@@ -53,10 +56,15 @@ export function CartProvider({ children }) {
   };
 
   const totalItems = cartItems.reduce((sum, i) => sum + i.quantity, 0);
-  const totalPrice = cartItems.reduce((sum, i) => sum + (i.price || 0) * i.quantity, 0);
+  const totalPrice = cartItems.reduce(
+    (sum, i) => sum + (i.price || 0) * i.quantity,
+    0
+  );
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, totalItems, totalPrice }}>
+    <CartContext.Provider
+      value={{ cartItems, addToCart, removeFromCart, totalItems, totalPrice }}
+    >
       {children}
     </CartContext.Provider>
   );
@@ -107,47 +115,48 @@ function App() {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
-      <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
-        <CartProvider>
-          <HelmetProvider>
-            <Router>
-              <div className="flex flex-col min-h-screen relative">
-                
-                <BloodStreamBackground darkMode={darkMode} />
-                
-                <div className="relative z-10 flex flex-col min-h-screen pointer-events-auto">
-                  <Header />
+    <Auth0ProviderWrapper>
+      <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+        <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
+          <CartProvider>
+            <HelmetProvider>
+              <Router>
+                <div className="flex flex-col min-h-screen relative">
+                  <BloodStreamBackground darkMode={darkMode} />
 
-                  <main className="flex-grow container mx-auto px-4 py-8">
-                    <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/about" element={<About />} />
-                      <Route path="/medibot" element={<MediBot />} />
-                      <Route path="/consultation" element={<Consultation />} />
-                      <Route path="/feedback" element={<Feedback />} />
-                      <Route path="/contact" element={<Contact />} />
-                      <Route path="/labs" element={<Labs />} />
-                      <Route path="/articles" element={<Articles />} />
-                      <Route path="/pharmacy" element={<Pharmacy />} />
-                      <Route path="/news" element={<News />} />
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/register" element={<Register />} />
-                      <Route path="/emergency" element={<Emergency />} />
-                    </Routes>
-                  </main>
+                  <div className="relative z-10 flex flex-col min-h-screen pointer-events-auto">
+                    <Header />
 
-                  <Footer />
+                    <main className="flex-grow container mx-auto px-4 py-8">
+                      <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/about" element={<About />} />
+                        <Route path="/medibot" element={<MediBot />} />
+                        <Route path="/consultation" element={<Consultation />} />
+                        <Route path="/feedback" element={<Feedback />} />
+                        <Route path="/contact" element={<Contact />} />
+                        <Route path="/labs" element={<Labs />} />
+                        <Route path="/articles" element={<Articles />} />
+                        <Route path="/pharmacy" element={<Pharmacy />} />
+                        <Route path="/news" element={<News />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/emergency" element={<Emergency />} />
+                      </Routes>
+                    </main>
+
+                    <Footer />
+                  </div>
+
+                  <Chatbot />
+                  <GoToTop />
                 </div>
-
-                <Chatbot />
-                <GoToTop />
-              </div>
-            </Router>
-          </HelmetProvider>
-        </CartProvider>
-      </DarkModeContext.Provider>
-    </AuthContext.Provider>
+              </Router>
+            </HelmetProvider>
+          </CartProvider>
+        </DarkModeContext.Provider>
+      </AuthContext.Provider>
+    </Auth0ProviderWrapper>
   );
 }
 

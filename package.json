@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@auth0/auth0-react": "^2.5.0",
     "@stripe/react-stripe-js": "^4.0.2",
     "@stripe/stripe-js": "^7.9.0",
     "anime": "^0.1.2",

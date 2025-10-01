@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -10,6 +10,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaTwitter } from "react-icons/fa";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 
 // 🔹 Custom Liquid Glass Dropdown
 function GlassSelect({ options, value, onChange }) {
@@ -43,6 +44,22 @@ function GlassSelect({ options, value, onChange }) {
   );
 }
 
+// ===================== Auth0 Wrapper =====================
+export function Auth0ProviderWithConfig({ children }) {
+  return (
+    <Auth0Provider
+      domain="YOUR_AUTH0_DOMAIN"
+      clientId="YOUR_CLIENT_ID"
+      redirectUri={window.location.origin}
+      useRefreshTokens={true}
+      cacheLocation="localstorage"
+    >
+      {children}
+    </Auth0Provider>
+  );
+}
+
+// ===================== Register Component =====================
 function Register() {
   const [formData, setFormData] = useState({
     fullName: "",
@@ -59,6 +76,33 @@ function Register() {
   const { darkMode } = useContext(DarkModeContext);
   const navigate = useNavigate();
 
+  // ===== Auth0 hooks =====
+  const { loginWithRedirect, user, isAuthenticated, getAccessTokenSilently } = useAuth0();
+
+  // ===== Save social user to backend =====
+  useEffect(() => {
+    if (isAuthenticated) {
+      const saveSocialUser = async () => {
+        try {
+          const token = await getAccessTokenSilently();
+          await axios.post(
+            "http://localhost:4000/api/auth/social-login",
+            {
+              fullName: user.name,
+              email: user.email,
+              authProvider: user.sub.split("|")[0], // google/facebook/twitter
+              auth0Id: user.sub,
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        } catch (err) {
+          console.error("Error saving social user:", err);
+        }
+      };
+      saveSocialUser();
+    }
+  }, [isAuthenticated]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -66,55 +110,47 @@ function Register() {
       [name]: type === "checkbox" ? checked : value,
     }));
   };
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!formData.termsAccepted) {
-    alert("Please accept the terms and conditions.");
-    return;
-  }
 
-  try {
-    // ✅ Format date before sending
-    const payload = {
-      ...formData,
-      dateOfBirth: formData.dateOfBirth
-        ? formData.dateOfBirth.toISOString()
-        : null,
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.termsAccepted) {
+      alert("Please accept the terms and conditions.");
+      return;
+    }
 
-    // ✅ Send JSON explicitly
-    const res = await axios.post(
-      "http://localhost:4000/api/auth/register",
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        withCredentials: true, // optional if your backend needs cookies
-      }
-    );
+    try {
+      const payload = {
+        ...formData,
+        dateOfBirth: formData.dateOfBirth
+          ? formData.dateOfBirth.toISOString()
+          : null,
+      };
 
-    alert(res.data.msg);
-    login({ email: formData.email });
-    navigate("/Login");
-  } catch (err) {
-    console.error(err); // 🔹 Log full error for debugging
-    alert(err.response?.data?.msg || "Error while registering ❌");
-  }
-};
+      const res = await axios.post(
+        "http://localhost:4000/api/auth/register",
+        payload,
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
 
-  const handleSocialLogin = (provider) => {
-    const urls = {
-      google: "http://localhost:5000/auth/google",
-      facebook: "http://localhost:5000/auth/facebook",
-      twitter: "http://localhost:5000/auth/twitter",
-    };
-    window.location.href = urls[provider];
+      alert(res.data.msg);
+      login({ email: formData.email });
+      navigate("/Login");
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.msg || "Error while registering ❌");
+    }
   };
 
-  const bgColor = darkMode
-    ? "bg-[#0A2A43]/70 backdrop-blur-lg"
-    : "bg-white/60 backdrop-blur-lg";
+  // ===== Social login buttons =====
+  const handleSocialLogin = (provider) => {
+    loginWithRedirect({ connection: provider });
+  };
+
+  // ===== Styling =====
+  const bgColor = darkMode ? "bg-[#0A2A43]/70 backdrop-blur-lg" : "bg-white/60 backdrop-blur-lg";
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]";
   const inputGlass =
     "w-full px-4 py-3 border rounded-xl sm:text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#00C2CB] border-gray-300/40 bg-white/30 backdrop-blur-lg shadow-inner placeholder-gray-500 text-[#0D3B66] dark:bg-[#0A2A43]/60 dark:text-[#FDFBFB] dark:placeholder-gray-300";
@@ -137,11 +173,11 @@ const handleSubmit = async (e) => {
             Create Your MediNova Account
           </h2>
 
-          {/* Social buttons */}
+          {/* Social Buttons */}
           <div className="space-y-3">
             <button
               type="button"
-              onClick={() => handleSocialLogin("google")}
+              onClick={() => handleSocialLogin("google-oauth2")}
               className="w-full flex items-center justify-center py-2 px-4 rounded-xl text-sm font-medium 
               text-[#0D3B66] bg-white/50 backdrop-blur-md border border-gray-200/30 
               hover:bg-white/70 hover:scale-105 transition-all shadow-md"
@@ -182,46 +218,17 @@ const handleSubmit = async (e) => {
             </div>
           </div>
 
-          {/* Form */}
+          {/* Email/password Form */}
           <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
-            {/* Text Inputs */}
             {[
-              {
-                id: "fullName",
-                label: "Full Name",
-                type: "text",
-                placeholder: "John Doe",
-              },
-              {
-                id: "email",
-                label: "Email",
-                type: "email",
-                placeholder: "you@example.com",
-              },
-              {
-                id: "password",
-                label: "Password",
-                type: "password",
-                placeholder: "********",
-              },
-              {
-                id: "phoneNumber",
-                label: "Phone Number",
-                type: "tel",
-                placeholder: "+92 300 1234567",
-              },
-              {
-                id: "country",
-                label: "Country",
-                type: "text",
-                placeholder: "Pakistan",
-              },
+              { id: "fullName", label: "Full Name", type: "text", placeholder: "John Doe" },
+              { id: "email", label: "Email", type: "email", placeholder: "you@example.com" },
+              { id: "password", label: "Password", type: "password", placeholder: "********" },
+              { id: "phoneNumber", label: "Phone Number", type: "tel", placeholder: "+92 300 1234567" },
+              { id: "country", label: "Country", type: "text", placeholder: "Pakistan" },
             ].map((field) => (
               <div key={field.id}>
-                <label
-                  htmlFor={field.id}
-                  className="block text-sm font-semibold mb-1"
-                >
+                <label htmlFor={field.id} className="block text-sm font-semibold mb-1">
                   {field.label}
                 </label>
                 <input
@@ -237,19 +244,13 @@ const handleSubmit = async (e) => {
               </div>
             ))}
 
-            {/* Date of Birth */}
             <div>
-              <label
-                htmlFor="dateOfBirth"
-                className="block text-sm font-semibold mb-1"
-              >
+              <label htmlFor="dateOfBirth" className="block text-sm font-semibold mb-1">
                 Date of Birth
               </label>
               <DatePicker
                 selected={formData.dateOfBirth}
-                onChange={(date) =>
-                  setFormData({ ...formData, dateOfBirth: date })
-                }
+                onChange={(date) => setFormData({ ...formData, dateOfBirth: date })}
                 dateFormat="dd/MM/yyyy"
                 placeholderText="Select Date"
                 className="w-full px-4 py-3 rounded-xl bg-white/30 backdrop-blur-lg border border-gray-300/40 shadow-inner cursor-pointer dark:bg-[#0A2A43]/60"
@@ -257,12 +258,8 @@ const handleSubmit = async (e) => {
               />
             </div>
 
-            {/* Gender */}
             <div>
-              <label
-                htmlFor="gender"
-                className="block text-sm font-semibold mb-1"
-              >
+              <label htmlFor="gender" className="block text-sm font-semibold mb-1">
                 Gender
               </label>
               <GlassSelect
@@ -272,7 +269,6 @@ const handleSubmit = async (e) => {
               />
             </div>
 
-            {/* Terms */}
             <div className="flex items-center">
               <input
                 id="termsAccepted"
@@ -285,16 +281,12 @@ const handleSubmit = async (e) => {
               />
               <label htmlFor="termsAccepted" className="ml-2 text-sm">
                 I agree to the{" "}
-                <a
-                  href="#"
-                  className="text-[#00C2CB] underline hover:text-[#0D3B66]"
-                >
+                <a href="#" className="text-[#00C2CB] underline hover:text-[#0D3B66]">
                   Terms and Conditions
                 </a>
               </label>
             </div>
 
-            {/* Submit */}
             <div>
               <button
                 type="submit"
