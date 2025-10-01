@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, Send, Trash2, Bot } from "lucide-react";
 import { DarkModeContext } from "../App";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,11 +29,7 @@ function Chatbot() {
   const { darkMode } = useContext(DarkModeContext);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Gemini setup with faster free-tier model
-  const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-  // MediNova context
+  // MediNova context (kept same as your original)
   const mediNovaContext = `
     MediNova is a comprehensive online hospital platform. Core features:
     - AI Form: Users input symptoms, age, gender, allergies; AI suggests primary/alternative OTC medicines with dosages, precautions, and pharmacy sources (e.g., CVS, Walgreens) using FDA/open-source APIs.
@@ -94,7 +89,7 @@ function Chatbot() {
     handleSubmit({ preventDefault: () => {} }, query);
   };
 
-  // Handle form submission
+  // Handle form submission → now talks to backend instead of Gemini SDK directly
   const handleSubmit = async (e, customInput = null) => {
     e?.preventDefault();
     const userInput = customInput || input;
@@ -113,43 +108,35 @@ function Chatbot() {
     setInput("");
     setIsLoading(true);
 
-    let retries = 0;
-    const maxRetries = 2;
-    while (retries <= maxRetries) {
-      try {
-        const prompt = `
-          ${mediNovaContext}
-          User query: "${userInput}"
-          Classify: App feature (guide steps), Medical (general advice + escalate to AI Form/consult), General (overview).
-          Respond helpfully, concisely. End medical responses with disclaimer.
-        `;
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        let text = response.text();
+    try {
+      const res = await fetch("http://localhost:5000/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: `${mediNovaContext}\nUser query: "${userInput}"`,
+        }),
+      });
 
-        if (userInput.toLowerCase().match(/symptom|pain|ill|sick|medicine|drug/)) {
-          text += "\n\n**Important**: This is not medical advice. Use our AI Form for personalized suggestions or book a consultation. Consult a doctor for serious issues.";
-        }
+      const data = await res.json();
+      let text = data.reply || "⚠️ No response. Please try again.";
 
-        setMessages((prev) => [...prev, { text, sender: "bot" }]);
-        console.log("Chat Analytics:", { query: userInput, type: "medical" || "app" || "general" });
-        break;
-      } catch (error) {
-        console.error("API Error (Retry", retries + 1, "):", error);
-        retries++;
-        if (retries > maxRetries) {
-          setMessages((prev) => [
-            ...prev,
-            {
-              text: "Apologies—connection issue. Try again or email support@medinova.com. May Allah ease your matters.",
-              sender: "bot",
-            },
-          ]);
-        } else {
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-        }
+      if (userInput.toLowerCase().match(/symptom|pain|ill|sick|medicine|drug/)) {
+        text +=
+          "\n\n**Important**: This is not medical advice. Use our AI Form for personalized suggestions or book a consultation. Consult a doctor for serious issues.";
       }
+
+      setMessages((prev) => [...prev, { text, sender: "bot" }]);
+    } catch (error) {
+      console.error("Frontend Error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: "Apologies—connection issue. Try again or email support@medinova.com. May Allah ease your matters.",
+          sender: "bot",
+        },
+      ]);
     }
+
     setIsLoading(false);
   };
 
