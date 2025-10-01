@@ -60,7 +60,7 @@ function Header() {
   const headerBg =
     "bg-white/20 dark:bg-[#0D3B66]/30 backdrop-blur-xl border border-white/20 dark:border-[#00C2CB]/20 shadow-lg";
   const textColor = darkMode ? "text-white" : "text-[#0D3B66]";
-  const hoverGlass = "transition-all duration-300 hover:bg-white/30 dark:hover:bg-[#00C2CB]/20 hover:shadow-lg hover:scale-105";
+  const hoverGlass = `transition-all duration-300 hover:bg-white/30 dark:hover:bg-[#00C2CB]/20 hover:shadow-lg hover:scale-105 ${darkMode ? "" : "hover:text-[#0D3B66]"}`;
 
   const navItems = [
     "Home",
