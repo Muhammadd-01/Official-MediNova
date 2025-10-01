@@ -96,7 +96,7 @@ const handleSubmit = async (e) => {
 
     alert(res.data.msg);
     login({ email: formData.email });
-    navigate("/");
+    navigate("/Login");
   } catch (err) {
     console.error(err); // 🔹 Log full error for debugging
     alert(err.response?.data?.msg || "Error while registering ❌");
