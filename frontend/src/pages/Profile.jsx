@@ -168,43 +168,41 @@ function Profile() {
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
           {/* Profile Picture */}
-<div className="flex flex-col items-center">
-  <motion.div
-    className={`w-32 h-32 ${cardBg} rounded-full cursor-pointer overflow-hidden flex items-center justify-center transition-all duration-300 hover:shadow-2xl hover:scale-105`}
-    whileHover={{ scale: 1.1, rotate: 2 }}
-    whileTap={{ scale: 0.95 }}
-    onClick={() => setShowModal(true)}
-  >
-    {profileData.profilePic ? (
-      <img
-        src={URL.createObjectURL(profileData.profilePic)}
-        alt="Profile"
-        className="w-full h-full object-cover"
-      />
-    ) : profileData.profilePicUrl ? (
-      <img
-        src={profileData.profilePicUrl.startsWith("http")
-          ? profileData.profilePicUrl
-          : `http://localhost:4000${profileData.profilePicUrl}`}
-        alt="Profile"
-        className="w-full h-full object-cover"
-      />
-    ) : (
-      <User className="w-10 h-10 text-[#00C2CB]" />
-    )}
-  </motion.div>
-  <input
-    type="file"
-    name="profilePic"
-    accept="image/*"
-    onChange={handleChange}
-    className="hidden"
-  />
-</div>
-
+          <div className="flex flex-col items-center">
+            <motion.div
+              className={`relative w-32 h-32 ${cardBg} rounded-full cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-105`}
+              whileHover={{ scale: 1.1, rotate: 2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowModal(true)}
+            >
+              {profileData.profilePic || profileData.profilePicUrl ? (
+                <img
+                  src={
+                    profileData.profilePic
+                      ? URL.createObjectURL(profileData.profilePic)
+                      : profileData.profilePicUrl.startsWith("http")
+                      ? profileData.profilePicUrl
+                      : `http://localhost:4000${profileData.profilePicUrl}`
+                  }
+                  alt="Profile"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : (
+                <User className="absolute w-10 h-10 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[#00C2CB]" />
+              )}
+            </motion.div>
+            <input
+              type="file"
+              name="profilePic"
+              accept="image/*"
+              onChange={handleChange}
+              className="hidden"
+            />
+          </div>
 
           {/* Personal Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Full Name */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Full Name *
@@ -221,7 +219,7 @@ function Profile() {
                 />
               </div>
             </div>
-
+            {/* Email */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Email
@@ -237,7 +235,7 @@ function Profile() {
                 />
               </div>
             </div>
-
+            {/* Phone */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Phone Number
@@ -253,7 +251,7 @@ function Profile() {
                 />
               </div>
             </div>
-
+            {/* Gender */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Gender
@@ -270,7 +268,7 @@ function Profile() {
                 <option value="Other">Other</option>
               </motion.select>
             </div>
-
+            {/* DOB */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Date of Birth
@@ -290,6 +288,7 @@ function Profile() {
 
           {/* Medical Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Blood Group */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Blood Group
@@ -311,7 +310,7 @@ function Profile() {
                 <option value="O-">O-</option>
               </motion.select>
             </div>
-
+            {/* Allergies */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Allergies
@@ -324,7 +323,7 @@ function Profile() {
                 className={`w-full px-4 py-2 rounded-[20px] ${inputBg}`}
               />
             </div>
-
+            {/* Medications */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Medications
@@ -337,7 +336,7 @@ function Profile() {
                 className={`w-full px-4 py-2 rounded-[20px] ${inputBg}`}
               />
             </div>
-
+            {/* History */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Medical History
@@ -381,69 +380,69 @@ function Profile() {
         </motion.form>
 
         {/* Profile Modal */}
-<AnimatePresence>
-  {showModal && (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <motion.div
-        className={`rounded-3xl p-6 w-80 flex flex-col items-center ${cardBg}`}
-        initial={{ scale: 0.8 }}
-        animate={{ scale: 1 }}
-        exit={{ scale: 0.8 }}
-      >
-        <img
-          src={
-            profileData.profilePic
-              ? URL.createObjectURL(profileData.profilePic)
-              : profileData.profilePicUrl
-              ? profileData.profilePicUrl.startsWith("http")
-                ? profileData.profilePicUrl
-                : `http://localhost:4000${profileData.profilePicUrl}`
-              : undefined
-          }
-          alt="Profile Modal"
-          className="w-32 h-32 rounded-full object-cover mb-4"
-        />
-        <div className="flex space-x-4">
-          {/* Update Button with Liquid Glass Hover */}
-          <label
-            className={`px-4 py-2 rounded-[20px] ${cardBg} backdrop-blur-[10px] border border-white/20 text-white cursor-pointer hover:scale-105 hover:shadow-2xl transition-all flex items-center justify-center`}
-          >
-            Update
-            <input
-              type="file"
-              name="profilePic"
-              accept="image/*"
-              onChange={(e) => {
-                handleChange(e);
-                setShowModal(false);
-              }}
-              className="hidden"
-            />
-          </label>
+        <AnimatePresence>
+          {showModal && (
+            <motion.div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                className={`rounded-3xl p-6 w-80 flex flex-col items-center ${cardBg}`}
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.8 }}
+              >
+                <img
+                  src={
+                    profileData.profilePic
+                      ? URL.createObjectURL(profileData.profilePic)
+                      : profileData.profilePicUrl
+                      ? profileData.profilePicUrl.startsWith("http")
+                        ? profileData.profilePicUrl
+                        : `http://localhost:4000${profileData.profilePicUrl}`
+                      : undefined
+                  }
+                  alt="Profile Modal"
+                  className="w-32 h-32 rounded-full object-cover mb-4"
+                />
+                <div className="flex space-x-4">
+                  {/* Update Button with Liquid Glass Hover */}
+                  <label
+                    className={`px-4 py-2 rounded-[20px] ${cardBg} backdrop-blur-[10px] border border-white/20 text-white cursor-pointer hover:scale-105 hover:shadow-2xl transition-all flex items-center justify-center`}
+                  >
+                    Update
+                    <input
+                      type="file"
+                      name="profilePic"
+                      accept="image/*"
+                      onChange={(e) => {
+                        handleChange(e);
+                        setShowModal(false);
+                      }}
+                      className="hidden"
+                    />
+                  </label>
 
-          {/* Remove Button with Liquid Glass Hover */}
-          <button
-            onClick={handleRemovePicture}
-            className={`px-4 py-2 rounded-[20px] ${cardBg} backdrop-blur-[10px] border border-red-500 text-red-500 hover:scale-105 hover:shadow-2xl transition-all`}
-          >
-            Remove
-          </button>
-        </div>
-        <button
-          onClick={() => setShowModal(false)}
-          className="mt-4 text-sm text-gray-500 hover:text-gray-700"
-        >
-          Close
-        </button>
-      </motion.div>
-    </motion.div>
-  )}
-</AnimatePresence>
+                  {/* Remove Button with Liquid Glass Hover */}
+                  <button
+                    onClick={handleRemovePicture}
+                    className={`px-4 py-2 rounded-[20px] ${cardBg} backdrop-blur-[10px] border border-red-500 text-red-500 hover:scale-105 hover:shadow-2xl transition-all`}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="mt-4 text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Close
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Success Notification */}
         <AnimatePresence>
