@@ -21,11 +21,12 @@ function Profile() {
     history: "",
     password: "",
     profilePic: null,
+    profilePicUrl: "",
   });
 
   const [showSuccess, setShowSuccess] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  // Fetch user data from backend
   const fetchProfile = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -36,20 +37,28 @@ function Profile() {
       });
       const data = res.data;
       if (data) {
+        const dobValue = data.dob || data.dateOfBirth || "";
+        const formattedDob = dobValue
+          ? new Date(dobValue).toISOString().slice(0, 10)
+          : "";
+
         setProfileData({
           fullName: data.fullName || "",
           email: data.email || "",
-          phone: data.phoneNumber || "",
+          phone: data.phoneNumber || data.phone || "",
           gender: data.gender || "",
-          dob: data.dateOfBirth
-            ? new Date(data.dateOfBirth).toISOString().split("T")[0]
-            : "",
+          dob: formattedDob,
           bloodGroup: data.bloodGroup || "",
           allergies: data.allergies || "",
           medications: data.medications || "",
           history: data.history || "",
           password: "",
           profilePic: null,
+          profilePicUrl: data.profilePic
+            ? data.profilePic.startsWith("http")
+              ? data.profilePic
+              : `http://localhost:4000${data.profilePic}`
+            : "",
         });
       }
     } catch (err) {
@@ -76,7 +85,6 @@ function Profile() {
     if (!token) return;
 
     try {
-      // Prepare FormData for possible file upload
       const formData = new FormData();
       for (let key in profileData) {
         if (profileData[key] !== "" && profileData[key] !== null) {
@@ -84,24 +92,39 @@ function Profile() {
         }
       }
 
-      await axios.put("http://localhost:4000/api/profile/update", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const res = await axios.put(
+        "http://localhost:4000/api/profile/update",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-      // Show success notification once
+      if (res.data.profilePic) {
+        setProfileData((prev) => ({
+          ...prev,
+          profilePicUrl: `http://localhost:4000${res.data.profilePic}`,
+          profilePic: null,
+        }));
+      }
+
       setShowSuccess({
         title: "Profile Updated ✅",
         message: "Your profile has been successfully updated.",
       });
 
-      // Reload the page after short delay so user sees the notification
       setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
       console.error("Error updating profile:", err);
     }
+  };
+
+  const handleRemovePicture = () => {
+    setProfileData({ ...profileData, profilePic: null, profilePicUrl: "" });
+    setShowModal(false);
   };
 
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
@@ -145,31 +168,40 @@ function Profile() {
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
           {/* Profile Picture */}
-          <div className="flex flex-col items-center">
-            <motion.label
-              className={`w-32 h-32 ${cardBg} rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105`}
-              whileHover={{ scale: 1.1, rotate: 2 }}
-              whileTap={{ scale: 0.95 }}
-              aria-label="Upload profile picture"
-            >
-              {profileData.profilePic ? (
-                <img
-                  src={URL.createObjectURL(profileData.profilePic)}
-                  alt="Profile"
-                  className="w-32 h-32 rounded-full object-cover"
-                />
-              ) : (
-                <User className="w-8 h-8 text-[#00C2CB]" />
-              )}
-              <input
-                type="file"
-                name="profilePic"
-                accept="image/*"
-                onChange={handleChange}
-                className="hidden"
-              />
-            </motion.label>
-          </div>
+<div className="flex flex-col items-center">
+  <motion.div
+    className={`w-32 h-32 ${cardBg} rounded-full cursor-pointer overflow-hidden flex items-center justify-center transition-all duration-300 hover:shadow-2xl hover:scale-105`}
+    whileHover={{ scale: 1.1, rotate: 2 }}
+    whileTap={{ scale: 0.95 }}
+    onClick={() => setShowModal(true)}
+  >
+    {profileData.profilePic ? (
+      <img
+        src={URL.createObjectURL(profileData.profilePic)}
+        alt="Profile"
+        className="w-full h-full object-cover"
+      />
+    ) : profileData.profilePicUrl ? (
+      <img
+        src={profileData.profilePicUrl.startsWith("http")
+          ? profileData.profilePicUrl
+          : `http://localhost:4000${profileData.profilePicUrl}`}
+        alt="Profile"
+        className="w-full h-full object-cover"
+      />
+    ) : (
+      <User className="w-10 h-10 text-[#00C2CB]" />
+    )}
+  </motion.div>
+  <input
+    type="file"
+    name="profilePic"
+    accept="image/*"
+    onChange={handleChange}
+    className="hidden"
+  />
+</div>
+
 
           {/* Personal Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -262,14 +294,24 @@ function Profile() {
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Blood Group
               </label>
-              <motion.input
-                type="text"
+              <motion.select
                 name="bloodGroup"
                 value={profileData.bloodGroup}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 rounded-[20px] ${inputBg}`}
-              />
+              >
+                <option value="">Select Blood Group</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </motion.select>
             </div>
+
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Allergies
@@ -282,6 +324,7 @@ function Profile() {
                 className={`w-full px-4 py-2 rounded-[20px] ${inputBg}`}
               />
             </div>
+
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Medications
@@ -294,6 +337,7 @@ function Profile() {
                 className={`w-full px-4 py-2 rounded-[20px] ${inputBg}`}
               />
             </div>
+
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Medical History
@@ -335,6 +379,71 @@ function Profile() {
             </motion.button>
           </div>
         </motion.form>
+
+        {/* Profile Modal */}
+<AnimatePresence>
+  {showModal && (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className={`rounded-3xl p-6 w-80 flex flex-col items-center ${cardBg}`}
+        initial={{ scale: 0.8 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.8 }}
+      >
+        <img
+          src={
+            profileData.profilePic
+              ? URL.createObjectURL(profileData.profilePic)
+              : profileData.profilePicUrl
+              ? profileData.profilePicUrl.startsWith("http")
+                ? profileData.profilePicUrl
+                : `http://localhost:4000${profileData.profilePicUrl}`
+              : undefined
+          }
+          alt="Profile Modal"
+          className="w-32 h-32 rounded-full object-cover mb-4"
+        />
+        <div className="flex space-x-4">
+          {/* Update Button with Liquid Glass Hover */}
+          <label
+            className={`px-4 py-2 rounded-[20px] ${cardBg} backdrop-blur-[10px] border border-white/20 text-white cursor-pointer hover:scale-105 hover:shadow-2xl transition-all flex items-center justify-center`}
+          >
+            Update
+            <input
+              type="file"
+              name="profilePic"
+              accept="image/*"
+              onChange={(e) => {
+                handleChange(e);
+                setShowModal(false);
+              }}
+              className="hidden"
+            />
+          </label>
+
+          {/* Remove Button with Liquid Glass Hover */}
+          <button
+            onClick={handleRemovePicture}
+            className={`px-4 py-2 rounded-[20px] ${cardBg} backdrop-blur-[10px] border border-red-500 text-red-500 hover:scale-105 hover:shadow-2xl transition-all`}
+          >
+            Remove
+          </button>
+        </div>
+        <button
+          onClick={() => setShowModal(false)}
+          className="mt-4 text-sm text-gray-500 hover:text-gray-700"
+        >
+          Close
+        </button>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
         {/* Success Notification */}
         <AnimatePresence>
