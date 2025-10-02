@@ -1,8 +1,9 @@
 import React, { useState, useContext } from "react";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
+import axios from "axios";
 import { DarkModeContext } from "../App";
-import FAQ from "../components/FAQ";
+
 function Contact() {
   const { darkMode } = useContext(DarkModeContext);
 
@@ -11,6 +12,7 @@ function Contact() {
   const [message, setMessage] = useState("");
   const [feedback, setFeedback] = useState("");
 
+  // Contact form (optional, keep as is)
   const handleContactSubmit = (e) => {
     e.preventDefault();
     alert("Thank you for contacting us. We will get back to you soon!");
@@ -19,13 +21,27 @@ function Contact() {
     setMessage("");
   };
 
-  const handleFeedbackSubmit = (e) => {
+  // Feedback form - send to backend
+  const handleFeedbackSubmit = async (e) => {
     e.preventDefault();
-    alert("Thank you for your feedback!");
-    setFeedback("");
+    if (!feedback.trim()) return; // prevent empty submission
+
+    try {
+      const res = await axios.post("http://localhost:4000/api/feedback", {
+        feedback,
+      });
+
+      alert(res.data.message); // e.g., "Feedback submitted successfully"
+      setFeedback(""); // clear form
+    } catch (err) {
+      console.error(err);
+      alert(
+        err.response?.data?.message ||
+          "Something went wrong! Please try again later."
+      );
+    }
   };
 
-  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
   const cardBg = darkMode
     ? "bg-[#0A2A43]/60 backdrop-blur-xl text-[#FDFBFB]"
     : "bg-white/40 backdrop-blur-xl text-[#0A3D62]";
@@ -164,44 +180,6 @@ function Contact() {
               Submit Feedback
             </button>
           </form>
-        </motion.div>
-
-        {/* Quick Support Section */}
-        <motion.div
-          className={`p-8 rounded-[40px] ${cardBg} shadow-md hover:shadow-xl transition-all duration-300 max-w-3xl mx-auto text-center`}
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.8 }}
-          whileHover={{ scale: 1.02 }}
-        >
-          <h2 className="text-2xl font-bold mb-4">Quick Support</h2>
-          <p className="mb-6">
-            Need urgent help? Reach out directly through our quick support
-            channels.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <a
-              href="mailto:contact.medinova@gmail.com"
-              className={`${buttonStyle} inline-block`}
-            >
-              Email Support
-            </a>
-            <a
-              href="https://wa.me/03160212457"
-              className={`${buttonStyle} inline-block`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              WhatsApp Us
-            </a>
-            <a
-              href="/faq"
-
-              className={`${buttonStyle} inline-block`}
-            >
-              Visit FAQ
-            </a>
-          </div>
         </motion.div>
       </div>
     </>

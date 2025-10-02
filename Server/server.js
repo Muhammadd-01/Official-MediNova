@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import cartRoutes from "./routes/cart.js";
+import feedbackRoutes from "./routes/feedbackRoutes.js"
 import geminiRoute from "./gemini.js"; 
 
 dotenv.config();
@@ -38,6 +39,8 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/chat", geminiRoute); 
 app.use("/api/cart", cartRoutes);
+app.use("/api/feedback", feedbackRoutes);
+
 
 import profileRoutes from "./routes/profile.js";
 
