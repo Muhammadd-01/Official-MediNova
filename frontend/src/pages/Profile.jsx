@@ -25,7 +25,7 @@ function Profile() {
 
   const [showSuccess, setShowSuccess] = useState(null);
 
-  // Fetch user data from backend on load
+  // Fetch user data from backend
   const fetchProfile = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -91,15 +91,14 @@ function Profile() {
         },
       });
 
+      // Show success notification once
       setShowSuccess({
         title: "Profile Updated ✅",
         message: "Your profile has been successfully updated.",
       });
 
-      // Reload updated profile
-      await fetchProfile();
-
-      setTimeout(() => setShowSuccess(null), 3000);
+      // Reload the page after short delay so user sees the notification
+      setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
       console.error("Error updating profile:", err);
     }
