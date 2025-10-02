@@ -3,6 +3,7 @@ import {
   BrowserRouter as Router,
   Route,
   Routes,
+  useNavigate,
 } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 
@@ -70,21 +71,13 @@ export function CartProvider({ children }) {
   );
 }
 
-function App() {
-  const [darkMode, setDarkMode] = useState(false);
+// ✅ AuthProvider with redirect on logout
+function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
-  // Set dark mode class on <html> tag
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [darkMode]);
-
-  // ✅ Restore auth from localStorage
+  // Restore from localStorage
   useEffect(() => {
     const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
@@ -95,12 +88,10 @@ function App() {
     }
   }, []);
 
-  // Auth logic
   const login = (userData) => {
     setIsAuthenticated(true);
     setUser(userData);
 
-    // ✅ Save to localStorage
     localStorage.setItem("token", userData.token);
     localStorage.setItem("user", JSON.stringify(userData));
   };
@@ -109,18 +100,39 @@ function App() {
     setIsAuthenticated(false);
     setUser(null);
 
-    // ✅ Remove from localStorage
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+
+    // ✅ Redirect to login page after logout
+    navigate("/login");
   };
 
   return (
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+function App() {
+  const [darkMode, setDarkMode] = useState(false);
+
+  // Dark mode toggle
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [darkMode]);
+
+  return (
     <Auth0ProviderWrapper>
-      <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
-        <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
-          <CartProvider>
-            <HelmetProvider>
-              <Router>
+      <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
+        <CartProvider>
+          <HelmetProvider>
+            <Router>
+              <AuthProvider>
                 <div className="flex flex-col min-h-screen relative">
                   <BloodStreamBackground darkMode={darkMode} />
 
@@ -151,11 +163,11 @@ function App() {
                   <Chatbot />
                   <GoToTop />
                 </div>
-              </Router>
-            </HelmetProvider>
-          </CartProvider>
-        </DarkModeContext.Provider>
-      </AuthContext.Provider>
+              </AuthProvider>
+            </Router>
+          </HelmetProvider>
+        </CartProvider>
+      </DarkModeContext.Provider>
     </Auth0ProviderWrapper>
   );
 }
