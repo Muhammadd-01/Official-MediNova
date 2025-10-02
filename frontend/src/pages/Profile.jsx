@@ -42,6 +42,12 @@ function Profile() {
           ? new Date(dobValue).toISOString().slice(0, 10)
           : "";
 
+        const profilePicUrl = data.profilePic
+          ? data.profilePic.startsWith("http")
+            ? data.profilePic
+            : `http://localhost:4000${data.profilePic}`
+          : "";
+
         setProfileData({
           fullName: data.fullName || "",
           email: data.email || "",
@@ -54,11 +60,7 @@ function Profile() {
           history: data.history || "",
           password: "",
           profilePic: null,
-          profilePicUrl: data.profilePic
-            ? data.profilePic.startsWith("http")
-              ? data.profilePic
-              : `http://localhost:4000${data.profilePic}`
-            : "",
+          profilePicUrl,
         });
       }
     } catch (err) {
@@ -79,53 +81,54 @@ function Profile() {
     }
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  const token = localStorage.getItem("token");
-  if (!token) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-  try {
-    const formData = new FormData();
-    for (let key in profileData) {
-      if (profileData[key] !== null) {
-        formData.append(key, profileData[key]);
+    try {
+      const formData = new FormData();
+      for (let key in profileData) {
+        if (profileData[key] !== null) {
+          formData.append(key, profileData[key]);
+        }
       }
-    }
 
-    // If profilePicUrl is empty, tell backend to remove
-    if (!profileData.profilePicUrl) {
-      formData.append("profilePic", "");
-    }
-
-    const res = await axios.put(
-      "http://localhost:4000/api/profile/update",
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
+      if (!profileData.profilePicUrl) {
+        formData.append("profilePic", "");
       }
-    );
 
-    setProfileData((prev) => ({
-      ...prev,
-      profilePicUrl: res.data.profilePic
-        ? `http://localhost:4000${res.data.profilePic}`
-        : "",
-      profilePic: null,
-    }));
+      const res = await axios.put(
+        "http://localhost:4000/api/profile/update",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-    setShowSuccess({
-      title: "Profile Updated ✅",
-      message: "Your profile has been successfully updated.",
-    });
+      setProfileData((prev) => ({
+        ...prev,
+        profilePicUrl: res.data.profilePic
+          ? res.data.profilePic.startsWith("http")
+            ? res.data.profilePic
+            : `http://localhost:4000${res.data.profilePic}`
+          : "",
+        profilePic: null,
+      }));
 
-    setTimeout(() => window.location.reload(), 1500);
-  } catch (err) {
-    console.error("Error updating profile:", err);
-  }
-};
+      setShowSuccess({
+        title: "Profile Updated ✅",
+        message: "Your profile has been successfully updated.",
+      });
+
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err) {
+      console.error("Error updating profile:", err);
+    }
+  };
 
   const handleRemovePicture = () => {
     setProfileData({ ...profileData, profilePic: null, profilePicUrl: "" });
@@ -140,8 +143,7 @@ function Profile() {
     ? "bg-[#0A2A43]/40 border-white/10 text-[#FDFBFB]"
     : "bg-white/40 border-[#0A3D62]/10 text-[#0A3D62]";
 
-  // Small reusable component for deletable fields
-  const DeletableInput = ({ name, label, value }) => (
+  const DeletableInput = ({ name, value }) => (
     <div className="relative flex items-center">
       <motion.input
         type="text"
@@ -202,15 +204,15 @@ function Profile() {
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowModal(true)}
             >
-              {profileData.profilePic || profileData.profilePicUrl ? (
+              {profileData.profilePic ? (
                 <img
-                  src={
-                    profileData.profilePic
-                      ? URL.createObjectURL(profileData.profilePic)
-                      : profileData.profilePicUrl.startsWith("http")
-                      ? profileData.profilePicUrl
-                      : `http://localhost:4000${profileData.profilePicUrl}`
-                  }
+                  src={URL.createObjectURL(profileData.profilePic)}
+                  alt="Profile"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : profileData.profilePicUrl ? (
+                <img
+                  src={profileData.profilePicUrl}
                   alt="Profile"
                   className="absolute inset-0 w-full h-full object-cover"
                 />
@@ -218,13 +220,6 @@ function Profile() {
                 <User className="absolute w-10 h-10 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[#00C2CB]" />
               )}
             </motion.div>
-            <input
-              type="file"
-              name="profilePic"
-              accept="image/*"
-              onChange={handleChange}
-              className="hidden"
-            />
           </div>
 
           {/* Personal Info */}
@@ -336,33 +331,21 @@ function Profile() {
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Allergies
               </label>
-              <DeletableInput
-                name="allergies"
-                label="Allergies"
-                value={profileData.allergies}
-              />
+              <DeletableInput name="allergies" value={profileData.allergies} />
             </div>
 
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Medications
               </label>
-              <DeletableInput
-                name="medications"
-                label="Medications"
-                value={profileData.medications}
-              />
+              <DeletableInput name="medications" value={profileData.medications} />
             </div>
 
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Medical History
               </label>
-              <DeletableInput
-                name="history"
-                label="Medical History"
-                value={profileData.history}
-              />
+              <DeletableInput name="history" value={profileData.history} />
             </div>
           </div>
 
@@ -394,7 +377,7 @@ function Profile() {
           </div>
         </motion.form>
 
-        {/* Profile Modal */}
+        {/* Modal for Profile Picture */}
         <AnimatePresence>
           {showModal && (
             <motion.div
@@ -414,9 +397,7 @@ function Profile() {
                     profileData.profilePic
                       ? URL.createObjectURL(profileData.profilePic)
                       : profileData.profilePicUrl
-                      ? profileData.profilePicUrl.startsWith("http")
-                        ? profileData.profilePicUrl
-                        : `http://localhost:4000${profileData.profilePicUrl}`
+                      ? profileData.profilePicUrl
                       : undefined
                   }
                   alt="Profile Modal"
@@ -438,7 +419,6 @@ function Profile() {
                       className="hidden"
                     />
                   </label>
-
                   <button
                     onClick={handleRemovePicture}
                     className={`px-4 py-2 rounded-[20px] ${cardBg} backdrop-blur-[10px] border border-red-500 text-red-500 hover:scale-105 hover:shadow-2xl transition-all`}
