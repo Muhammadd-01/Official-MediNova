@@ -87,7 +87,7 @@ function Profile() {
     try {
       const formData = new FormData();
       for (let key in profileData) {
-        if (profileData[key] !== "" && profileData[key] !== null) {
+        if (profileData[key] !== null) {
           formData.append(key, profileData[key]);
         }
       }
@@ -134,6 +134,28 @@ function Profile() {
   const inputBg = darkMode
     ? "bg-[#0A2A43]/40 border-white/10 text-[#FDFBFB]"
     : "bg-white/40 border-[#0A3D62]/10 text-[#0A3D62]";
+
+  // Small reusable component for deletable fields
+  const DeletableInput = ({ name, label, value }) => (
+    <div className="relative flex items-center">
+      <motion.input
+        type="text"
+        name={name}
+        value={value}
+        onChange={handleChange}
+        className={`w-full px-4 py-2 rounded-[20px] ${inputBg}`}
+      />
+      {value && (
+        <button
+          type="button"
+          onClick={() => setProfileData({ ...profileData, [name]: "" })}
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500 font-bold"
+        >
+          ✕
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -202,7 +224,6 @@ function Profile() {
 
           {/* Personal Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Full Name */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Full Name *
@@ -219,7 +240,6 @@ function Profile() {
                 />
               </div>
             </div>
-            {/* Email */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Email
@@ -235,7 +255,6 @@ function Profile() {
                 />
               </div>
             </div>
-            {/* Phone */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Phone Number
@@ -251,7 +270,6 @@ function Profile() {
                 />
               </div>
             </div>
-            {/* Gender */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Gender
@@ -268,7 +286,6 @@ function Profile() {
                 <option value="Other">Other</option>
               </motion.select>
             </div>
-            {/* DOB */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Date of Birth
@@ -288,7 +305,6 @@ function Profile() {
 
           {/* Medical Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Blood Group */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Blood Group
@@ -310,43 +326,37 @@ function Profile() {
                 <option value="O-">O-</option>
               </motion.select>
             </div>
-            {/* Allergies */}
+
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Allergies
               </label>
-              <motion.input
-                type="text"
+              <DeletableInput
                 name="allergies"
+                label="Allergies"
                 value={profileData.allergies}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 rounded-[20px] ${inputBg}`}
               />
             </div>
-            {/* Medications */}
+
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Medications
               </label>
-              <motion.input
-                type="text"
+              <DeletableInput
                 name="medications"
+                label="Medications"
                 value={profileData.medications}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 rounded-[20px] ${inputBg}`}
               />
             </div>
-            {/* History */}
+
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Medical History
               </label>
-              <motion.input
-                type="text"
+              <DeletableInput
                 name="history"
+                label="Medical History"
                 value={profileData.history}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 rounded-[20px] ${inputBg}`}
               />
             </div>
           </div>
@@ -408,7 +418,6 @@ function Profile() {
                   className="w-32 h-32 rounded-full object-cover mb-4"
                 />
                 <div className="flex space-x-4">
-                  {/* Update Button with Liquid Glass Hover */}
                   <label
                     className={`px-4 py-2 rounded-[20px] ${cardBg} backdrop-blur-[10px] border border-white/20 text-white cursor-pointer hover:scale-105 hover:shadow-2xl transition-all flex items-center justify-center`}
                   >
@@ -425,7 +434,6 @@ function Profile() {
                     />
                   </label>
 
-                  {/* Remove Button with Liquid Glass Hover */}
                   <button
                     onClick={handleRemovePicture}
                     className={`px-4 py-2 rounded-[20px] ${cardBg} backdrop-blur-[10px] border border-red-500 text-red-500 hover:scale-105 hover:shadow-2xl transition-all`}
