@@ -2,12 +2,13 @@
 import { useState, useContext, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { AuthContext, DarkModeContext } from "../App";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaTwitter } from "react-icons/fa";
 import { useAuth0 } from "@auth0/auth0-react";
+import { CheckCircle, X, AlertCircle } from "lucide-react";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -15,14 +16,23 @@ function Login() {
   const { login } = useContext(AuthContext);
   const { darkMode } = useContext(DarkModeContext);
   const navigate = useNavigate();
+  const [showSuccess, setShowSuccess] = useState(false); // State for success notification
+  const [showError, setShowError] = useState(null); // State for error notification
 
   // Auth0 hooks
-  const { loginWithRedirect, user, isAuthenticated } = useAuth0();
+  const { loginWithRedirect, user, isAuthenticated, logout } = useAuth0();
+
+  // Clear Auth0 session on page load to prevent unintended social login triggers
+  useEffect(() => {
+    if (isAuthenticated) {
+      logout({ returnTo: window.location.origin + "/Login" });
+    }
+  }, [isAuthenticated, logout]);
 
   // Save social user to backend after Auth0 login
   useEffect(() => {
-    const saveSocialUser = async () => {
-      if (isAuthenticated && user) {
+    if (isAuthenticated && user) {
+      const saveSocialUser = async () => {
         try {
           const res = await axios.post("http://localhost:4000/api/auth/social-login", {
             fullName: user.name,
@@ -39,14 +49,19 @@ function Login() {
             token: res.data.token,
           });
 
-          navigate("/"); // Redirect to home
+          setShowSuccess(true); // Show success notification
+          setTimeout(() => {
+            setShowSuccess(false);
+            navigate("/"); // Redirect to home after 3 seconds
+          }, 3000);
         } catch (err) {
           console.error("Error saving social user:", err);
+          // Do not set showError for social login failures
         }
-      }
-    };
-    saveSocialUser();
-  }, [isAuthenticated, user]);
+      };
+      saveSocialUser();
+    }
+  }, [isAuthenticated, user, login, navigate]);
 
   // Email/password login
   const handleSubmit = async (e) => {
@@ -66,11 +81,15 @@ function Login() {
         token: res.data.token,
       });
 
-      alert(res.data.msg);
-      navigate("/"); // Redirect to home
+      setShowSuccess(true); // Show success notification
+      setTimeout(() => {
+        setShowSuccess(false);
+        navigate("/"); // Redirect to home after 3 seconds
+      }, 3000);
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.msg || "Error while logging in ❌");
+      setShowError(err.response?.data?.msg || "Invalid email or password ❌");
+      setTimeout(() => setShowError(null), 3000); // Auto-dismiss error
     }
   };
 
@@ -87,6 +106,9 @@ function Login() {
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]";
   const inputGlass =
     "w-full px-4 py-3 border rounded-xl sm:text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#00C2CB] border-gray-300/40 bg-white/30 backdrop-blur-lg shadow-inner placeholder-gray-500 text-[#0D3B66] dark:bg-[#0A2A43]/60 dark:text-[#FDFBFB] dark:placeholder-gray-300";
+  const cardBg = darkMode
+    ? "bg-[#0A2A43]/20 backdrop-blur-[10px] border border-white/20"
+    : "bg-white/20 backdrop-blur-md border border-gray-200";
 
   return (
     <>
@@ -190,6 +212,74 @@ function Login() {
           </form>
         </motion.div>
       </div>
+
+      {/* Success Notification */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            className={`fixed top-4 right-4 z-50 w-full max-w-sm p-6 rounded-[20px] ${cardBg} shadow-2xl`}
+            initial={{ opacity: 0, scale: 0.8, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -20 }}
+            transition={{ duration: 0.3 }}
+            role="alert"
+            aria-live="assertive"
+          >
+            <div className="flex items-start">
+              <CheckCircle className="w-6 h-6 text-[#00C2CB] mr-3" />
+              <div className="flex-1">
+                <h3 className={`text-lg font-bold ${textColor}`}>Login Successful ✅</h3>
+                <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"} mt-1`}>
+                  Welcome back! You are now signed in.
+                </p>
+              </div>
+              <motion.button
+                onClick={() => setShowSuccess(false)}
+                className="p-1 rounded-full bg-[#00C2CB]/20 hover:bg-[#00C2CB]/30 transition-all duration-300"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                aria-label="Close notification"
+              >
+                <X className="w-5 h-5 text-[#00C2CB]" />
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Error Notification */}
+      <AnimatePresence>
+        {showError && (
+          <motion.div
+            className={`fixed top-4 right-4 z-50 w-full max-w-sm p-6 rounded-[20px] ${cardBg} shadow-2xl`}
+            initial={{ opacity: 0, scale: 0.8, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -20 }}
+            transition={{ duration: 0.3 }}
+            role="alert"
+            aria-live="assertive"
+          >
+            <div className="flex items-start">
+              <AlertCircle className="w-6 h-6 text-red-500 mr-3" />
+              <div className="flex-1">
+                <h3 className={`text-lg font-bold ${textColor}`}>Login Failed ❌</h3>
+                <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"} mt-1`}>
+                  {showError}
+                </p>
+              </div>
+              <motion.button
+                onClick={() => setShowError(null)}
+                className="p-1 rounded-full bg-[#00C2CB]/20 hover:bg-[#00C2CB]/30 transition-all duration-300"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                aria-label="Close notification"
+              >
+                <X className="w-5 h-5 text-[#00C2CB]" />
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
