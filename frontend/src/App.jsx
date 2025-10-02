@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext, createContext } from "react";
 import {
   BrowserRouter as Router,
   Route,
   Routes,
   useNavigate,
+  Navigate,
 } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+import { motion, AnimatePresence } from "framer-motion";
+import { AlertCircle, X } from "lucide-react";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -27,18 +30,86 @@ import GoToTop from "./components/GoToTop";
 import Labs from "./pages/Labs";
 import FAQ from "./components/FAQ";
 
-// Auth0 Wrapper
 import { Auth0ProviderWrapper } from "./components/Auth0ProviderWrapper";
 
 // Contexts
-export const DarkModeContext = React.createContext();
-export const AuthContext = React.createContext();
-export const CartContext = React.createContext(); // ✅ Add CartContext
+export const DarkModeContext = createContext();
+export const AuthContext = createContext();
+export const CartContext = createContext();
+export const NotificationContext = createContext();
 
-// CartProvider Component
+// ✅ Global Notification Provider (Glass Style)
+function NotificationProvider({ children }) {
+  const [notification, setNotification] = useState(null);
+  const { darkMode } = useContext(DarkModeContext);
+
+  const showNotification = (message, type = "error") => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  const cardBg = darkMode
+    ? "bg-[#0A2A43]/70 backdrop-blur-lg border border-white/20"
+    : "bg-white/60 backdrop-blur-lg border border-gray-200/40";
+
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]";
+
+  return (
+    <NotificationContext.Provider value={{ showNotification }}>
+      {children}
+      <AnimatePresence>
+        {notification && (
+          <motion.div
+            className={`fixed top-4 right-4 z-50 w-full max-w-sm p-6 rounded-[20px] shadow-2xl ${cardBg}`}
+            initial={{ opacity: 0, scale: 0.8, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -20 }}
+            transition={{ duration: 0.3 }}
+            role="alert"
+          >
+            <div className="flex items-start">
+              <AlertCircle
+                className={`w-6 h-6 mr-3 ${
+                  notification.type === "error" ? "text-red-500" : "text-green-500"
+                }`}
+              />
+              <div className="flex-1">
+                <h3 className={`text-lg font-bold ${textColor}`}>
+                  {notification.type === "error"
+                    ? "⚠️ Authentication Required"
+                    : "✅ Success"}
+                </h3>
+                <p
+                  className={`text-sm ${
+                    darkMode ? "text-gray-300" : "text-gray-600"
+                  } mt-1`}
+                >
+                  {notification.message}
+                </p>
+              </div>
+              <motion.button
+                onClick={() => setNotification(null)}
+                className="p-1 rounded-full bg-red-500/20 hover:bg-red-500/30 transition-all duration-300"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <X
+                  className={`w-5 h-5 ${
+                    notification.type === "error" ? "text-red-500" : "text-green-500"
+                  }`}
+                />
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </NotificationContext.Provider>
+  );
+}
+
+// ✅ CartProvider
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
-
   const addToCart = (item) => {
     setCartItems((prev) => {
       const existing = prev.find((i) => i.id === item.id);
@@ -51,17 +122,14 @@ export function CartProvider({ children }) {
       }
     });
   };
-
   const removeFromCart = (id) => {
     setCartItems((prev) => prev.filter((i) => i.id !== id));
   };
-
   const totalItems = cartItems.reduce((sum, i) => sum + i.quantity, 0);
   const totalPrice = cartItems.reduce(
     (sum, i) => sum + (i.price || 0) * i.quantity,
     0
   );
-
   return (
     <CartContext.Provider
       value={{ cartItems, addToCart, removeFromCart, totalItems, totalPrice }}
@@ -71,17 +139,15 @@ export function CartProvider({ children }) {
   );
 }
 
-// ✅ AuthProvider with redirect on logout
+// ✅ AuthProvider
 function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  // Restore from localStorage
   useEffect(() => {
     const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
-
     if (token && storedUser) {
       setIsAuthenticated(true);
       setUser(JSON.parse(storedUser));
@@ -91,7 +157,6 @@ function AuthProvider({ children }) {
   const login = (userData) => {
     setIsAuthenticated(true);
     setUser(userData);
-
     localStorage.setItem("token", userData.token);
     localStorage.setItem("user", JSON.stringify(userData));
   };
@@ -99,12 +164,9 @@ function AuthProvider({ children }) {
   const logout = () => {
     setIsAuthenticated(false);
     setUser(null);
-
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-
-    // ✅ Redirect to login page after logout
-    navigate("/login");
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -114,16 +176,24 @@ function AuthProvider({ children }) {
   );
 }
 
+// ✅ ProtectedRoute (Glass-style notification on block)
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("token");
+  const { showNotification } = useContext(NotificationContext);
+
+  if (!token) {
+    showNotification("Please login or register first to continue.", "error");
+    return <Navigate to="/register" replace />;
+  }
+
+  return children;
+}
+
 function App() {
   const [darkMode, setDarkMode] = useState(false);
-
-  // Dark mode toggle
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    if (darkMode) document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
   }, [darkMode]);
 
   return (
@@ -133,36 +203,41 @@ function App() {
           <HelmetProvider>
             <Router>
               <AuthProvider>
-                <div className="flex flex-col min-h-screen relative">
-                  <BloodStreamBackground darkMode={darkMode} />
+                <NotificationProvider>
+                  <div className="flex flex-col min-h-screen relative">
+                    <BloodStreamBackground darkMode={darkMode} />
 
-                  <div className="relative z-10 flex flex-col min-h-screen pointer-events-auto">
-                    <Header />
+                    <div className="relative z-10 flex flex-col min-h-screen pointer-events-auto">
+                      <Header />
 
-                    <main className="flex-grow container mx-auto px-4 py-8">
-                      <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/about" element={<About />} />
-                        <Route path="/medibot" element={<MediBot />} />
-                        <Route path="/consultation" element={<Consultation />} />
-                        <Route path="/feedback" element={<Feedback />} />
-                        <Route path="/contact" element={<Contact />} />
-                        <Route path="/labs" element={<Labs />} />
-                        <Route path="/articles" element={<Articles />} />
-                        <Route path="/pharmacy" element={<Pharmacy />} />
-                        <Route path="/news" element={<News />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
-                        <Route path="/emergency" element={<Emergency />} />
-                      </Routes>
-                    </main>
+                      <main className="flex-grow container mx-auto px-4 py-8">
+                        <Routes>
+                          {/* Public Routes */}
+                          <Route path="/login" element={<Login />} />
+                          <Route path="/register" element={<Register />} />
 
-                    <Footer />
+                          {/* Protected Routes */}
+                          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                          <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
+                          <Route path="/medibot" element={<ProtectedRoute><MediBot /></ProtectedRoute>} />
+                          <Route path="/consultation" element={<ProtectedRoute><Consultation /></ProtectedRoute>} />
+                          <Route path="/feedback" element={<ProtectedRoute><Feedback /></ProtectedRoute>} />
+                          <Route path="/contact" element={<ProtectedRoute><Contact /></ProtectedRoute>} />
+                          <Route path="/labs" element={<ProtectedRoute><Labs /></ProtectedRoute>} />
+                          <Route path="/articles" element={<ProtectedRoute><Articles /></ProtectedRoute>} />
+                          <Route path="/pharmacy" element={<ProtectedRoute><Pharmacy /></ProtectedRoute>} />
+                          <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
+                          <Route path="/emergency" element={<ProtectedRoute><Emergency /></ProtectedRoute>} />
+                        </Routes>
+                      </main>
+
+                      <Footer />
+                    </div>
+
+                    <Chatbot />
+                    <GoToTop />
                   </div>
-
-                  <Chatbot />
-                  <GoToTop />
-                </div>
+                </NotificationProvider>
               </AuthProvider>
             </Router>
           </HelmetProvider>
