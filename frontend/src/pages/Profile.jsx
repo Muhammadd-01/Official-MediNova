@@ -222,8 +222,9 @@ function Profile() {
             </motion.div>
           </div>
 
-          {/* Personal Info */}
+          {/* Personal & Medical Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Full Name */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Full Name *
@@ -240,6 +241,7 @@ function Profile() {
                 />
               </div>
             </div>
+            {/* Email */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Email
@@ -255,6 +257,7 @@ function Profile() {
                 />
               </div>
             </div>
+            {/* Phone */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Phone Number
@@ -270,6 +273,7 @@ function Profile() {
                 />
               </div>
             </div>
+            {/* Gender */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Gender
@@ -286,6 +290,7 @@ function Profile() {
                 <option value="Other">Other</option>
               </motion.select>
             </div>
+            {/* DOB */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Date of Birth
@@ -326,21 +331,18 @@ function Profile() {
                 <option value="O-">O-</option>
               </motion.select>
             </div>
-
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Allergies
               </label>
               <DeletableInput name="allergies" value={profileData.allergies} />
             </div>
-
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Medications
               </label>
               <DeletableInput name="medications" value={profileData.medications} />
             </div>
-
             <div>
               <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Medical History
@@ -405,9 +407,11 @@ function Profile() {
                 />
                 <div className="flex space-x-4">
                   <label
-                    className={`px-4 py-2 rounded-[20px] ${cardBg} backdrop-blur-[10px] border border-white/20 text-white cursor-pointer hover:scale-105 hover:shadow-2xl transition-all flex items-center justify-center`}
+                    className={`px-4 py-2 rounded-[20px] ${
+                      cardBg
+                    } backdrop-blur-[10px] border border-white/20 text-white cursor-pointer hover:scale-105 hover:shadow-2xl transition-all flex items-center justify-center`}
                   >
-                    Update
+                    {profileData.profilePicUrl ? "Update" : "Add"}
                     <input
                       type="file"
                       name="profilePic"
@@ -419,12 +423,14 @@ function Profile() {
                       className="hidden"
                     />
                   </label>
-                  <button
-                    onClick={handleRemovePicture}
-                    className={`px-4 py-2 rounded-[20px] ${cardBg} backdrop-blur-[10px] border border-red-500 text-red-500 hover:scale-105 hover:shadow-2xl transition-all`}
-                  >
-                    Remove
-                  </button>
+                  {profileData.profilePicUrl && (
+                    <button
+                      onClick={handleRemovePicture}
+                      className={`px-4 py-2 rounded-[20px] ${cardBg} backdrop-blur-[10px] border border-red-500 text-red-500 hover:scale-105 hover:shadow-2xl transition-all`}
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
                 <button
                   onClick={() => setShowModal(false)}
