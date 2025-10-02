@@ -1,11 +1,21 @@
 import { useState, useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Moon, Sun, Settings, LogIn, UserPlus, LogOut, ShoppingCart } from "lucide-react";
+import {
+  Menu,
+  X,
+  Moon,
+  Sun,
+  Settings,
+  LogIn,
+  UserPlus,
+  LogOut,
+  ShoppingCart,
+  User,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DarkModeContext, AuthContext, CartContext } from "../App";
 import CartSidebar from "./CartSidebar";
 
-// Create motion-enhanced Link
 const MotionLink = motion(Link);
 
 // Animation variants
@@ -23,13 +33,20 @@ const mobileMenuVariants = {
 
 const logoVariants = {
   initial: { scale: 1 },
-  hover: { scale: 1.05, transition: { type: "spring", stiffness: 300, damping: 15 } },
+  hover: {
+    scale: 1.05,
+    transition: { type: "spring", stiffness: 300, damping: 15 },
+  },
   tap: { scale: 0.95 },
 };
 
 const settingsButtonVariants = {
   initial: { scale: 1, rotate: 0 },
-  hover: { scale: 1.1, rotate: 15, transition: { type: "spring", stiffness: 300, damping: 15 } },
+  hover: {
+    scale: 1.1,
+    rotate: 15,
+    transition: { type: "spring", stiffness: 300, damping: 15 },
+  },
   tap: { scale: 0.95, rotate: -15 },
   pulse: {
     scale: [1, 1.15, 1],
@@ -40,9 +57,33 @@ const settingsButtonVariants = {
 
 const cartIconVariants = {
   initial: { scale: 1 },
-  hover: { scale: 1.1, rotate: 15, transition: { type: "spring", stiffness: 300, damping: 15 } },
+  hover: {
+    scale: 1.1,
+    rotate: 15,
+    transition: { type: "spring", stiffness: 300, damping: 15 },
+  },
   tap: { scale: 0.9, rotate: -15 },
-  pulse: { scale: [1, 1.2, 1], rotate: [0, 15, -15, 0], transition: { duration: 0.6 } },
+  pulse: {
+    scale: [1, 1.2, 1],
+    rotate: [0, 15, -15, 0],
+    transition: { duration: 0.6 },
+  },
+};
+
+// ✅ Profile animation (matches cartIconVariants exactly)
+const profileIconVariants = {
+  initial: { scale: 1, rotate: 0 },
+  hover: {
+    scale: 1.1,
+    rotate: 15,
+    transition: { type: "spring", stiffness: 300, damping: 15 },
+  },
+  tap: { scale: 0.9, rotate: -15 },
+  pulse: {
+    scale: [1, 1.2, 1],
+    rotate: [0, 15, -15, 0],
+    transition: { duration: 0.6 },
+  },
 };
 
 function Header() {
@@ -50,6 +91,7 @@ function Header() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [pulse, setPulse] = useState(false);
   const [cartPulse, setCartPulse] = useState(false);
+  const [profilePulse, setProfilePulse] = useState(false); // ✅ Keep for pulse on click
   const [cartOpen, setCartOpen] = useState(false);
 
   const { darkMode, setDarkMode } = useContext(DarkModeContext);
@@ -60,7 +102,9 @@ function Header() {
   const headerBg =
     "bg-white/20 dark:bg-[#0D3B66]/30 backdrop-blur-xl border border-white/20 dark:border-[#00C2CB]/20 shadow-lg";
   const textColor = darkMode ? "text-white" : "text-[#0D3B66]";
-  const hoverGlass = `transition-all duration-300 hover:bg-white/30 dark:hover:bg-[#00C2CB]/20 hover:shadow-lg hover:scale-105 ${darkMode ? "" : "hover:text-[#0D3B66]"}`;
+  const hoverGlass = `transition-all duration-300 hover:bg-white/30 dark:hover:bg-[#00C2CB]/20 hover:shadow-lg hover:scale-105 ${
+    darkMode ? "" : "hover:text-[#0D3B66]"
+  }`;
 
   const navItems = [
     "Home",
@@ -88,9 +132,21 @@ function Header() {
     }
   }, [cartPulse]);
 
+  useEffect(() => {
+    if (profilePulse) {
+      const timer = setTimeout(() => setProfilePulse(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [profilePulse]);
+
   const handleCartClick = () => {
     setCartOpen(true);
     setCartPulse(true);
+  };
+
+  // ✅ Handler for profile click to trigger pulse
+  const handleProfileClick = () => {
+    setProfilePulse(true);
   };
 
   return (
@@ -117,7 +173,11 @@ function Header() {
               {navItems.map((item) => (
                 <Link
                   key={item}
-                  to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
+                  to={
+                    item === "Home"
+                      ? "/"
+                      : `/${item.toLowerCase().replace(" ", "-")}`
+                  }
                   className={`px-3 py-2 rounded-full text-sm font-medium ${hoverGlass} min-w-max`}
                 >
                   {item}
@@ -125,7 +185,7 @@ function Header() {
               ))}
             </nav>
 
-            {/* Right-side Controls (Desktop) */}
+            {/* Right-side Controls */}
             <div className="hidden lg:flex items-center gap-3 relative">
               {/* Cart Icon */}
               <motion.button
@@ -135,7 +195,9 @@ function Header() {
                 whileHover="hover"
                 whileTap="tap"
                 animate={cartPulse ? "pulse" : "initial"}
-                className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${darkMode ? "text-white" : "text-[#0D3B66]"} border border-white/20 ${hoverGlass}`}
+                className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${
+                  darkMode ? "text-white" : "text-[#0D3B66]"
+                } border border-white/20 ${hoverGlass}`}
               >
                 <ShoppingCart size={20} />
                 {totalItems > 0 && (
@@ -145,122 +207,28 @@ function Header() {
                 )}
               </motion.button>
 
-              {/* Settings Button */}
-              <motion.button
-                variants={settingsButtonVariants}
-                initial="initial"
-                whileHover="hover"
-                whileTap="tap"
-                animate={pulse ? "pulse" : "initial"}
-                onClick={() => {
-                  setIsSettingsOpen(!isSettingsOpen);
-                  setPulse(true);
-                }}
-                className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${darkMode ? "text-white" : "text-[#0D3B66]"} border border-white/20 ${hoverGlass}`}
-              >
-                <Settings size={18} />
-              </motion.button>
-
-              {/* Settings Dropdown */}
-              <AnimatePresence>
-                {isSettingsOpen && (
-                  <motion.div
-                    variants={dropdownVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="absolute top-12 right-0 w-52 rounded-2xl p-4 space-y-3 bg-white/30 dark:bg-[#0D3B66]/40 backdrop-blur-xl border border-white/20 shadow-xl"
+              {/* ✅ Profile Icon (matches cart/settings behavior) */}
+              {isAuthenticated && (
+                <motion.div className="relative">
+                  <MotionLink
+                    to="/profile"
+                    variants={profileIconVariants}
+                    initial="initial"
+                    whileHover="hover"
+                    whileTap="tap"
+                    animate={profilePulse ? "pulse" : "initial"}
+                    onClick={handleProfileClick}
+                    className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${
+                      darkMode ? "text-white" : "text-[#0D3B66]"
+                    } border border-white/20 ${hoverGlass}`}
                   >
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setDarkMode(!darkMode)}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-full text-sm font-medium ${hoverGlass}`}
-                    >
-                      {darkMode ? <Moon size={16} /> : <Sun size={16} />}
-                      <span>{darkMode ? "Light Mode" : "Dark Mode"}</span>
-                    </motion.button>
+                    <User size={18} />
+                  </MotionLink>
+                </motion.div>
+              )}
 
-                    {isAuthenticated ? (
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={logout}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-full text-sm font-semibold bg-red-600/80 text-white hover:bg-red-700/90 transition-all"
-                      >
-                        <LogOut size={16} />
-                        Logout
-                      </motion.button>
-                    ) : (
-                      <>
-                        <Link
-                          to="/login"
-                          className={`flex items-center gap-3 w-full px-3 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}
-                        >
-                          <LogIn size={16} />
-                          Login
-                        </Link>
-                        <Link
-                          to="/register"
-                          className={`flex items-center gap-3 w-full px-3 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}
-                        >
-                          <UserPlus size={16} />
-                          Register
-                        </Link>
-                      </>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Mobile Toggle */}
-            <div className="lg:hidden flex items-center gap-2">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className={`p-2 rounded-full ${hoverGlass}`}
-              >
-                {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Nav */}
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div
-              variants={mobileMenuVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className={`lg:hidden absolute top-full left-0 w-full ${headerBg}`}
-            >
-              <div className="px-4 py-4 space-y-3">
-                {navItems.map((item) => (
-                  <Link
-                    key={item}
-                    to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
-                    onClick={() => setIsMenuOpen(false)}
-                    className={`block px-5 py-2 rounded-full text-sm font-medium ${hoverGlass} min-w-max`}
-                  >
-                    {item}
-                  </Link>
-                ))}
-                {/* Cart in Mobile Menu */}
-                <motion.button
-                  onClick={handleCartClick}
-                  variants={cartIconVariants}
-                  initial="initial"
-                  whileHover="hover"
-                  whileTap="tap"
-                  animate={cartPulse ? "pulse" : "initial"}
-                  className={`w-full flex items-center gap-3 px-5 py-2 rounded-full text-sm font-medium bg-white/30 dark:bg-[#0D3B66]/80 ${darkMode ? "text-white" : "text-[#0D3B66]"} ${hoverGlass}`}
-                >
-                  <ShoppingCart size={20} />
-                  <span>Cart {totalItems > 0 ? `(${totalItems})` : ""}</span>
-                </motion.button>
-                {/* Settings in Mobile Menu */}
+              {/* Settings */}
+              <div className="relative">
                 <motion.button
                   variants={settingsButtonVariants}
                   initial="initial"
@@ -271,12 +239,13 @@ function Header() {
                     setIsSettingsOpen(!isSettingsOpen);
                     setPulse(true);
                   }}
-                  className={`w-full flex items-center gap-3 px-5 py-2 rounded-full text-sm font-medium bg-white/30 dark:bg-[#0D3B66] ${darkMode ? "text-white" : "text-[#0D3B66]"} ${hoverGlass}`}
+                  className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${
+                    darkMode ? "text-white" : "text-[#0D3B66]"
+                  } border border-white/20 ${hoverGlass}`}
                 >
-                  <Settings size={20} />
-                  <span>Settings</span>
+                  <Settings size={18} />
                 </motion.button>
-                {/* Mobile Settings Dropdown */}
+
                 <AnimatePresence>
                   {isSettingsOpen && (
                     <motion.div
@@ -284,7 +253,7 @@ function Header() {
                       initial="hidden"
                       animate="visible"
                       exit="exit"
-                      className="w-full rounded-2xl p-4 space-y-3 bg-white/30 dark:bg-[#0D3B66]/40 backdrop-blur-xl border border-white/20 shadow-xl"
+                      className="absolute top-12 right-0 w-52 rounded-2xl p-4 space-y-3 bg-white/30 dark:bg-[#0D3B66]/40 backdrop-blur-xl border border-white/20 shadow-xl z-50"
                     >
                       <motion.button
                         whileHover={{ scale: 1.05 }}
@@ -295,6 +264,7 @@ function Header() {
                         {darkMode ? <Moon size={16} /> : <Sun size={16} />}
                         <span>{darkMode ? "Light Mode" : "Dark Mode"}</span>
                       </motion.button>
+
                       {isAuthenticated ? (
                         <motion.button
                           whileHover={{ scale: 1.05 }}
@@ -310,7 +280,6 @@ function Header() {
                           <Link
                             to="/login"
                             className={`flex items-center gap-3 w-full px-3 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}
-                            onClick={() => setIsMenuOpen(false)}
                           >
                             <LogIn size={16} />
                             Login
@@ -318,7 +287,6 @@ function Header() {
                           <Link
                             to="/register"
                             className={`flex items-center gap-3 w-full px-3 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}
-                            onClick={() => setIsMenuOpen(false)}
                           >
                             <UserPlus size={16} />
                             Register
@@ -329,9 +297,19 @@ function Header() {
                   )}
                 </AnimatePresence>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+
+            {/* Mobile Toggle */}
+            <div className="lg:hidden flex items-center gap-2">
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className={`p-2 rounded-full ${hoverGlass}`}
+              >
+                {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+            </div>
+          </div>
+        </div>
       </header>
 
       {/* Spacer */}

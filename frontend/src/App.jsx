@@ -24,6 +24,7 @@ import News from "./pages/News";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Emergency from "./pages/Emergency";
+import Profile from "./pages/Profile";   // ✅ Import Profile Page
 import BloodStreamBackground from "./components/BackgroundAnimation";
 import Chatbot from "./components/Chatbot";
 import GoToTop from "./components/GoToTop";
@@ -176,7 +177,7 @@ function AuthProvider({ children }) {
   );
 }
 
-// ✅ ProtectedRoute (Glass-style notification on block)
+// ✅ ProtectedRoute
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
   const { showNotification } = useContext(NotificationContext);
@@ -228,6 +229,7 @@ function App() {
                           <Route path="/pharmacy" element={<ProtectedRoute><Pharmacy /></ProtectedRoute>} />
                           <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
                           <Route path="/emergency" element={<ProtectedRoute><Emergency /></ProtectedRoute>} />
+                          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} /> {/* ✅ Profile Route Added */}
                         </Routes>
                       </main>
 
