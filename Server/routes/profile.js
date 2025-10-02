@@ -51,19 +51,25 @@ router.put("/update", verifyToken, upload.single("profilePic"), async (req, res)
       medications,
       history,
       password,
+      profilePic, // <-- frontend sends "" if user removed pic
     } = req.body;
 
-    const updateData = {};
+    const updateData = {
+      fullName: fullName !== undefined ? fullName : undefined,
+      email: email !== undefined ? email : undefined,
+      phone: phone !== undefined ? phone : undefined,
+      gender: gender !== undefined ? gender : undefined,
+      dob: dob !== undefined ? dob : undefined,
+      bloodGroup: bloodGroup !== undefined ? bloodGroup : undefined,
+      allergies: allergies !== undefined ? allergies : undefined,
+      medications: medications !== undefined ? medications : undefined,
+      history: history !== undefined ? history : undefined,
+    };
 
-    if (fullName) updateData.fullName = fullName;
-    if (email) updateData.email = email;
-    if (phone) updateData.phone = phone;
-    if (gender) updateData.gender = gender;
-    if (dob) updateData.dob = dob;
-    if (bloodGroup) updateData.bloodGroup = bloodGroup;
-    if (allergies) updateData.allergies = allergies;
-    if (medications) updateData.medications = medications;
-    if (history) updateData.history = history;
+    // Remove undefined fields
+    Object.keys(updateData).forEach(
+      (key) => updateData[key] === undefined && delete updateData[key]
+    );
 
     // Handle password update
     if (password) {
@@ -73,7 +79,21 @@ router.put("/update", verifyToken, upload.single("profilePic"), async (req, res)
 
     // Handle profile picture upload
     if (req.file) {
+      // Delete old picture from disk if exists
+      const user = await User.findById(req.user.id);
+      if (user.profilePic) {
+        const oldPath = path.join(".", user.profilePic);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
       updateData.profilePic = `/uploads/profilePics/${req.file.filename}`;
+    } else if (profilePic === "") {
+      // Remove profile picture from DB and disk
+      const user = await User.findById(req.user.id);
+      if (user.profilePic) {
+        const oldPath = path.join(".", user.profilePic);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+      updateData.profilePic = "";
     }
 
     const updatedUser = await User.findByIdAndUpdate(

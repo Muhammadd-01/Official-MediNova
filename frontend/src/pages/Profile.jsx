@@ -79,48 +79,53 @@ function Profile() {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token) return;
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  const token = localStorage.getItem("token");
+  if (!token) return;
 
-    try {
-      const formData = new FormData();
-      for (let key in profileData) {
-        if (profileData[key] !== null) {
-          formData.append(key, profileData[key]);
-        }
+  try {
+    const formData = new FormData();
+    for (let key in profileData) {
+      if (profileData[key] !== null) {
+        formData.append(key, profileData[key]);
       }
-
-      const res = await axios.put(
-        "http://localhost:4000/api/profile/update",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (res.data.profilePic) {
-        setProfileData((prev) => ({
-          ...prev,
-          profilePicUrl: `http://localhost:4000${res.data.profilePic}`,
-          profilePic: null,
-        }));
-      }
-
-      setShowSuccess({
-        title: "Profile Updated ✅",
-        message: "Your profile has been successfully updated.",
-      });
-
-      setTimeout(() => window.location.reload(), 1500);
-    } catch (err) {
-      console.error("Error updating profile:", err);
     }
-  };
+
+    // If profilePicUrl is empty, tell backend to remove
+    if (!profileData.profilePicUrl) {
+      formData.append("profilePic", "");
+    }
+
+    const res = await axios.put(
+      "http://localhost:4000/api/profile/update",
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    setProfileData((prev) => ({
+      ...prev,
+      profilePicUrl: res.data.profilePic
+        ? `http://localhost:4000${res.data.profilePic}`
+        : "",
+      profilePic: null,
+    }));
+
+    setShowSuccess({
+      title: "Profile Updated ✅",
+      message: "Your profile has been successfully updated.",
+    });
+
+    setTimeout(() => window.location.reload(), 1500);
+  } catch (err) {
+    console.error("Error updating profile:", err);
+  }
+};
 
   const handleRemovePicture = () => {
     setProfileData({ ...profileData, profilePic: null, profilePicUrl: "" });
