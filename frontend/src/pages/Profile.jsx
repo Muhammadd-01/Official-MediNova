@@ -1,13 +1,13 @@
 "use client";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
-import { DarkModeContext, NotificationContext } from "../App";
+import { DarkModeContext } from "../App";
 import { CheckCircle, X, User, Mail, Phone, Calendar } from "lucide-react";
+import axios from "axios";
 
 function Profile() {
   const { darkMode } = useContext(DarkModeContext);
-  const { showNotification } = useContext(NotificationContext);
 
   const [profileData, setProfileData] = useState({
     fullName: "",
@@ -22,36 +22,89 @@ function Profile() {
     password: "",
     profilePic: null,
   });
+
   const [showSuccess, setShowSuccess] = useState(null);
+
+  // Fetch user data from backend on load
+  const fetchProfile = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await axios.get("http://localhost:4000/api/profile/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = res.data;
+      if (data) {
+        setProfileData({
+          fullName: data.fullName || "",
+          email: data.email || "",
+          phone: data.phoneNumber || "",
+          gender: data.gender || "",
+          dob: data.dateOfBirth
+            ? new Date(data.dateOfBirth).toISOString().split("T")[0]
+            : "",
+          bloodGroup: data.bloodGroup || "",
+          allergies: data.allergies || "",
+          medications: data.medications || "",
+          history: data.history || "",
+          password: "",
+          profilePic: null,
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (files) {
       setProfileData({ ...profileData, [name]: files[0] });
-      setShowSuccess({
-        title: "Photo Uploaded ✅",
-        message: "Your profile picture has been successfully uploaded.",
-      });
-      setTimeout(() => setShowSuccess(null), 3000);
     } else {
       setProfileData({ ...profileData, [name]: value });
-      if (name === "password" && value.length >= 6) {
-        setShowSuccess({
-          title: "Password Updated ✅",
-          message: "Your password has been successfully updated.",
-        });
-        setTimeout(() => setShowSuccess(null), 3000);
-      }
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(profileData);
-    showNotification("Profile updated successfully ✅", "success");
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      // Prepare FormData for possible file upload
+      const formData = new FormData();
+      for (let key in profileData) {
+        if (profileData[key] !== "" && profileData[key] !== null) {
+          formData.append(key, profileData[key]);
+        }
+      }
+
+      await axios.put("http://localhost:4000/api/profile/update", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setShowSuccess({
+        title: "Profile Updated ✅",
+        message: "Your profile has been successfully updated.",
+      });
+
+      // Reload updated profile
+      await fetchProfile();
+
+      setTimeout(() => setShowSuccess(null), 3000);
+    } catch (err) {
+      console.error("Error updating profile:", err);
+    }
   };
 
-  // Styling from Labs.jsx
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
   const cardBg = darkMode
     ? "bg-[#0A2A43]/20 backdrop-blur-[10px] border border-white/20"
@@ -67,7 +120,9 @@ function Profile() {
         <meta name="description" content="Manage your MediNova profile" />
       </Helmet>
 
-      <div className={`min-h-screen py-12 px-4 sm:px-8 lg:px-16 ${textColor} bg-transparent max-w-7xl mx-auto`}>
+      <div
+        className={`min-h-screen py-12 px-4 sm:px-8 lg:px-16 ${textColor} bg-transparent max-w-7xl mx-auto`}
+      >
         <motion.h1
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -120,7 +175,7 @@ function Profile() {
           {/* Personal Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="fullName">
+              <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Full Name *
               </label>
               <div className="relative">
@@ -128,19 +183,16 @@ function Profile() {
                 <motion.input
                   type="text"
                   name="fullName"
-                  placeholder="Enter your full name"
                   value={profileData.fullName}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none hover:shadow-lg hover:scale-[1.02]`}
+                  className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg}`}
                   required
-                  aria-required="true"
-                  whileHover={{ scale: 1.02 }}
-                  whileFocus={{ scale: 1.02, boxShadow: "0 0 10px rgba(0, 194, 203, 0.3)" }}
                 />
               </div>
             </div>
+
             <div>
-              <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="email">
+              <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Email
               </label>
               <div className="relative">
@@ -148,17 +200,15 @@ function Profile() {
                 <motion.input
                   type="email"
                   name="email"
-                  placeholder="your.email@example.com"
                   value={profileData.email}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none hover:shadow-lg hover:scale-[1.02]`}
-                  whileHover={{ scale: 1.02 }}
-                  whileFocus={{ scale: 1.02, boxShadow: "0 0 10px rgba(0, 194, 203, 0.3)" }}
+                  className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg}`}
                 />
               </div>
             </div>
+
             <div>
-              <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="phone">
+              <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Phone Number
               </label>
               <div className="relative">
@@ -166,35 +216,32 @@ function Profile() {
                 <motion.input
                   type="tel"
                   name="phone"
-                  placeholder="03XX-XXXXXXX"
                   value={profileData.phone}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none hover:shadow-lg hover:scale-[1.02]`}
-                  whileHover={{ scale: 1.02 }}
-                  whileFocus={{ scale: 1.02, boxShadow: "0 0 10px rgba(0, 194, 203, 0.3)" }}
+                  className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg}`}
                 />
               </div>
             </div>
+
             <div>
-              <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="gender">
+              <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Gender
               </label>
               <motion.select
                 name="gender"
                 value={profileData.gender}
                 onChange={handleChange}
-                className={`w-full pl-4 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none appearance-none hover:shadow-lg hover:scale-[1.02]`}
-                whileHover={{ scale: 1.02 }}
-                whileFocus={{ scale: 1.02, boxShadow: "0 0 10px rgba(0, 194, 203, 0.3)" }}
+                className={`w-full pl-4 pr-4 py-2 rounded-[20px] ${inputBg}`}
               >
                 <option value="">Select gender</option>
-                <option value="male">Male ♂</option>
-                <option value="female">Female ♀</option>
-                <option value="other">Other</option>
+                <option value="Male">Male ♂</option>
+                <option value="Female">Female ♀</option>
+                <option value="Other">Other</option>
               </motion.select>
             </div>
+
             <div>
-              <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="dob">
+              <label className={`block text-sm font-medium mb-1 ${textColor}`}>
                 Date of Birth
               </label>
               <div className="relative">
@@ -204,113 +251,90 @@ function Profile() {
                   name="dob"
                   value={profileData.dob}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none appearance-none hover:shadow-lg hover:scale-[1.02]`}
-                  whileHover={{ scale: 1.02 }}
-                  whileFocus={{ scale: 1.02, boxShadow: "0 0 10px rgba(0, 194, 203, 0.3)" }}
+                  className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg}`}
                 />
               </div>
-            </div>
-            <div>
-              <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="bloodGroup">
-                Blood Group
-              </label>
-              <motion.select
-                name="bloodGroup"
-                value={profileData.bloodGroup}
-                onChange={handleChange}
-                className={`w-full pl-4 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none appearance-none hover:shadow-lg hover:scale-[1.02]`}
-                whileHover={{ scale: 1.02 }}
-                whileFocus={{ scale: 1.02, boxShadow: "0 0 10px rgba(0, 194, 203, 0.3)" }}
-              >
-                <option value="">Select blood group</option>
-                <option>A+</option>
-                <option>A-</option>
-                <option>B+</option>
-                <option>B-</option>
-                <option>AB+</option>
-                <option>AB-</option>
-                <option>O+</option>
-                <option>O-</option>
-              </motion.select>
             </div>
           </div>
 
           {/* Medical Info */}
-          <div>
-            <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="allergies">
-              Allergies
-            </label>
-            <motion.textarea
-              name="allergies"
-              placeholder="List any allergies"
-              value={profileData.allergies}
-              onChange={handleChange}
-              className={`w-full pl-4 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none h-24 resize-none hover:shadow-lg hover:scale-[1.02]`}
-              rows="3"
-              whileHover={{ scale: 1.02 }}
-              whileFocus={{ scale: 1.02, boxShadow: "0 0 10px rgba(0, 194, 203, 0.3)" }}
-            />
-          </div>
-          <div>
-            <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="medications">
-              Current Medications
-            </label>
-            <motion.textarea
-              name="medications"
-              placeholder="List current medications"
-              value={profileData.medications}
-              onChange={handleChange}
-              className={`w-full pl-4 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none h-24 resize-none hover:shadow-lg hover:scale-[1.02]`}
-              rows="3"
-              whileHover={{ scale: 1.02 }}
-              whileFocus={{ scale: 1.02, boxShadow: "0 0 10px rgba(0, 194, 203, 0.3)" }}
-            />
-          </div>
-          <div>
-            <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="history">
-              Medical History
-            </label>
-            <motion.textarea
-              name="history"
-              placeholder="Brief medical history"
-              value={profileData.history}
-              onChange={handleChange}
-              className={`w-full pl-4 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none h-24 resize-none hover:shadow-lg hover:scale-[1.02]`}
-              rows="3"
-              whileHover={{ scale: 1.02 }}
-              whileFocus={{ scale: 1.02, boxShadow: "0 0 10px rgba(0, 194, 203, 0.3)" }}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${textColor}`}>
+                Blood Group
+              </label>
+              <motion.input
+                type="text"
+                name="bloodGroup"
+                value={profileData.bloodGroup}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 rounded-[20px] ${inputBg}`}
+              />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${textColor}`}>
+                Allergies
+              </label>
+              <motion.input
+                type="text"
+                name="allergies"
+                value={profileData.allergies}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 rounded-[20px] ${inputBg}`}
+              />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${textColor}`}>
+                Medications
+              </label>
+              <motion.input
+                type="text"
+                name="medications"
+                value={profileData.medications}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 rounded-[20px] ${inputBg}`}
+              />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${textColor}`}>
+                Medical History
+              </label>
+              <motion.input
+                type="text"
+                name="history"
+                value={profileData.history}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 rounded-[20px] ${inputBg}`}
+              />
+            </div>
           </div>
 
-          {/* Security Info */}
+          {/* Password */}
           <div>
-            <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="password">
-              New Password
+            <label className={`block text-sm font-medium mb-1 ${textColor}`}>
+              Change Password
             </label>
             <motion.input
               type="password"
               name="password"
-              placeholder="Enter new password"
               value={profileData.password}
               onChange={handleChange}
-              className={`w-full pl-4 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none hover:shadow-lg hover:scale-[1.02]`}
-              whileHover={{ scale: 1.02 }}
-              whileFocus={{ scale: 1.02, boxShadow: "0 0 10px rgba(0, 194, 203, 0.3)" }}
+              className={`w-full px-4 py-2 rounded-[20px] ${inputBg}`}
+              placeholder="Enter new password"
             />
           </div>
 
           {/* Save Button */}
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <button
+          <div className="text-center">
+            <motion.button
               type="submit"
-              className={`w-full py-3 rounded-[20px] bg-[#00C2CB] text-white hover:bg-[#0097A7] focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300`}
+              className="px-6 py-3 rounded-[20px] bg-[#00C2CB] text-white font-bold hover:bg-[#0098A3] transition"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              Save Profile
-            </button>
-          </motion.div>
+              Save Changes
+            </motion.button>
+          </div>
         </motion.form>
 
         {/* Success Notification */}
@@ -318,12 +342,6 @@ function Profile() {
           {showSuccess && (
             <motion.div
               className={`fixed top-4 right-4 z-50 w-full max-w-sm p-6 rounded-[20px] ${cardBg} shadow-2xl`}
-              initial={{ opacity: 0, scale: 0.8, y: -20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: -20 }}
-              transition={{ duration: 0.3 }}
-              role="alert"
-              aria-live="assertive"
             >
               <div className="flex items-start">
                 <CheckCircle className="w-6 h-6 text-[#00C2CB] mr-3" />
@@ -331,16 +349,17 @@ function Profile() {
                   <h3 className={`text-lg font-bold ${textColor}`}>
                     {showSuccess.title}
                   </h3>
-                  <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"} mt-1`}>
+                  <p
+                    className={`text-sm ${
+                      darkMode ? "text-gray-300" : "text-gray-600"
+                    } mt-1`}
+                  >
                     {showSuccess.message}
                   </p>
                 </div>
                 <motion.button
                   onClick={() => setShowSuccess(null)}
-                  className="p-1 rounded-full bg-[#00C2CB]/20 hover:bg-[#00C2CB]/30 transition-all duration-300"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  aria-label="Close notification"
+                  className="p-1 rounded-full bg-[#00C2CB]/20 hover:bg-[#00C2CB]/30"
                 >
                   <X className="w-5 h-5 text-[#00C2CB]" />
                 </motion.button>
