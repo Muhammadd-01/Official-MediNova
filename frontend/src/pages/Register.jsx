@@ -11,9 +11,14 @@ import { FaFacebook, FaTwitter } from "react-icons/fa";
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 import { CheckCircle, X } from "lucide-react";
 
-// 🔹 Custom Liquid Glass Dropdown
-function GlassSelect({ options, value, onChange }) {
+// 🔹 Custom Liquid Glass Dropdown with Search
+function GlassSelect({ options, value, onChange, placeholder }) {
   const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredOptions = options.filter((opt) =>
+    opt.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="relative">
@@ -21,27 +26,235 @@ function GlassSelect({ options, value, onChange }) {
         onClick={() => setOpen(!open)}
         className="w-full px-4 py-3 rounded-xl bg-white/30 backdrop-blur-lg border border-gray-300/40 shadow-inner cursor-pointer dark:bg-[#0A2A43]/60"
       >
-        {value || "Select Gender"}
+        {value || placeholder}
       </div>
       {open && (
-        <ul className="absolute mt-2 w-full rounded-xl bg-white/40 backdrop-blur-xl border border-gray-200/40 shadow-xl dark:bg-[#0A2A43]/80 z-10">
-          {options.map((opt) => (
-            <li
-              key={opt}
-              onClick={() => {
-                onChange(opt);
-                setOpen(false);
-              }}
-              className="px-4 py-2 hover:bg-white/60 dark:hover:bg-[#0A2A43]/60 cursor-pointer rounded-lg transition-all"
-            >
-              {opt}
-            </li>
-          ))}
-        </ul>
+        <div className="absolute mt-2 w-full rounded-xl bg-white/40 backdrop-blur-xl border border-gray-200/40 shadow-xl dark:bg-[#0A2A43]/80 z-10">
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 bg-transparent border-b border-gray-300/40 focus:outline-none text-[#0D3B66] dark:text-[#FDFBFB] dark:placeholder-gray-300"
+          />
+          <ul className="max-h-60 overflow-y-auto">
+            {filteredOptions.map((opt) => (
+              <li
+                key={opt}
+                onClick={() => {
+                  onChange(opt);
+                  setOpen(false);
+                  setSearchTerm("");
+                }}
+                className="px-4 py-2 hover:bg-white/60 dark:hover:bg-[#0A2A43]/60 cursor-pointer rounded-lg transition-all"
+              >
+                {opt}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );
 }
+
+// 🔹 Country List
+const countries = [
+  "Afghanistan",
+  "Albania",
+  "Algeria",
+  "Andorra",
+  "Angola",
+  "Antigua and Barbuda",
+  "Argentina",
+  "Armenia",
+  "Australia",
+  "Austria",
+  "Azerbaijan",
+  "Bahamas",
+  "Bahrain",
+  "Bangladesh",
+  "Barbados",
+  "Belarus",
+  "Belgium",
+  "Belize",
+  "Benin",
+  "Bhutan",
+  "Bolivia",
+  "Bosnia and Herzegovina",
+  "Botswana",
+  "Brazil",
+  "Brunei",
+  "Bulgaria",
+  "Burkina Faso",
+  "Burundi",
+  "Cabo Verde",
+  "Cambodia",
+  "Cameroon",
+  "Canada",
+  "Central African Republic",
+  "Chad",
+  "Chile",
+  "China",
+  "Colombia",
+  "Comoros",
+  "Congo",
+  "Costa Rica",
+  "Croatia",
+  "Cuba",
+  "Cyprus",
+  "Czech Republic",
+  "Democratic Republic of the Congo",
+  "Denmark",
+  "Djibouti",
+  "Dominica",
+  "Dominican Republic",
+  "Ecuador",
+  "Egypt",
+  "El Salvador",
+  "Equatorial Guinea",
+  "Eritrea",
+  "Estonia",
+  "Eswatini",
+  "Ethiopia",
+  "Fiji",
+  "Finland",
+  "France",
+  "Gabon",
+  "Gambia",
+  "Georgia",
+  "Germany",
+  "Ghana",
+  "Greece",
+  "Grenada",
+  "Guatemala",
+  "Guinea",
+  "Guinea-Bissau",
+  "Guyana",
+  "Haiti",
+  "Honduras",
+  "Hungary",
+  "Iceland",
+  "India",
+  "Indonesia",
+  "Iran",
+  "Iraq",
+  "Ireland",
+  "Israel",
+  "Italy",
+  "Jamaica",
+  "Japan",
+  "Jordan",
+  "Kazakhstan",
+  "Kenya",
+  "Kiribati",
+  "Kuwait",
+  "Kyrgyzstan",
+  "Laos",
+  "Latvia",
+  "Lebanon",
+  "Lesotho",
+  "Liberia",
+  "Libya",
+  "Liechtenstein",
+  "Lithuania",
+  "Luxembourg",
+  "Madagascar",
+  "Malawi",
+  "Malaysia",
+  "Maldives",
+  "Mali",
+  "Malta",
+  "Marshall Islands",
+  "Mauritania",
+  "Mauritius",
+  "Mexico",
+  "Micronesia",
+  "Moldova",
+  "Monaco",
+  "Mongolia",
+  "Montenegro",
+  "Morocco",
+  "Mozambique",
+  "Myanmar",
+  "Namibia",
+  "Nauru",
+  "Nepal",
+  "Netherlands",
+  "New Zealand",
+  "Nicaragua",
+  "Niger",
+  "Nigeria",
+  "North Korea",
+  "North Macedonia",
+  "Norway",
+  "Oman",
+  "Pakistan",
+  "Palau",
+  "Panama",
+  "Papua New Guinea",
+  "Paraguay",
+  "Peru",
+  "Philippines",
+  "Poland",
+  "Portugal",
+  "Qatar",
+  "Romania",
+  "Russia",
+  "Rwanda",
+  "Saint Kitts and Nevis",
+  "Saint Lucia",
+  "Saint Vincent and the Grenadines",
+  "Samoa",
+  "San Marino",
+  "Sao Tome and Principe",
+  "Saudi Arabia",
+  "Senegal",
+  "Serbia",
+  "Seychelles",
+  "Sierra Leone",
+  "Singapore",
+  "Slovakia",
+  "Slovenia",
+  "Solomon Islands",
+  "Somalia",
+  "South Africa",
+  "South Korea",
+  "South Sudan",
+  "Spain",
+  "Sri Lanka",
+  "Sudan",
+  "Suriname",
+  "Sweden",
+  "Switzerland",
+  "Syria",
+  "Taiwan",
+  "Tajikistan",
+  "Tanzania",
+  "Thailand",
+  "Timor-Leste",
+  "Togo",
+  "Tonga",
+  "Trinidad and Tobago",
+  "Tunisia",
+  "Turkey",
+  "Turkmenistan",
+  "Tuvalu",
+  "Uganda",
+  "Ukraine",
+  "United Arab Emirates",
+  "United Kingdom",
+  "United States",
+  "Uruguay",
+  "Uzbekistan",
+  "Vanuatu",
+  "Vatican City",
+  "Venezuela",
+  "Vietnam",
+  "Yemen",
+  "Zambia",
+  "Zimbabwe",
+];
 
 // ===================== Auth0 Wrapper =====================
 export function Auth0ProviderWithConfig({ children }) {
@@ -250,7 +463,6 @@ function Register() {
               { id: "email", label: "Email", type: "email", placeholder: "you@example.com" },
               { id: "password", label: "Password", type: "password", placeholder: "********" },
               { id: "phoneNumber", label: "Phone Number", type: "tel", placeholder: "+92 300 1234567" },
-              { id: "country", label: "Country", type: "text", placeholder: "Pakistan" },
             ].map((field) => (
               <div key={field.id}>
                 <label htmlFor={field.id} className="block text-sm font-semibold mb-1">
@@ -270,6 +482,18 @@ function Register() {
             ))}
 
             <div>
+              <label htmlFor="country" className="block text-sm font-semibold mb-1">
+                Country
+              </label>
+              <GlassSelect
+                options={countries}
+                value={formData.country}
+                onChange={(val) => setFormData({ ...formData, country: val })}
+                placeholder="Select Country"
+              />
+            </div>
+
+            <div>
               <label htmlFor="gender" className="block text-sm font-semibold mb-1">
                 Gender
               </label>
@@ -277,6 +501,7 @@ function Register() {
                 options={["Male", "Female", "Other"]}
                 value={formData.gender}
                 onChange={(val) => setFormData({ ...formData, gender: val })}
+                placeholder="Select Gender"
               />
             </div>
 
