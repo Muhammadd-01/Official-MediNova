@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { CartContext } from "../App";
+import { CartContext, NotificationContext } from "../App";
 import axios from "axios";
 
 const sidebarVariants = {
@@ -23,7 +23,8 @@ const itemVariants = {
 };
 
 export default function CartSidebar({ isOpen, onClose, openPaymentModal }) {
-  const { cartItems, setCartItems, removeFromCart, totalPrice } = useContext(CartContext);
+  const { cartItems, setCartItems, totalPrice } = useContext(CartContext);
+  const { showNotification } = useContext(NotificationContext);
   const [loading, setLoading] = useState(false);
 
   // Fetch cart from backend when sidebar opens
@@ -41,6 +42,7 @@ export default function CartSidebar({ isOpen, onClose, openPaymentModal }) {
         if (res.data && res.data.items) {
           const items = res.data.items.map((item) => ({
             id: item._id,
+            fdaId: item.fdaId,
             name: item.name,
             price: item.price,
             quantity: item.quantity,
@@ -57,25 +59,34 @@ export default function CartSidebar({ isOpen, onClose, openPaymentModal }) {
     fetchCart();
   }, [isOpen, setCartItems]);
 
-  // Update quantity in backend & frontend
-  const updateQuantity = async (itemId, qty) => {
-    if (qty < 1) return; // minimum 1
-    try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `http://localhost:4000/api/cart/${itemId}`,
-        { quantity: qty },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  // Remove item function
+const handleRemove = async (itemId, itemName) => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await axios.delete(`http://localhost:4000/api/cart/${itemId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      // Update frontend
-      setCartItems((prev) =>
-        prev.map((item) => (item.id === itemId ? { ...item, quantity: qty } : item))
-      );
-    } catch (err) {
-      console.error("Failed to update quantity:", err);
+    // If status is 200 or 204, consider it successful
+    if (res.status === 200 || res.status === 204) {
+      // Remove item from frontend immediately
+      setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+
+      // Show success notification
+      showNotification(`"${itemName}" removed from cart`, "success");
+    } else {
+      // Some unexpected status code
+      showNotification(`Failed to remove "${itemName}"`, "error");
     }
-  };
+  } catch (err) {
+    console.error("Failed to remove item:", err);
+
+    // Show backend message if available, else generic
+    const msg = err.response?.data?.error || `"${itemName}" could not be removed`;
+    showNotification(msg, "error");
+  }
+};
+
 
   return (
     <AnimatePresence>
@@ -130,21 +141,12 @@ export default function CartSidebar({ isOpen, onClose, openPaymentModal }) {
                   >
                     <div className="flex flex-col">
                       <h3 className="font-semibold">{item.name}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <input
-                          type="number"
-                          min={1}
-                          value={item.quantity}
-                          onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
-                          className="w-16 p-1 rounded-xl text-center border border-gray-300 dark:border-gray-600"
-                        />
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
-                          ${(item.price * item.quantity).toFixed(2)}
-                        </span>
-                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Qty: {item.quantity} | ${(item.price * item.quantity).toFixed(2)}
+                      </p>
                     </div>
                     <button
-                      onClick={() => removeFromCart(item.id)}
+                      onClick={() => handleRemove(item.id, item.name)}
                       className="text-red-600 dark:text-red-400 hover:scale-110 transition-transform"
                     >
                       Remove
