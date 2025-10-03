@@ -1,8 +1,9 @@
 import React, { useState, useContext } from "react";
 import { Helmet } from "react-helmet-async";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { DarkModeContext } from "../App";
+import { CheckCircle, X, AlertCircle } from "lucide-react";
 
 function Contact() {
   const { darkMode } = useContext(DarkModeContext);
@@ -12,10 +13,17 @@ function Contact() {
   const [message, setMessage] = useState("");
   const [feedback, setFeedback] = useState("");
 
-  // Contact form (optional, keep as is)
+  // Notification states
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showError, setShowError] = useState(null);
+
+  // Contact form
   const handleContactSubmit = (e) => {
     e.preventDefault();
-    alert("Thank you for contacting us. We will get back to you soon!");
+    setSuccessMessage("Thank you for contacting us. We will get back to you soon!");
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
     setName("");
     setEmail("");
     setMessage("");
@@ -31,14 +39,17 @@ function Contact() {
         feedback,
       });
 
-      alert(res.data.message); // e.g., "Feedback submitted successfully"
+      setSuccessMessage(res.data.message || "Feedback submitted successfully ✅");
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
       setFeedback(""); // clear form
     } catch (err) {
       console.error(err);
-      alert(
+      setShowError(
         err.response?.data?.message ||
           "Something went wrong! Please try again later."
       );
+      setTimeout(() => setShowError(null), 3000);
     }
   };
 
@@ -50,6 +61,11 @@ function Contact() {
     : "bg-white/50 text-gray-800 border border-gray-300 focus:border-blue-500";
   const buttonStyle =
     "mt-4 px-6 py-3 rounded-2xl bg-[#0A3D62] text-white hover:bg-[#081F5C] hover:shadow-lg transition-all duration-300";
+
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]";
+  const notifyCard = darkMode
+    ? "bg-[#0A2A43]/20 backdrop-blur-[10px] border border-white/20"
+    : "bg-white/20 backdrop-blur-md border border-gray-200";
 
   return (
     <>
@@ -182,6 +198,68 @@ function Contact() {
           </form>
         </motion.div>
       </div>
+
+      {/* Success Notification */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            className={`fixed top-4 right-4 z-50 w-full max-w-sm p-6 rounded-[20px] ${notifyCard} shadow-2xl`}
+            initial={{ opacity: 0, scale: 0.8, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex items-start">
+              <CheckCircle className="w-6 h-6 text-[#00C2CB] mr-3" />
+              <div className="flex-1">
+                <h3 className={`text-lg font-bold ${textColor}`}>Success ✅</h3>
+                <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"} mt-1`}>
+                  {successMessage}
+                </p>
+              </div>
+              <motion.button
+                onClick={() => setShowSuccess(false)}
+                className="p-1 rounded-full bg-[#00C2CB]/20 hover:bg-[#00C2CB]/30"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <X className="w-5 h-5 text-[#00C2CB]" />
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Error Notification */}
+      <AnimatePresence>
+        {showError && (
+          <motion.div
+            className={`fixed top-4 right-4 z-50 w-full max-w-sm p-6 rounded-[20px] ${notifyCard} shadow-2xl`}
+            initial={{ opacity: 0, scale: 0.8, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex items-start">
+              <AlertCircle className="w-6 h-6 text-red-500 mr-3" />
+              <div className="flex-1">
+                <h3 className={`text-lg font-bold ${textColor}`}>Error ❌</h3>
+                <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"} mt-1`}>
+                  {showError}
+                </p>
+              </div>
+              <motion.button
+                onClick={() => setShowError(null)}
+                className="p-1 rounded-full bg-[#00C2CB]/20 hover:bg-[#00C2CB]/30"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <X className="w-5 h-5 text-[#00C2CB]" />
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
