@@ -33,6 +33,7 @@ function Pharmacy() {
   const [medicines, setMedicines] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState("USA");
+  const [quantities, setQuantities] = useState({}); // store quantity per medicine id
 
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
   const bgColor = darkMode
@@ -131,6 +132,12 @@ function Pharmacy() {
             manufacturer: med.openfda?.manufacturer_name?.[0] || "Unknown",
           }));
         setMedicines(enriched);
+        // Initialize quantity for each medicine
+        const initialQuantities = {};
+        enriched.forEach((med) => {
+          initialQuantities[med.id] = 1;
+        });
+        setQuantities(initialQuantities);
       } else {
         setMedicines([]);
       }
@@ -149,10 +156,11 @@ function Pharmacy() {
     return () => clearTimeout(timeout);
   }, [searchQuery, selectedCountry]);
 
-  // Add to Cart + Notification
+  // Add to Cart + Notification with quantity
   const addToCart = async (med) => {
-    addToLocalCart({ ...med, quantity: 1 });
-    showNotification(`${med.name} added to cart`, "success");
+    const qty = quantities[med.id] || 1;
+    addToLocalCart({ ...med, quantity: qty });
+    showNotification(`${med.name} (x${qty}) added to cart`, "success");
 
     try {
       const token = localStorage.getItem("token");
@@ -167,7 +175,7 @@ function Pharmacy() {
           name: med.name,
           manufacturer: med.manufacturer,
           dosage: med.generic_name,
-          quantity: 1,
+          quantity: qty,
           price: med.price,
         }),
       });
@@ -259,12 +267,24 @@ function Pharmacy() {
                   <p className="text-sm mb-1">Manufacturer: {med.manufacturer}</p>
                   <p className="text-sm mb-1">Country: {med.country}</p>
                   <p className="text-sm mb-1">Price: ${med.price} | Discount: {med.discount}% | Stock: {med.stock}</p>
-                  <button
-                    onClick={() => addToCart(med)}
-                    className="bg-[#0D3B66] text-white px-4 py-2 rounded-xl hover:bg-[#081F5C]"
-                  >
-                    Add to Cart
-                  </button>
+
+                  {/* Quantity Selector + Add to Cart */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={med.stock}
+                      value={quantities[med.id] || 1}
+                      onChange={(e) => setQuantities({ ...quantities, [med.id]: parseInt(e.target.value) })}
+                      className="w-16 p-2 rounded-xl border border-gray-300 text-center"
+                    />
+                    <button
+                      onClick={() => addToCart(med)}
+                      className="bg-[#0D3B66] text-white px-4 py-2 rounded-xl hover:bg-[#081F5C]"
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
                 </motion.div>
               ))
             )}

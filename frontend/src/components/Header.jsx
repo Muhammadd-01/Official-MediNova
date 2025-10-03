@@ -25,85 +25,47 @@ const dropdownVariants = {
   exit: { opacity: 0, y: -10, scale: 0.95 },
 };
 
-const mobileMenuVariants = {
-  hidden: { opacity: 0, height: 0 },
-  visible: { opacity: 1, height: "auto" },
-  exit: { opacity: 0, height: 0 },
-};
-
 const logoVariants = {
   initial: { scale: 1 },
-  hover: {
-    scale: 1.05,
-    transition: { type: "spring", stiffness: 300, damping: 15 },
-  },
+  hover: { scale: 1.05, transition: { type: "spring", stiffness: 300, damping: 15 } },
   tap: { scale: 0.95 },
 };
 
 const settingsButtonVariants = {
   initial: { scale: 1, rotate: 0 },
-  hover: {
-    scale: 1.1,
-    rotate: 15,
-    transition: { type: "spring", stiffness: 300, damping: 15 },
-  },
+  hover: { scale: 1.1, rotate: 15, transition: { type: "spring", stiffness: 300, damping: 15 } },
   tap: { scale: 0.95, rotate: -15 },
-  pulse: {
-    scale: [1, 1.15, 1],
-    rotate: [0, 180, 360],
-    transition: { duration: 0.8, ease: "easeInOut" },
-  },
+  pulse: { scale: [1, 1.15, 1], rotate: [0, 180, 360], transition: { duration: 0.8, ease: "easeInOut" } },
 };
 
 const cartIconVariants = {
   initial: { scale: 1 },
-  hover: {
-    scale: 1.1,
-    rotate: 15,
-    transition: { type: "spring", stiffness: 300, damping: 15 },
-  },
+  hover: { scale: 1.1, rotate: 15, transition: { type: "spring", stiffness: 300, damping: 15 } },
   tap: { scale: 0.9, rotate: -15 },
-  pulse: {
-    scale: [1, 1.2, 1],
-    rotate: [0, 15, -15, 0],
-    transition: { duration: 0.6 },
-  },
+  pulse: { scale: [1, 1.2, 1], rotate: [0, 15, -15, 0], transition: { duration: 0.6 } },
 };
 
-// ✅ Profile animation (matches cartIconVariants exactly)
-const profileIconVariants = {
-  initial: { scale: 1, rotate: 0 },
-  hover: {
-    scale: 1.1,
-    rotate: 15,
-    transition: { type: "spring", stiffness: 300, damping: 15 },
-  },
-  tap: { scale: 0.9, rotate: -15 },
-  pulse: {
-    scale: [1, 1.2, 1],
-    rotate: [0, 15, -15, 0],
-    transition: { duration: 0.6 },
-  },
-};
+const profileIconVariants = cartIconVariants;
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [pulse, setPulse] = useState(false);
   const [cartPulse, setCartPulse] = useState(false);
-  const [profilePulse, setProfilePulse] = useState(false); // ✅ Keep for pulse on click
+  const [profilePulse, setProfilePulse] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
 
   const { darkMode, setDarkMode } = useContext(DarkModeContext);
   const { isAuthenticated, logout } = useContext(AuthContext);
-  const cartContext = useContext(CartContext);
-  const totalItems = cartContext?.totalItems || 0;
+  const { cartItems } = useContext(CartContext);
+
+  // ✅ Show number of unique items in cart
+  const totalUniqueItems = cartItems?.length || 0;
 
   const headerBg =
     "bg-white/20 dark:bg-[#0D3B66]/30 backdrop-blur-xl border border-white/20 dark:border-[#00C2CB]/20 shadow-lg";
   const textColor = darkMode ? "text-white" : "text-[#0D3B66]";
-  const hoverGlass = `transition-all duration-300 hover:bg-white/30 dark:hover:bg-[#00C2CB]/20 hover:shadow-lg hover:scale-105 ${darkMode ? "" : "hover:text-[#0D3B66]"
-    }`;
+  const hoverGlass = `transition-all duration-300 hover:bg-white/30 dark:hover:bg-[#00C2CB]/20 hover:shadow-lg hover:scale-105 ${darkMode ? "" : "hover:text-[#0D3B66]"}`;
 
   const navItems = [
     "Home",
@@ -117,25 +79,15 @@ function Header() {
     "Contact",
   ];
 
+  // Pulse effects
   useEffect(() => {
-    if (pulse) {
-      const timer = setTimeout(() => setPulse(false), 800);
-      return () => clearTimeout(timer);
-    }
+    if (pulse) { const timer = setTimeout(() => setPulse(false), 800); return () => clearTimeout(timer); }
   }, [pulse]);
-
   useEffect(() => {
-    if (cartPulse) {
-      const timer = setTimeout(() => setCartPulse(false), 600);
-      return () => clearTimeout(timer);
-    }
+    if (cartPulse) { const timer = setTimeout(() => setCartPulse(false), 600); return () => clearTimeout(timer); }
   }, [cartPulse]);
-
   useEffect(() => {
-    if (profilePulse) {
-      const timer = setTimeout(() => setProfilePulse(false), 600);
-      return () => clearTimeout(timer);
-    }
+    if (profilePulse) { const timer = setTimeout(() => setProfilePulse(false), 600); return () => clearTimeout(timer); }
   }, [profilePulse]);
 
   const handleCartClick = () => {
@@ -143,16 +95,11 @@ function Header() {
     setCartPulse(true);
   };
 
-  // ✅ Handler for profile click to trigger pulse
-  const handleProfileClick = () => {
-    setProfilePulse(true);
-  };
+  const handleProfileClick = () => setProfilePulse(true);
 
   return (
     <>
-      <header
-        className={`fixed top-0 left-0 w-full z-50 transition-colors duration-300 ${headerBg} ${textColor} rounded-b-2xl`}
-      >
+      <header className={`fixed top-0 left-0 w-full z-50 transition-colors duration-300 ${headerBg} ${textColor} rounded-b-2xl`}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex justify-between items-center">
             {/* Logo */}
@@ -172,11 +119,7 @@ function Header() {
               {navItems.map((item) => (
                 <Link
                   key={item}
-                  to={
-                    item === "Home"
-                      ? "/"
-                      : `/${item.toLowerCase().replace(" ", "-")}`
-                  }
+                  to={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
                   className={`px-3 py-2 rounded-full text-sm font-medium ${hoverGlass} min-w-max`}
                 >
                   {item}
@@ -187,28 +130,24 @@ function Header() {
             {/* Right-side Controls */}
             <div className="hidden lg:flex items-center gap-3 relative">
               {/* Cart Icon */}
-             <motion.button
-  onClick={handleCartClick}
-  variants={cartIconVariants}
-  initial="initial"
-  whileHover="hover"
-  whileTap="tap"
-  animate={cartPulse ? "pulse" : "initial"}
-  className={`relative h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${
-    darkMode ? "text-white" : "text-[#0D3B66]"
-  } border border-white/20 ${hoverGlass}`}
->
-  <ShoppingCart size={20} />
-  {totalItems > 0 && (
-    <span className="absolute top-0 right-0 -translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs text-white font-bold pointer-events-none">
-      {totalItems}
-    </span>
-  )}
-</motion.button>
+              <motion.button
+                onClick={handleCartClick}
+                variants={cartIconVariants}
+                initial="initial"
+                whileHover="hover"
+                whileTap="tap"
+                animate={cartPulse ? "pulse" : "initial"}
+                className={`relative h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${darkMode ? "text-white" : "text-[#0D3B66]"} border border-white/20 ${hoverGlass}`}
+              >
+                <ShoppingCart size={20} />
+                {totalUniqueItems > 0 && (
+                  <span className="absolute top-0 right-0 -translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs text-white font-bold pointer-events-none">
+                    {totalUniqueItems}
+                  </span>
+                )}
+              </motion.button>
 
-
-
-              {/* ✅ Profile Icon (matches cart/settings behavior) */}
+              {/* Profile */}
               {isAuthenticated && (
                 <motion.div className="relative">
                   <MotionLink
@@ -219,8 +158,7 @@ function Header() {
                     whileTap="tap"
                     animate={profilePulse ? "pulse" : "initial"}
                     onClick={handleProfileClick}
-                    className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${darkMode ? "text-white" : "text-[#0D3B66]"
-                      } border border-white/20 ${hoverGlass}`}
+                    className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${darkMode ? "text-white" : "text-[#0D3B66]"} border border-white/20 ${hoverGlass}`}
                   >
                     <User size={18} />
                   </MotionLink>
@@ -235,12 +173,8 @@ function Header() {
                   whileHover="hover"
                   whileTap="tap"
                   animate={pulse ? "pulse" : "initial"}
-                  onClick={() => {
-                    setIsSettingsOpen(!isSettingsOpen);
-                    setPulse(true);
-                  }}
-                  className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${darkMode ? "text-white" : "text-[#0D3B66]"
-                    } border border-white/20 ${hoverGlass}`}
+                  onClick={() => { setIsSettingsOpen(!isSettingsOpen); setPulse(true); }}
+                  className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${darkMode ? "text-white" : "text-[#0D3B66]"} border border-white/20 ${hoverGlass}`}
                 >
                   <Settings size={18} />
                 </motion.button>
@@ -276,17 +210,11 @@ function Header() {
                         </motion.button>
                       ) : (
                         <>
-                          <Link
-                            to="/login"
-                            className={`flex items-center gap-3 w-full px-3 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}
-                          >
+                          <Link to="/login" className={`flex items-center gap-3 w-full px-3 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}>
                             <LogIn size={16} />
                             Login
                           </Link>
-                          <Link
-                            to="/register"
-                            className={`flex items-center gap-3 w-full px-3 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}
-                          >
+                          <Link to="/register" className={`flex items-center gap-3 w-full px-3 py-2 rounded-full text-sm font-medium ${hoverGlass} bg-[#0D3B66]/80 text-white`}>
                             <UserPlus size={16} />
                             Register
                           </Link>
@@ -300,10 +228,7 @@ function Header() {
 
             {/* Mobile Toggle */}
             <div className="lg:hidden flex items-center gap-2">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className={`p-2 rounded-full ${hoverGlass}`}
-              >
+              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={`p-2 rounded-full ${hoverGlass}`}>
                 {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
             </div>

@@ -26,37 +26,42 @@ export default function CartSidebar({ isOpen, onClose, openPaymentModal }) {
   const { cartItems, setCartItems, removeFromCart, totalPrice } = useContext(CartContext);
   const [loading, setLoading] = useState(false);
 
-  // Fetch cart from backend when sidebar opens
+  // ✅ Fetch cart from backend
+  const fetchCart = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:4000/api/cart/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.data && res.data.items) {
+        const items = res.data.items.map((item) => ({
+          id: item._id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        }));
+        setCartItems(items);
+      }
+    } catch (err) {
+      console.error("Failed to fetch cart:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch cart whenever sidebar opens or cart changes
+  useEffect(() => {
+    if (isOpen) fetchCart();
+  }, [isOpen]);
+
+  // ✅ Also fetch cart whenever cartItems change (auto-refresh)
   useEffect(() => {
     if (!isOpen) return;
-
-    const fetchCart = async () => {
-      setLoading(true);
-      try {
-        const token = localStorage.getItem("token"); // assuming you store JWT here
-        const res = await axios.get("http://localhost:4000/api/cart/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.data && res.data.items) {
-          // Map backend items to your cart structure
-          const items = res.data.items.map((item) => ({
-            id: item._id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-          }));
-          setCartItems(items); // update CartContext
-        }
-      } catch (err) {
-        console.error("Failed to fetch cart:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCart();
-  }, [isOpen, setCartItems]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartItems.length]);
 
   return (
     <AnimatePresence>
@@ -116,7 +121,10 @@ export default function CartSidebar({ isOpen, onClose, openPaymentModal }) {
                       </p>
                     </div>
                     <button
-                      onClick={() => removeFromCart(item.id)}
+                      onClick={async () => {
+                        await removeFromCart(item.id); // Remove from backend + context
+                        fetchCart(); // Auto-refresh after removal
+                      }}
                       className="text-red-600 dark:text-red-400 hover:scale-110 transition-transform"
                     >
                       Remove
