@@ -5,7 +5,7 @@ import Cart from "../models/cartModel.js";
 const router = express.Router();
 
 // GET cart for current user
-router.get("/", verifyToken, async (req, res) => {
+router.get("/me", verifyToken, async (req, res) => {
   try {
     const cart = await Cart.findOne({ userId: req.user.id });
     if (!cart) return res.status(200).json({ items: [] });
@@ -68,9 +68,15 @@ router.delete("/:itemId", verifyToken, async (req, res) => {
     const cart = await Cart.findOne({ userId: req.user.id });
     if (!cart) return res.status(404).json({ error: "Cart not found" });
 
-    cart.items.id(req.params.itemId).remove();
+    // Find index of the item
+    const index = cart.items.findIndex(item => item._id.toString() === req.params.itemId);
+    if (index === -1) return res.status(404).json({ error: "Item not found in cart" });
+
+    // Remove item
+    cart.items.splice(index, 1);
     await cart.save();
-    res.status(200).json(cart);
+
+    res.status(200).json({ success: true, cart });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
