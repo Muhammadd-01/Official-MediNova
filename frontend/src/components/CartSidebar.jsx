@@ -1,3 +1,4 @@
+
 import { useContext, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
@@ -60,33 +61,37 @@ export default function CartSidebar({ isOpen, onClose, openPaymentModal }) {
   }, [isOpen, setCartItems]);
 
   // Remove item function
-const handleRemove = async (itemId, itemName) => {
-  try {
-    const token = localStorage.getItem("token");
-    const res = await axios.delete(`http://localhost:4000/api/cart/${itemId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  const handleRemove = async (itemId, itemName) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.delete(`http://localhost:4000/api/cart/${itemId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    // If status is 200 or 204, consider it successful
-    if (res.status === 200 || res.status === 204) {
-      // Remove item from frontend immediately
-      setCartItems((prev) => prev.filter((item) => item.id !== itemId));
-
-      // Show success notification
-      showNotification(`"${itemName}" removed from cart`, "success");
-    } else {
-      // Some unexpected status code
-      showNotification(`Failed to remove "${itemName}"`, "error");
+      if (res.status === 200 || res.status === 204) {
+        setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+        showNotification(`"${itemName}" removed from cart`, "success");
+      } else {
+        showNotification(`Failed to remove "${itemName}"`, "error");
+      }
+    } catch (err) {
+      console.error("Failed to remove item:", err);
+      const msg = err.response?.data?.error || `"${itemName}" could not be removed`;
+      showNotification(msg, "error");
     }
-  } catch (err) {
-    console.error("Failed to remove item:", err);
+  };
 
-    // Show backend message if available, else generic
-    const msg = err.response?.data?.error || `"${itemName}" could not be removed`;
-    showNotification(msg, "error");
-  }
-};
-
+  // Prepare cart items for modal
+  const handleProceedToCheckout = () => {
+    const itemTitle = cartItems.map((item) => `${item.name} (Qty: ${item.quantity})`).join(", ");
+    openPaymentModal({
+      modalType: "cart",
+      itemTitle: itemTitle || "Cart Items",
+      itemPrice: totalPrice,
+      cartItems, // Pass cart items for pre-filling
+    });
+    onClose();
+  };
 
   return (
     <AnimatePresence>
@@ -164,10 +169,7 @@ const handleRemove = async (itemId, itemName) => {
                   <span className="font-bold">${totalPrice.toFixed(2)}</span>
                 </div>
                 <motion.button
-                  onClick={() => {
-                    onClose();
-                    openPaymentModal();
-                  }}
+                  onClick={handleProceedToCheckout}
                   className="w-full bg-[#0D3B66] hover:bg-[#081F5C] text-white py-2 rounded-xl font-semibold transition-all"
                   whileHover={{ scale: 1.02 }}
                 >
