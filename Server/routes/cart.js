@@ -1,67 +1,78 @@
-// routes/cart.js
 import express from "express";
-import Cart from "../models/Cart.js";
-import { verifyToken } from "../middleware/verifyToken.js";// your JWT middleware
+import { verifyToken } from "../middleware/verifyToken.js";
+import Cart from "../models/cartModel.js";
 
 const router = express.Router();
 
-// Get current user's cart
+// GET cart for current user
 router.get("/", verifyToken, async (req, res) => {
   try {
-    const cart = await Cart.findOne({ userId: req.user._id });
-    res.json(cart || { items: [] });
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    const cart = await Cart.findOne({ userId: req.user.id });
+    if (!cart) return res.status(200).json({ items: [] });
+    res.status(200).json(cart);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Add or update item in cart
+// POST add item to cart
 router.post("/", verifyToken, async (req, res) => {
-  const { medicineId, name, price, discount, quantity } = req.body;
+  const { fdaId, name, manufacturer, dosage, quantity, price } = req.body;
+
+  if (!fdaId || !name) {
+    return res.status(400).json({ error: "Medicine ID and name required" });
+  }
 
   try {
-    let cart = await Cart.findOne({ userId: req.user._id });
-
+    let cart = await Cart.findOne({ userId: req.user.id });
     if (!cart) {
-      cart = new Cart({ userId: req.user._id, items: [] });
+      cart = new Cart({ userId: req.user.id, items: [] });
     }
 
-    const itemIndex = cart.items.findIndex(
-      (i) => i.medicineId.toString() === medicineId
-    );
-
-    if (itemIndex > -1) {
-      // If item exists, update quantity
-      cart.items[itemIndex].quantity += quantity;
+    // Check if item already exists
+    const existingItem = cart.items.find(item => item.fdaId === fdaId);
+    if (existingItem) {
+      existingItem.quantity += quantity || 1;
     } else {
-      // Add new item
-      cart.items.push({ medicineId, name, price, discount, quantity });
+      cart.items.push({ fdaId, name, manufacturer, dosage, quantity: quantity || 1, price: price || 0 });
     }
 
-    cart.updatedAt = Date.now();
     await cart.save();
-    res.json(cart);
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(200).json(cart);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Remove item from cart
-router.delete("/:medicineId", verifyToken, async (req, res) => {
-  const { medicineId } = req.params;
-
+// PATCH update quantity
+router.patch("/:itemId", verifyToken, async (req, res) => {
+  const { quantity } = req.body;
   try {
-    const cart = await Cart.findOne({ userId: req.user._id });
-    if (!cart) return res.status(404).json({ message: "Cart not found" });
+    const cart = await Cart.findOne({ userId: req.user.id });
+    if (!cart) return res.status(404).json({ error: "Cart not found" });
 
-    cart.items = cart.items.filter(
-      (item) => item.medicineId.toString() !== medicineId
-    );
-    cart.updatedAt = Date.now();
+    const item = cart.items.id(req.params.itemId);
+    if (!item) return res.status(404).json({ error: "Item not found" });
+
+    item.quantity = quantity;
     await cart.save();
-    res.json(cart);
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(200).json(cart);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE remove item
+router.delete("/:itemId", verifyToken, async (req, res) => {
+  try {
+    const cart = await Cart.findOne({ userId: req.user.id });
+    if (!cart) return res.status(404).json({ error: "Cart not found" });
+
+    cart.items.id(req.params.itemId).remove();
+    await cart.save();
+    res.status(200).json(cart);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

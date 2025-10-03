@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState, useContext, useRef } from "react";
 import { DarkModeContext, CartContext } from "../App";
 import Header from "../components/Header";
@@ -19,7 +21,7 @@ const pakistaniBanks = [
 
 function Pharmacy() {
   const { darkMode } = useContext(DarkModeContext);
-  const { cartItems, addToCart, totalPrice } = useContext(CartContext);
+  const { cartItems, addToCart: addToLocalCart, totalPrice } = useContext(CartContext);
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
 
@@ -40,9 +42,7 @@ function Pharmacy() {
     accountNumber: "",
     transactionId: "",
   });
-  const [cardDetails, setCardDetails] = useState(null);
   const [cardLoading, setCardLoading] = useState(false);
-  const [bankDetails, setBankDetails] = useState(null);
   const [bankLoading, setBankLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [bankQuery, setBankQuery] = useState("");
@@ -120,47 +120,38 @@ function Pharmacy() {
     }
     setIsLoading(true);
     try {
-      // Primary query: search brand and generic names
       let url = `https://api.fda.gov/drug/label.json?search=openfda.brand_name:${encodeURIComponent(
         query
       )}+openfda.generic_name:${encodeURIComponent(query)}&limit=10`;
-      console.log("Fetching medicines with URL:", url);
       let res = await fetch(url);
       let data = await res.json();
 
-      // Fallback query if no results
       if (!data.results || data.results.length === 0) {
-        console.warn("No results for primary query, trying fallback...");
         url = `https://api.fda.gov/drug/label.json?search=${encodeURIComponent(query)}&limit=10`;
         res = await fetch(url);
         data = await res.json();
       }
 
       if (data.results) {
-        console.log("API response:", data.results);
         const enriched = data.results
           .filter((med) => {
-            if (country !== "USA") return true; // Show all for "Other"
-            return med.openfda?.manufacturer_name?.[0]; // Relaxed USA filter
+            if (country !== "USA") return true;
+            return med.openfda?.manufacturer_name?.[0];
           })
           .map((med) => ({
-            id: med.id || Math.random().toString(36).slice(2), // Ensure unique ID
+            id: med.id || Math.random().toString(36).slice(2),
             name: med.openfda?.brand_name?.[0] || med.openfda?.generic_name?.[0] || "Unknown",
             price: (Math.random() * 45 + 5).toFixed(2),
             quantity: 1,
             discount: Math.floor(Math.random() * 20),
             stock: Math.floor(Math.random() * 100),
-            image: `https://via.placeholder.com/150?text=${
-              med.openfda?.brand_name?.[0] || med.openfda?.generic_name?.[0] || "Medicine"
-            }`,
+            image: `https://via.placeholder.com/150?text=${med.openfda?.brand_name?.[0] || med.openfda?.generic_name?.[0] || "Medicine"}`,
             country: country,
             generic_name: med.openfda?.generic_name?.[0] || "Unknown",
             manufacturer: med.openfda?.manufacturer_name?.[0] || "Unknown",
           }));
         setMedicines(enriched);
-        console.log("Processed medicines:", enriched);
       } else {
-        console.log("No medicines found in response");
         setMedicines([]);
       }
     } catch (err) {
@@ -178,169 +169,32 @@ function Pharmacy() {
     return () => clearTimeout(timeout);
   }, [searchQuery, selectedCountry]);
 
-  // Card verification with binlist.net
-  const verifyCard = async (cardNumber) => {
-    const digitsOnly = cardNumber.replace(/\D/g, "");
-    if (digitsOnly.length >= 6) {
-      setCardLoading(true);
-      try {
-        const bin = digitsOnly.slice(0, 6);
-        const response = await fetch(`https://lookup.binlist.net/${bin}`);
-        if (response.ok) {
-          const data = await response.json();
-          const details = `${data.bank?.name || "Unknown Bank"}, ${data.type || "Unknown Type"}, ${data.country?.name || "Unknown Country"}`;
-          setCardDetails(`Card verified: ${details}`);
-        } else {
-          const isValid = luhnCheck(digitsOnly);
-          setCardDetails(isValid ? "Card verified (Luhn): Valid card number" : "Invalid card number");
-        }
-      } catch {
-        const isValid = luhnCheck(digitsOnly);
-        setCardDetails(isValid ? "Card verified (Luhn): Valid card number" : "Invalid card number");
-      }
-      setCardLoading(false);
-    } else {
-      setCardDetails("Invalid card number");
-      setCardLoading(false);
-    }
-  };
-
-  // Luhn algorithm for card validation
-  const luhnCheck = (cardNumber) => {
-    let sum = 0;
-    let isEven = false;
-    for (let i = cardNumber.length - 1; i >= 0; i--) {
-      let digit = parseInt(cardNumber[i]);
-      if (isEven) {
-        digit *= 2;
-        if (digit > 9) digit -= 9;
-      }
-      sum += digit;
-      isEven = !isEven;
-    }
-    return sum % 10 === 0;
-  };
-
-  // Bank verification
-  const verifyBank = (bankName, accountNumber) => {
-    const digitsOnly = accountNumber.replace(/\D/g, "");
-    if (digitsOnly.length >= 12 && digitsOnly.length <= 16) {
-      setBankLoading(true);
-      setTimeout(() => {
-        const bank = pakistaniBanks.find((b) => b.name.toLowerCase() === bankName.toLowerCase());
-        if (bank) {
-          setBankDetails(`Account verified: ${bank.name}, ${bank.details}`);
-        } else {
-          setBankDetails("Invalid bank or account number");
-        }
-        setBankLoading(false);
-      }, 2000);
-    } else {
-      setBankDetails("Invalid bank or account number");
-      setBankLoading(false);
-    }
-  };
-
-  // Format card number
-  const formatCardNumber = (value) => {
-    const digits = value.replace(/\D/g, "");
-    const formatted = digits.match(/.{1,4}/g)?.join(" ").slice(0, 19) || digits;
-    return formatted;
-  };
-
-  const handlePaymentChange = (e) => {
-    const { name, value } = e.target;
-    let newValue = value;
-    if (name === "cardNumber") {
-      newValue = formatCardNumber(value);
-    }
-    setPaymentForm((prev) => ({ ...prev, [name]: newValue }));
-    if (name === "cardNumber") verifyCard(newValue);
-    if (name === "bankName") {
-      setBankQuery(value);
-      verifyBank(value, paymentForm.accountNumber);
-    }
-    if (name === "accountNumber") {
-      verifyBank(paymentForm.bankName, value);
-    }
-  };
-
-  const handleCheckout = async (e) => {
-    e.preventDefault();
-    if (!paymentMethod) {
-      alert("Please select a payment method.");
-      return;
-    }
-    setPaymentError(null);
+  // Add to Cart backend integration
+  const addToCart = async (med) => {
+    addToLocalCart({ ...med, quantity: 1 });
 
     try {
-      if (paymentMethod === "card") {
-        if (!paymentForm.cardHolder || !paymentForm.cardNumber || !paymentForm.cardExpiry || !paymentForm.cardCVV) {
-          alert("Please provide complete card details.");
-          return;
-        }
-        if (!cardDetails || cardDetails.includes("Invalid")) {
-          alert("Please verify card details.");
-          return;
-        }
-      } else if (paymentMethod === "bank") {
-        if (!paymentForm.bankName || !paymentForm.accountNumber || !paymentForm.transactionId) {
-          alert("Please fill all bank transfer details.");
-          return;
-        }
-        if (!pakistaniBanks.some((b) => b.name.toLowerCase() === paymentForm.bankName.toLowerCase())) {
-          alert("Please select a valid Pakistani bank from the list.");
-          return;
-        }
-        if (!bankDetails || bankDetails.includes("Invalid")) {
-          alert("Please verify bank details.");
-          return;
-        }
-      }
-
-      // Send order to local server
-      const response = await fetch("http://localhost:3000/process-payment", {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:4000/api/cart", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
-          items: cartItems,
-          paymentMethod,
-          paymentDetails: paymentMethod === "card" ? {
-            cardHolder: paymentForm.cardHolder,
-            cardNumber: paymentForm.cardNumber,
-            cardExpiry: paymentForm.cardExpiry,
-            cardCVV: paymentForm.cardCVV,
-          } : paymentMethod === "bank" ? {
-            bankName: paymentForm.bankName,
-            accountNumber: paymentForm.accountNumber,
-            transactionId: paymentForm.transactionId,
-          } : {},
-          total: totalPrice,
+          fdaId: med.id,
+          name: med.name,
+          manufacturer: med.manufacturer,
+          dosage: med.generic_name,
+          quantity: 1,
+          price: med.price,
         }),
       });
-      const result = await response.json();
-      if (result.success) {
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          setCartOpen(false);
-          setPaymentMethod("");
-          setPaymentForm({
-            cardHolder: "",
-            cardNumber: "",
-            cardExpiry: "",
-            cardCVV: "",
-            bankName: "",
-            accountNumber: "",
-            transactionId: "",
-          });
-        }, 3000);
-      } else {
-        setPaymentError("Payment processing failed. Please try again.");
-      }
-    } catch (error) {
-      console.error("Payment error:", error);
-      setPaymentError("Failed to process payment. Please try again.");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Failed to add cart item");
+      console.log("Added to backend cart:", data);
+    } catch (err) {
+      console.error("Add to cart backend error:", err);
     }
   };
 
@@ -451,7 +305,7 @@ function Pharmacy() {
                   </p>
                   <button
                     onClick={() => addToCart(med)}
-                    className="mt-2 px-4 py-2 rounded-[40px] bg-[#0A3D62] text-white hover:bg-[#08253A] hover:shadow-lg transition-all duration-300"
+                    className="bg-[#0D3B66] text-white px-4 py-2 rounded-xl hover:bg-[#081F5C]"
                   >
                     Add to Cart
                   </button>
@@ -461,7 +315,7 @@ function Pharmacy() {
           </AnimatePresence>
         </div>
 
-        {/* Cart Sidebar */}
+            {/* Cart Sidebar */}
         <AnimatePresence>
           {cartOpen && (
             <motion.div
@@ -518,9 +372,8 @@ function Pharmacy() {
                         <motion.button
                           type="button"
                           onClick={() => setPaymentMethod("cod")}
-                          className={`p-3 rounded-xl ${
-                            paymentMethod === "cod" ? "bg-[#0D3B66] text-white" : bgColor
-                          } flex items-center justify-center transition-all duration-300`}
+                          className={`p-3 rounded-xl ${paymentMethod === "cod" ? "bg-[#0D3B66] text-white" : bgColor
+                            } flex items-center justify-center transition-all duration-300`}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
@@ -530,9 +383,8 @@ function Pharmacy() {
                         <motion.button
                           type="button"
                           onClick={() => setPaymentMethod("card")}
-                          className={`p-3 rounded-xl ${
-                            paymentMethod === "card" ? "bg-[#0D3B66] text-white" : bgColor
-                          } flex items-center justify-center transition-all duration-300`}
+                          className={`p-3 rounded-xl ${paymentMethod === "card" ? "bg-[#0D3B66] text-white" : bgColor
+                            } flex items-center justify-center transition-all duration-300`}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
@@ -542,9 +394,8 @@ function Pharmacy() {
                         <motion.button
                           type="button"
                           onClick={() => setPaymentMethod("bank")}
-                          className={`p-3 rounded-xl ${
-                            paymentMethod === "bank" ? "bg-[#0D3B66] text-white" : bgColor
-                          } flex items-center justify-center transition-all duration-300`}
+                          className={`p-3 rounded-xl ${paymentMethod === "bank" ? "bg-[#0D3B66] text-white" : bgColor
+                            } flex items-center justify-center transition-all duration-300`}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
@@ -597,9 +448,8 @@ function Pharmacy() {
                             />
                             {cardDetails && (
                               <span
-                                className={`text-xs mt-1 block flex items-center ${
-                                  cardDetails.includes("Invalid") ? "text-red-500" : "text-green-500"
-                                }`}
+                                className={`text-xs mt-1 block flex items-center ${cardDetails.includes("Invalid") ? "text-red-500" : "text-green-500"
+                                  }`}
                               >
                                 {cardLoading ? (
                                   <>
@@ -745,9 +595,8 @@ function Pharmacy() {
                             />
                             {bankDetails && (
                               <span
-                                className={`text-xs mt-1 block flex items-center ${
-                                  bankDetails.includes("Invalid") ? "text-red-500" : "text-green-500"
-                                }`}
+                                className={`text-xs mt-1 block flex items-center ${bankDetails.includes("Invalid") ? "text-red-500" : "text-green-500"
+                                  }`}
                               >
                                 {bankLoading ? (
                                   <>
@@ -858,11 +707,9 @@ function Pharmacy() {
           )}
         </AnimatePresence>
 
-        {/* Chatbot behind cart */}
-        <div className={`${cartOpen ? "z-0" : "z-50"} relative`}>
-          <Chatbot />
-        </div>
       </div>
+
+      <Chatbot />
     </>
   );
 }
