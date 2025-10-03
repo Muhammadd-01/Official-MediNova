@@ -102,9 +102,8 @@ function Header() {
   const headerBg =
     "bg-white/20 dark:bg-[#0D3B66]/30 backdrop-blur-xl border border-white/20 dark:border-[#00C2CB]/20 shadow-lg";
   const textColor = darkMode ? "text-white" : "text-[#0D3B66]";
-  const hoverGlass = `transition-all duration-300 hover:bg-white/30 dark:hover:bg-[#00C2CB]/20 hover:shadow-lg hover:scale-105 ${
-    darkMode ? "" : "hover:text-[#0D3B66]"
-  }`;
+  const hoverGlass = `transition-all duration-300 hover:bg-white/30 dark:hover:bg-[#00C2CB]/20 hover:shadow-lg hover:scale-105 ${darkMode ? "" : "hover:text-[#0D3B66]"
+    }`;
 
   const navItems = [
     "Home",
@@ -188,24 +187,26 @@ function Header() {
             {/* Right-side Controls */}
             <div className="hidden lg:flex items-center gap-3 relative">
               {/* Cart Icon */}
-              <motion.button
-                onClick={handleCartClick}
-                variants={cartIconVariants}
-                initial="initial"
-                whileHover="hover"
-                whileTap="tap"
-                animate={cartPulse ? "pulse" : "initial"}
-                className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${
-                  darkMode ? "text-white" : "text-[#0D3B66]"
-                } border border-white/20 ${hoverGlass}`}
-              >
-                <ShoppingCart size={20} />
-                {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs text-white font-bold">
-                    {totalItems}
-                  </span>
-                )}
-              </motion.button>
+             <motion.button
+  onClick={handleCartClick}
+  variants={cartIconVariants}
+  initial="initial"
+  whileHover="hover"
+  whileTap="tap"
+  animate={cartPulse ? "pulse" : "initial"}
+  className={`relative h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${
+    darkMode ? "text-white" : "text-[#0D3B66]"
+  } border border-white/20 ${hoverGlass}`}
+>
+  <ShoppingCart size={20} />
+  {totalItems > 0 && (
+    <span className="absolute top-0 right-0 -translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs text-white font-bold pointer-events-none">
+      {totalItems}
+    </span>
+  )}
+</motion.button>
+
+
 
               {/* ✅ Profile Icon (matches cart/settings behavior) */}
               {isAuthenticated && (
@@ -218,9 +219,8 @@ function Header() {
                     whileTap="tap"
                     animate={profilePulse ? "pulse" : "initial"}
                     onClick={handleProfileClick}
-                    className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${
-                      darkMode ? "text-white" : "text-[#0D3B66]"
-                    } border border-white/20 ${hoverGlass}`}
+                    className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${darkMode ? "text-white" : "text-[#0D3B66]"
+                      } border border-white/20 ${hoverGlass}`}
                   >
                     <User size={18} />
                   </MotionLink>
@@ -239,9 +239,8 @@ function Header() {
                     setIsSettingsOpen(!isSettingsOpen);
                     setPulse(true);
                   }}
-                  className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${
-                    darkMode ? "text-white" : "text-[#0D3B66]"
-                  } border border-white/20 ${hoverGlass}`}
+                  className={`h-10 w-10 flex items-center justify-center rounded-full bg-white/30 dark:bg-[#0D3B66] ${darkMode ? "text-white" : "text-[#0D3B66]"
+                    } border border-white/20 ${hoverGlass}`}
                 >
                   <Settings size={18} />
                 </motion.button>

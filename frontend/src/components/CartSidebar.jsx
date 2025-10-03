@@ -1,7 +1,8 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { CartContext } from "../App";
+import axios from "axios";
 
 const sidebarVariants = {
   hidden: { x: "100%" },
@@ -22,7 +23,40 @@ const itemVariants = {
 };
 
 export default function CartSidebar({ isOpen, onClose, openPaymentModal }) {
-  const { cartItems, removeFromCart, totalPrice } = useContext(CartContext);
+  const { cartItems, setCartItems, removeFromCart, totalPrice } = useContext(CartContext);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch cart from backend when sidebar opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchCart = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("token"); // assuming you store JWT here
+        const res = await axios.get("http://localhost:4000/api/cart/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.data && res.data.items) {
+          // Map backend items to your cart structure
+          const items = res.data.items.map((item) => ({
+            id: item._id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          }));
+          setCartItems(items); // update CartContext
+        }
+      } catch (err) {
+        console.error("Failed to fetch cart:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCart();
+  }, [isOpen, setCartItems]);
 
   return (
     <AnimatePresence>
@@ -59,7 +93,9 @@ export default function CartSidebar({ isOpen, onClose, openPaymentModal }) {
 
             {/* Cart Items */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {cartItems.length === 0 ? (
+              {loading ? (
+                <p className="text-center text-gray-500 dark:text-gray-300">Loading...</p>
+              ) : cartItems.length === 0 ? (
                 <p className="text-center text-gray-500 dark:text-gray-300">
                   Your cart is empty
                 </p>

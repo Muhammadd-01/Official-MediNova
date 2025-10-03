@@ -9,6 +9,7 @@ import {
 import { HelmetProvider } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, X } from "lucide-react";
+import axios from "axios";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -24,13 +25,12 @@ import News from "./pages/News";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Emergency from "./pages/Emergency";
-import Profile from "./pages/Profile";   // ✅ Import Profile Page
+import Profile from "./pages/Profile";
 import BloodStreamBackground from "./components/BackgroundAnimation";
 import Chatbot from "./components/Chatbot";
 import GoToTop from "./components/GoToTop";
 import Labs from "./pages/Labs";
 import FAQ from "./components/FAQ";
-
 import { Auth0ProviderWrapper } from "./components/Auth0ProviderWrapper";
 
 // Contexts
@@ -39,7 +39,7 @@ export const AuthContext = createContext();
 export const CartContext = createContext();
 export const NotificationContext = createContext();
 
-// ✅ Global Notification Provider (Glass Style)
+// Global Notification Provider
 function NotificationProvider({ children }) {
   const [notification, setNotification] = useState(null);
   const { darkMode } = useContext(DarkModeContext);
@@ -76,15 +76,9 @@ function NotificationProvider({ children }) {
               />
               <div className="flex-1">
                 <h3 className={`text-lg font-bold ${textColor}`}>
-                  {notification.type === "error"
-                    ? "⚠️ Authentication Required"
-                    : "✅ Success"}
+                  {notification.type === "error" ? "⚠️ Error" : "✅ Success"}
                 </h3>
-                <p
-                  className={`text-sm ${
-                    darkMode ? "text-gray-300" : "text-gray-600"
-                  } mt-1`}
-                >
+                <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"} mt-1`}>
                   {notification.message}
                 </p>
               </div>
@@ -108,39 +102,7 @@ function NotificationProvider({ children }) {
   );
 }
 
-// ✅ CartProvider
-export function CartProvider({ children }) {
-  const [cartItems, setCartItems] = useState([]);
-  const addToCart = (item) => {
-    setCartItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id);
-      if (existing) {
-        return prev.map((i) =>
-          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-        );
-      } else {
-        return [...prev, { ...item, quantity: 1 }];
-      }
-    });
-  };
-  const removeFromCart = (id) => {
-    setCartItems((prev) => prev.filter((i) => i.id !== id));
-  };
-  const totalItems = cartItems.reduce((sum, i) => sum + i.quantity, 0);
-  const totalPrice = cartItems.reduce(
-    (sum, i) => sum + (i.price || 0) * i.quantity,
-    0
-  );
-  return (
-    <CartContext.Provider
-      value={{ cartItems, addToCart, removeFromCart, totalItems, totalPrice }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
-}
-
-// ✅ AuthProvider
+// AuthProvider
 function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
@@ -177,16 +139,70 @@ function AuthProvider({ children }) {
   );
 }
 
-// ✅ ProtectedRoute
+// CartProvider
+export function CartProvider({ children }) {
+  const { user, isAuthenticated } = useContext(AuthContext) || {};
+  const { showNotification } = useContext(NotificationContext) || {};
+  const [cartItems, setCartItems] = useState([]);
+
+  const fetchCart = async () => {
+    if (!user || !isAuthenticated) return;
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:4000/api/cart/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const backendItems = res.data.items.map((item) => ({
+        id: item._id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        manufacturer: item.manufacturer,
+        dosage: item.dosage,
+        fdaId: item.fdaId,
+      }));
+      setCartItems(backendItems);
+    } catch (error) {
+      console.error("Failed to fetch cart:", error);
+      showNotification && showNotification("Failed to load cart items", "error");
+    }
+  };
+
+  useEffect(() => {
+    fetchCart();
+  }, [user, isAuthenticated]);
+
+  const addToCart = (item) => {
+    setCartItems((prev) => {
+      const existing = prev.find((i) => i.id === item.id);
+      if (existing) return prev.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i));
+      else return [...prev, { ...item, quantity: 1 }];
+    });
+  };
+
+  const removeFromCart = (id) => {
+    setCartItems((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  const totalItems = cartItems.reduce((sum, i) => sum + i.quantity, 0);
+  const totalPrice = cartItems.reduce((sum, i) => sum + (i.price || 0) * i.quantity, 0);
+
+  return (
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, totalItems, totalPrice }}>
+      {children}
+    </CartContext.Provider>
+  );
+}
+
+// ProtectedRoute
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
   const { showNotification } = useContext(NotificationContext);
 
   if (!token) {
-    showNotification("Please login or register first to continue.", "error");
+    showNotification && showNotification("Please login or register first to continue.", "error");
     return <Navigate to="/register" replace />;
   }
-
   return children;
 }
 
@@ -200,11 +216,11 @@ function App() {
   return (
     <Auth0ProviderWrapper>
       <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
-        <CartProvider>
-          <HelmetProvider>
-            <Router>
-              <AuthProvider>
-                <NotificationProvider>
+        <HelmetProvider>
+          <Router>
+            <AuthProvider>
+              <NotificationProvider>
+                <CartProvider>
                   <div className="flex flex-col min-h-screen relative">
                     <BloodStreamBackground darkMode={darkMode} />
 
@@ -229,7 +245,7 @@ function App() {
                           <Route path="/pharmacy" element={<ProtectedRoute><Pharmacy /></ProtectedRoute>} />
                           <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
                           <Route path="/emergency" element={<ProtectedRoute><Emergency /></ProtectedRoute>} />
-                          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} /> {/* ✅ Profile Route Added */}
+                          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                         </Routes>
                       </main>
 
@@ -239,11 +255,11 @@ function App() {
                     <Chatbot />
                     <GoToTop />
                   </div>
-                </NotificationProvider>
-              </AuthProvider>
-            </Router>
-          </HelmetProvider>
-        </CartProvider>
+                </CartProvider>
+              </NotificationProvider>
+            </AuthProvider>
+          </Router>
+        </HelmetProvider>
       </DarkModeContext.Provider>
     </Auth0ProviderWrapper>
   );
