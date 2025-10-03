@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useContext, useState, useRef, useCallback, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { DarkModeContext } from "../App"; // If needed for internal dark mode, but uses prop
+import { DarkModeContext } from "../App";
 import {
   X,
   User,
@@ -16,9 +17,10 @@ import {
   ShieldCheck,
   CheckCircle,
   Loader2,
+  Clock,
 } from "lucide-react";
 
-// Static data (moved inside for self-containment)
+// Static data
 const pakistaniNames = {
   male: [
     "Ahmed Raza", "Muhammad Ali", "Hassan Khan", "Usman Malik", "Bilal Ahmed",
@@ -50,13 +52,14 @@ export default function CheckoutModal({
   onClose,
   itemTitle,
   itemPrice,
-  onSubmit, // async (payload) => Promise<boolean> (success)
-  onSuccess, // (details) => void (for parent toast)
+  onSubmit,
+  onSuccess,
   darkMode = false,
   cardBg = "bg-white",
   textColor = "text-black",
+  showTiming = false, // Control timing input visibility
+  showHours = false, // Control hours input visibility
 }) {
-  // Internal states (self-contained)
   const [formData, setFormData] = useState({
     name: "",
     cnic: "",
@@ -65,6 +68,8 @@ export default function CheckoutModal({
     phone: "",
     email: "",
     date: "",
+    time: "",
+    hours: 1,
     address: "",
     cardHolder: "",
     cardNumber: "",
@@ -86,7 +91,6 @@ export default function CheckoutModal({
   const [locationLoading, setLocationLoading] = useState(false);
   const modalContentRef = useRef(null);
 
-  // Internal functions (self-contained)
   const debounce = useCallback((func, wait) => {
     let timeout;
     return (...args) => {
@@ -116,7 +120,7 @@ export default function CheckoutModal({
         setCnicLoading(false);
       }
     }, 500),
-    [debounce]
+    []
   );
 
   const formatCNIC = useCallback((value) => {
@@ -237,6 +241,7 @@ export default function CheckoutModal({
       let newValue = value;
       if (name === "cardNumber") newValue = formatCardNumber(value);
       else if (name === "cnic") newValue = formatCNIC(value);
+      else if (name === "hours") newValue = Number(value);
       setFormData((prev) => ({ ...prev, [name]: newValue }));
       if (name === "cnic") verifyCNIC(newValue);
       if (name === "phone") validatePhone(newValue);
@@ -252,8 +257,8 @@ export default function CheckoutModal({
   const handleInternalSubmit = useCallback(
     async (e) => {
       e.preventDefault();
-      if (!formData.name || !formData.phone || !formData.date || !formData.address) {
-        alert("Please complete required fields (name, phone, date, address).");
+      if (!formData.name || !formData.phone || !formData.date || (showTiming && !formData.time) || (showHours && !formData.address)) {
+        alert(`Please complete required fields: name, phone, date${showTiming ? ", time" : ""}${showHours ? ", address" : ""}.`);
         return;
       }
       if (!validatePhone(formData.phone)) {
@@ -298,20 +303,26 @@ export default function CheckoutModal({
       try {
         const success = await onSubmit(payload);
         if (success) {
-          const details = {
+          onSuccess({
             name: formData.name,
             item: itemTitle,
             paymentMethod: paymentMethod === "cod" ? "Cash on Delivery" : paymentMethod === "card" ? "Credit/Debit Card" : "Bank Transfer",
             price: itemPrice,
-          };
-          onSuccess(details);
-          // Reset form
+            hours: formData.hours,
+            date: formData.date,
+            time: formData.time,
+            address: formData.address,
+          });
           setFormData({
-            name: "", cnic: "", age: "", gender: "", phone: "", email: "", date: "", address: "",
+            name: "", cnic: "", age: "", gender: "", phone: "", email: "", date: "", time: "", hours: 1, address: "",
             cardHolder: "", cardNumber: "", cardExpiry: "", cardCVV: "", bankName: "", accountNumber: "", transactionId: "",
           });
           setPaymentMethod("");
-          setCnicVerified(null); setCardDetails(null); setBankDetails(null); setBankQuery(""); setPhoneError(null);
+          setCnicVerified(null);
+          setCardDetails(null);
+          setBankDetails(null);
+          setBankQuery("");
+          setPhoneError(null);
           onClose();
         } else {
           alert("Booking failed. Please try again.");
@@ -320,25 +331,27 @@ export default function CheckoutModal({
         alert("Booking failed. Please try again.");
       }
     },
-    [formData, paymentMethod, itemTitle, itemPrice, onSubmit, onSuccess, onClose, validatePhone, cnicVerified, cardDetails, bankDetails, pakistaniBanks]
+    [formData, paymentMethod, itemTitle, itemPrice, onSubmit, onSuccess, onClose, validatePhone, cnicVerified, cardDetails, bankDetails, showTiming, showHours]
   );
 
-  // ESC key handler
   useEffect(() => {
     const handleKey = (e) => e.key === "Escape" && onClose();
     if (isOpen) window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [isOpen, onClose]);
 
-  // Reset on open (via isOpen change)
   useEffect(() => {
     if (isOpen) {
       setFormData({
-        name: "", cnic: "", age: "", gender: "", phone: "", email: "", date: "", address: "",
+        name: "", cnic: "", age: "", gender: "", phone: "", email: "", date: "", time: "", hours: 1, address: "",
         cardHolder: "", cardNumber: "", cardExpiry: "", cardCVV: "", bankName: "", accountNumber: "", transactionId: "",
       });
       setPaymentMethod("");
-      setCnicVerified(null); setCardDetails(null); setBankDetails(null); setBankQuery(""); setPhoneError(null);
+      setCnicVerified(null);
+      setCardDetails(null);
+      setBankDetails(null);
+      setBankQuery("");
+      setPhoneError(null);
       setTimeout(() => modalContentRef.current?.scrollTo(0, 0), 100);
     }
   }, [isOpen]);
@@ -356,7 +369,6 @@ export default function CheckoutModal({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
       >
-        {/* Backdrop */}
         <motion.div
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           onClick={onClose}
@@ -364,7 +376,6 @@ export default function CheckoutModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         />
-        {/* Modal Content */}
         <motion.div
           ref={modalContentRef}
           initial={{ scale: 0.96, y: 10, opacity: 0 }}
@@ -394,9 +405,7 @@ export default function CheckoutModal({
           </p>
 
           <form onSubmit={handleInternalSubmit} className="space-y-6">
-            {/* Form Fields - Full as in original */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Name */}
               <div>
                 <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="name">
                   Full Name *
@@ -414,7 +423,6 @@ export default function CheckoutModal({
                   />
                 </div>
               </div>
-              {/* CNIC */}
               <div>
                 <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="cnic">
                   CNIC (Auto-fills Name, Age, Gender)
@@ -452,7 +460,6 @@ export default function CheckoutModal({
                   )}
                 </div>
               </div>
-              {/* Age */}
               <div>
                 <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="age">
                   Age
@@ -468,7 +475,6 @@ export default function CheckoutModal({
                   max="150"
                 />
               </div>
-              {/* Gender */}
               <div>
                 <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="gender">
                   Gender
@@ -485,7 +491,6 @@ export default function CheckoutModal({
                   <option value="Other">Other</option>
                 </select>
               </div>
-              {/* Phone */}
               <div>
                 <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="phone">
                   Phone Number *
@@ -504,7 +509,6 @@ export default function CheckoutModal({
                   {phoneError && <span className="text-xs mt-1 block text-red-500">{phoneError}</span>}
                 </div>
               </div>
-              {/* Email */}
               <div>
                 <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="email">
                   Email
@@ -521,7 +525,6 @@ export default function CheckoutModal({
                   />
                 </div>
               </div>
-              {/* Date */}
               <div>
                 <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="date">
                   Preferred Date *
@@ -539,10 +542,43 @@ export default function CheckoutModal({
                   />
                 </div>
               </div>
-              {/* Address */}
+              {showTiming && (
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="time">
+                    Preferred Time *
+                  </label>
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#00C2CB]" />
+                    <input
+                      type="time"
+                      name="time"
+                      value={formData.time}
+                      onChange={handleFormChange}
+                      className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none`}
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+              {showHours && (
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="hours">
+                    Duration (Hours) *
+                  </label>
+                  <input
+                    type="number"
+                    name="hours"
+                    min="1"
+                    value={formData.hours}
+                    onChange={handleFormChange}
+                    className={`w-full pl-4 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none`}
+                    required
+                  />
+                </div>
+              )}
               <div className="sm:col-span-2">
                 <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="address">
-                  Address *
+                  Address {showHours ? "*" : ""}
                 </label>
                 <div className="relative">
                   <Home className="absolute left-3 top-3 w-5 h-5 text-[#00C2CB]" />
@@ -571,13 +607,12 @@ export default function CheckoutModal({
                     onChange={handleFormChange}
                     className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none h-24 resize-none`}
                     placeholder="Enter your full address"
-                    required
+                    required={showHours}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Payment Methods */}
             <div>
               <label className={`block text-sm font-medium mb-2 ${textColor}`}>Payment Method *</label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -601,7 +636,6 @@ export default function CheckoutModal({
               </div>
             </div>
 
-            {/* Card Fields (conditional) */}
             <AnimatePresence>
               {paymentMethod === "card" && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} className="space-y-4">
@@ -638,7 +672,6 @@ export default function CheckoutModal({
               )}
             </AnimatePresence>
 
-            {/* Bank Fields (conditional) */}
             <AnimatePresence>
               {paymentMethod === "bank" && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} className="space-y-4">
@@ -703,7 +736,6 @@ export default function CheckoutModal({
               )}
             </AnimatePresence>
 
-            {/* Submit Button */}
             <div className="flex justify-center mt-6">
               <motion.button
                 type="submit"
