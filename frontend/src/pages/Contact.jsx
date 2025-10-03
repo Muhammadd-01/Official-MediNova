@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { DarkModeContext } from "../App";
-import { CheckCircle, X, AlertCircle } from "lucide-react";
+import { CheckCircle, X, AlertCircle, Mail, MessageCircle, HelpCircle } from "lucide-react";
 
 function Contact() {
   const { darkMode } = useContext(DarkModeContext);
@@ -84,6 +84,10 @@ const handleContactSubmit = async (e) => {
     ? "bg-[#0A2A43]/20 backdrop-blur-[10px] border border-white/20"
     : "bg-white/20 backdrop-blur-md border border-gray-200";
 
+  const quickButtonStyle = darkMode
+    ? "bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20"
+    : "bg-white/50 backdrop-blur-md border border-gray-300/50 hover:bg-white/70";
+
   return (
     <>
       <Helmet>
@@ -96,13 +100,46 @@ const handleContactSubmit = async (e) => {
 
       <div className="container mx-auto px-4 py-16">
         <motion.h1
-          className="text-4xl font-bold mb-12 text-center"
+          className="text-4xl font-bold mb-6 text-center"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           Contact Us
         </motion.h1>
+
+        {/* Quick Contact Buttons */}
+        <div className="flex justify-center gap-4 mb-12 flex-wrap">
+          <motion.a
+            href="mailto:contact.medinova@gmail.com"
+            className={`flex items-center gap-2 px-6 py-3 rounded-full ${quickButtonStyle} transition-all duration-300 hover:shadow-lg`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Mail className="w-5 h-5" />
+            Email Us
+          </motion.a>
+          <motion.a
+            href="https://wa.me/923160212457"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`flex items-center gap-2 px-6 py-3 rounded-full ${quickButtonStyle} transition-all duration-300 hover:shadow-lg`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <MessageCircle className="w-5 h-5" />
+            WhatsApp Chat
+          </motion.a>
+          <motion.button
+            className={`flex items-center gap-2 px-6 py-3 rounded-full ${quickButtonStyle} transition-all duration-300 hover:shadow-lg`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => alert("FAQ section coming soon!")} // Placeholder for FAQ functionality
+          >
+            <HelpCircle className="w-5 h-5" />
+            FAQ
+          </motion.button>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
           {/* Contact Form */}
