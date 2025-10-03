@@ -1929,7 +1929,6 @@ function Consultation() {
         )}
       </AnimatePresence>
 
-      <Footer />
     </>
   );
 }
