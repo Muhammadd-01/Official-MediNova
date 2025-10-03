@@ -8,8 +8,6 @@ import axios from "axios";
 import { AuthContext, DarkModeContext } from "../App";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaTwitter } from "react-icons/fa";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 import { CheckCircle, X } from "lucide-react";
 
@@ -66,7 +64,6 @@ function Register() {
     fullName: "",
     email: "",
     password: "",
-    dateOfBirth: null,
     phoneNumber: "",
     gender: "",
     country: "",
@@ -135,16 +132,8 @@ function Register() {
       return;
     }
 
-    if (!formData.dateOfBirth) {
-      setErrorMessage("Please select your Date of Birth.");
-      return;
-    }
-
     try {
-      const payload = {
-        ...formData,
-        dateOfBirth: formData.dateOfBirth.toISOString(),
-      };
+      const payload = { ...formData };
 
       await axios.post("http://localhost:4000/api/auth/register", payload, {
         headers: { "Content-Type": "application/json" },
@@ -279,20 +268,6 @@ function Register() {
                 />
               </div>
             ))}
-
-            <div>
-              <label htmlFor="dateOfBirth" className="block text-sm font-semibold mb-1">
-                Date of Birth
-              </label>
-              <DatePicker
-                selected={formData.dateOfBirth}
-                onChange={(date) => setFormData({ ...formData, dateOfBirth: date })}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="Select Date"
-                className="w-full px-4 py-3 rounded-xl bg-white/30 backdrop-blur-lg border border-gray-300/40 shadow-inner cursor-pointer dark:bg-[#0A2A43]/60"
-                calendarClassName="bg-white/40 backdrop-blur-xl rounded-2xl border border-gray-300/30 shadow-xl dark:bg-[#0A2A43]/80"
-              />
-            </div>
 
             <div>
               <label htmlFor="gender" className="block text-sm font-semibold mb-1">
