@@ -18,16 +18,33 @@ function Contact() {
   const [successMessage, setSuccessMessage] = useState("");
   const [showError, setShowError] = useState(null);
 
-  // Contact form
-  const handleContactSubmit = (e) => {
-    e.preventDefault();
-    setSuccessMessage("Thank you for contacting us. We will get back to you soon!");
+ // Contact form
+const handleContactSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    const res = await axios.post("http://localhost:4000/api/contact", {
+      name,
+      email,
+      message,
+    });
+
+    setSuccessMessage(res.data.message || "Message sent successfully ✅");
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
+
     setName("");
     setEmail("");
     setMessage("");
-  };
+  } catch (err) {
+    console.error(err);
+    setShowError(
+      err.response?.data?.message || "Something went wrong! Please try again later."
+    );
+    setTimeout(() => setShowError(null), 3000);
+  }
+};
+
 
   // Feedback form - send to backend
   const handleFeedbackSubmit = async (e) => {
