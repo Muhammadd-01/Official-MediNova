@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState, useContext, useRef } from "react";
-import { DarkModeContext, CartContext } from "../App";
+import { DarkModeContext, CartContext, NotificationContext } from "../App";
 import Header from "../components/Header";
 import Chatbot from "../components/Chatbot";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiShoppingCart, FiCreditCard, FiDollarSign } from "react-icons/fi";
-import { Loader2, CheckCircle, X, Banknote } from "lucide-react";
+import { FiShoppingCart } from "react-icons/fi";
+import { Loader2 } from "lucide-react";
 
 // Static list of Pakistani banks for bank transfer
 const pakistaniBanks = [
@@ -22,6 +22,8 @@ const pakistaniBanks = [
 function Pharmacy() {
   const { darkMode } = useContext(DarkModeContext);
   const { cartItems, addToCart: addToLocalCart, totalPrice } = useContext(CartContext);
+  const { showNotification } = useContext(NotificationContext);
+
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
 
@@ -30,23 +32,7 @@ function Pharmacy() {
   const [searchQuery, setSearchQuery] = useState("");
   const [medicines, setMedicines] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState("USA");
-  const [paymentMethod, setPaymentMethod] = useState("");
-  const [paymentForm, setPaymentForm] = useState({
-    cardHolder: "",
-    cardNumber: "",
-    cardExpiry: "",
-    cardCVV: "",
-    bankName: "",
-    accountNumber: "",
-    transactionId: "",
-  });
-  const [cardLoading, setCardLoading] = useState(false);
-  const [bankLoading, setBankLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [bankQuery, setBankQuery] = useState("");
-  const [paymentError, setPaymentError] = useState(null);
 
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
   const bgColor = darkMode
@@ -56,7 +42,7 @@ function Pharmacy() {
     ? "bg-[#0A2A43]/60 text-[#FDFBFB] border-none backdrop-blur-xl"
     : "bg-white/40 text-[#0A3D62] border-none backdrop-blur-xl";
 
-  // Initialize Map
+  // Initialize map
   useEffect(() => {
     if (!mapRef.current && mapContainerRef.current) {
       mapRef.current = L.map(mapContainerRef.current).setView([30.3753, 69.3451], 13);
@@ -71,10 +57,7 @@ function Pharmacy() {
           const { latitude, longitude } = pos.coords;
           setUserLocation([latitude, longitude]);
           mapRef.current.setView([latitude, longitude], 15);
-          L.marker([latitude, longitude])
-            .addTo(mapRef.current)
-            .bindPopup("You are here")
-            .openPopup();
+          L.marker([latitude, longitude]).addTo(mapRef.current).bindPopup("You are here").openPopup();
           fetchNearbyPharmacies(latitude, longitude);
         },
         (error) => console.error("Geolocation error:", error)
@@ -134,10 +117,7 @@ function Pharmacy() {
 
       if (data.results) {
         const enriched = data.results
-          .filter((med) => {
-            if (country !== "USA") return true;
-            return med.openfda?.manufacturer_name?.[0];
-          })
+          .filter((med) => (country !== "USA" ? true : med.openfda?.manufacturer_name?.[0]))
           .map((med) => ({
             id: med.id || Math.random().toString(36).slice(2),
             name: med.openfda?.brand_name?.[0] || med.openfda?.generic_name?.[0] || "Unknown",
@@ -169,9 +149,10 @@ function Pharmacy() {
     return () => clearTimeout(timeout);
   }, [searchQuery, selectedCountry]);
 
-  // Add to Cart backend integration
+  // Add to Cart + Notification
   const addToCart = async (med) => {
     addToLocalCart({ ...med, quantity: 1 });
+    showNotification(`${med.name} added to cart`, "success");
 
     try {
       const token = localStorage.getItem("token");
@@ -195,6 +176,7 @@ function Pharmacy() {
       console.log("Added to backend cart:", data);
     } catch (err) {
       console.error("Add to cart backend error:", err);
+      showNotification(`Failed to add ${med.name} to cart`, "error");
     }
   };
 
@@ -219,32 +201,18 @@ function Pharmacy() {
       </Header>
 
       <div className={`min-h-screen pt-20 p-4 sm:p-6 ${textColor} max-w-7xl mx-auto`}>
-        <motion.h1
-          className="text-3xl sm:text-4xl font-bold mb-6 text-center"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <motion.h1 className="text-3xl sm:text-4xl font-bold mb-6 text-center" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           Pharmacy
         </motion.h1>
 
         {/* Map */}
-        <motion.div
-          className={`w-full h-[400px] rounded-[40px] shadow-md mb-6 ${bgColor} overflow-hidden`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <motion.div className={`w-full h-[400px] rounded-[40px] shadow-md mb-6 ${bgColor} overflow-hidden`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div ref={mapContainerRef} className="w-full h-full rounded-[40px] overflow-hidden"></div>
         </motion.div>
 
         {/* Country Selector */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-4"
-        >
-          <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="country">
-            Select Country
-          </label>
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+          <label className={`block text-sm font-medium mb-1 ${textColor}`} htmlFor="country">Select Country</label>
           <select
             id="country"
             value={selectedCountry}
@@ -269,40 +237,28 @@ function Pharmacy() {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <AnimatePresence>
             {isLoading ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="col-span-full text-center"
-              >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="col-span-full text-center">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto" />
                 <p>Loading medicines...</p>
               </motion.div>
             ) : medicines.length === 0 && searchQuery ? (
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                No medicines found...
-              </motion.p>
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}>No medicines found...</motion.p>
             ) : (
               medicines.map((med) => (
                 <motion.div
                   key={med.id}
                   layout
-                  className={`p-4 sm:p-6 rounded-[40px] ${bgColor} shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer`}
+                  className={`p-4 sm:p-6 rounded-[40px] ${bgColor} shadow-md hover:shadow-xl transition-all duration-300`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   whileHover={{ scale: 1.03 }}
                 >
-                  <img
-                    src={med.image}
-                    alt={med.name}
-                    className="w-full h-32 object-cover rounded-2xl mb-3"
-                  />
+                  <img src={med.image} alt={med.name} className="w-full h-32 object-cover rounded-2xl mb-3" />
                   <h2 className="text-lg font-semibold mb-2 line-clamp-2">{med.name}</h2>
                   <p className="text-sm mb-1 line-clamp-2">Generic: {med.generic_name}</p>
                   <p className="text-sm mb-1">Manufacturer: {med.manufacturer}</p>
                   <p className="text-sm mb-1">Country: {med.country}</p>
-                  <p className="text-sm mb-1">
-                    Price: ${med.price} | Discount: {med.discount}% | Stock: {med.stock}
-                  </p>
+                  <p className="text-sm mb-1">Price: ${med.price} | Discount: {med.discount}% | Stock: {med.stock}</p>
                   <button
                     onClick={() => addToCart(med)}
                     className="bg-[#0D3B66] text-white px-4 py-2 rounded-xl hover:bg-[#081F5C]"
@@ -314,47 +270,6 @@ function Pharmacy() {
             )}
           </AnimatePresence>
         </div>
-
-     
-
-        {/* Success Notification */}
-        <AnimatePresence>
-          {showSuccess && (
-            <motion.div
-              className={`fixed top-4 right-4 z-50 w-full max-w-sm p-6 rounded-xl ${bgColor} shadow-2xl`}
-              initial={{ opacity: 0, scale: 0.8, y: -20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: -20 }}
-              transition={{ duration: 0.3 }}
-              role="alert"
-              aria-live="assertive"
-            >
-              <div className="flex items-start">
-                <CheckCircle className="w-6 h-6 text-[#0D3B66] mr-3" />
-                <div className="flex-1">
-                  <h3 className={`text-lg font-bold ${textColor}`}>Order Confirmed ✅</h3>
-                  <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"} mt-1`}>
-                    Thank you! Your order has been placed successfully.
-                  </p>
-                  <ul className={`text-sm ${textColor} mt-2 space-y-1`}>
-                    <li><strong>Total:</strong> ${totalPrice.toFixed(2)}</li>
-                    <li><strong>Payment:</strong> {paymentMethod === "cod" ? "Cash on Delivery" : paymentMethod === "card" ? "Credit/Debit Card" : "Bank Transfer"}</li>
-                  </ul>
-                </div>
-                <motion.button
-                  onClick={() => setShowSuccess(false)}
-                  className="p-1 rounded-full bg-[#0D3B66]/20 hover:bg-[#0D3B66]/30 transition-all duration-300"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  aria-label="Close notification"
-                >
-                  <X className="w-5 h-5 text-[#0D3B66]" />
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
       </div>
 
       <Chatbot />
