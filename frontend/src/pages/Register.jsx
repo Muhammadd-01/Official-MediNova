@@ -72,7 +72,8 @@ function Register() {
     country: "",
     termsAccepted: false,
   });
-  const [showSuccess, setShowSuccess] = useState(false); // State for success notification
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const { login } = useContext(AuthContext);
   const { darkMode } = useContext(DarkModeContext);
@@ -81,7 +82,7 @@ function Register() {
   // ===== Auth0 hooks =====
   const { loginWithRedirect, user, isAuthenticated, getAccessTokenSilently, logout } = useAuth0();
 
-  // Clear Auth0 session on page load to prevent unintended social login triggers
+  // Clear Auth0 session on page load
   useEffect(() => {
     if (isAuthenticated) {
       logout({ returnTo: window.location.origin + "/Register" });
@@ -94,25 +95,23 @@ function Register() {
       const saveSocialUser = async () => {
         try {
           const token = await getAccessTokenSilently();
-          const res = await axios.post(
+          await axios.post(
             "http://localhost:4000/api/auth/social-login",
             {
               fullName: user.name,
               email: user.email,
-              authProvider: user.sub.split("|")[0], // google/facebook/twitter
+              authProvider: user.sub.split("|")[0],
               auth0Id: user.sub,
             },
             { headers: { Authorization: `Bearer ${token}` } }
           );
-
-          setShowSuccess(true); // Show success notification
+          setShowSuccess(true);
           setTimeout(() => {
             setShowSuccess(false);
-            navigate("/Login"); // Redirect to login after 3 seconds
+            navigate("/Login");
           }, 3000);
         } catch (err) {
           console.error("Error saving social user:", err);
-          // Do not set error notification for social login failures
         }
       };
       saveSocialUser();
@@ -129,46 +128,61 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage(""); // clear old errors
+
     if (!formData.termsAccepted) {
-      console.error("Terms and conditions not accepted");
+      setErrorMessage("You must accept terms and conditions.");
+      return;
+    }
+
+    if (!formData.dateOfBirth) {
+      setErrorMessage("Please select your Date of Birth.");
       return;
     }
 
     try {
       const payload = {
         ...formData,
-        dateOfBirth: formData.dateOfBirth
-          ? formData.dateOfBirth.toISOString()
-          : null,
+        dateOfBirth: formData.dateOfBirth.toISOString(),
       };
 
-      const res = await axios.post(
-        "http://localhost:4000/api/auth/register",
-        payload,
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
-        }
-      );
+      await axios.post("http://localhost:4000/api/auth/register", payload, {
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true,
+      });
 
-      setShowSuccess(true); // Show success notification
+      setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
         login({ email: formData.email });
-        navigate("/Login"); // Redirect to login after 3 seconds
+        navigate("/Login");
       }, 3000);
     } catch (err) {
       console.error(err);
-      // Do not set error notification for registration failures
+
+      if (err.response && err.response.data?.msg) {
+        const msg = err.response.data.msg.toLowerCase();
+
+        if (msg.includes("email")) {
+          setErrorMessage("Email already exists");
+        } else if (msg.includes("phone")) {
+          setErrorMessage("Phone number already exists");
+        } else {
+          setErrorMessage("Registration failed. Try again.");
+        }
+      } else {
+        setErrorMessage("Registration failed. Try again.");
+      }
+
+      // auto clear error after 3 sec
+      setTimeout(() => setErrorMessage(""), 3000);
     }
   };
 
-  // ===== Social login buttons =====
   const handleSocialLogin = (provider) => {
     loginWithRedirect({ connection: provider });
   };
 
-  // ===== Styling =====
   const bgColor = darkMode ? "bg-[#0A2A43]/70 backdrop-blur-lg" : "bg-white/60 backdrop-blur-lg";
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]";
   const inputGlass =
@@ -323,7 +337,7 @@ function Register() {
         </motion.div>
       </div>
 
-      {/* Success Notification */}
+      {/* ✅ Success Notification */}
       <AnimatePresence>
         {showSuccess && (
           <motion.div
@@ -351,6 +365,40 @@ function Register() {
                 aria-label="Close notification"
               >
                 <X className="w-5 h-5 text-[#00C2CB]" />
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ❌ Error Notification */}
+      <AnimatePresence>
+        {errorMessage && (
+          <motion.div
+            className={`fixed top-4 right-4 z-50 w-full max-w-sm p-6 rounded-[20px] ${cardBg} shadow-2xl`}
+            initial={{ opacity: 0, scale: 0.8, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -20 }}
+            transition={{ duration: 0.3 }}
+            role="alert"
+            aria-live="assertive"
+          >
+            <div className="flex items-start">
+              <X className="w-6 h-6 text-red-500 mr-3" />
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-red-600">Error ❌</h3>
+                <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"} mt-1`}>
+                  {errorMessage}
+                </p>
+              </div>
+              <motion.button
+                onClick={() => setErrorMessage("")}
+                className="p-1 rounded-full bg-red-200/40 hover:bg-red-300/50 transition-all duration-300"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                aria-label="Close notification"
+              >
+                <X className="w-5 h-5 text-red-500" />
               </motion.button>
             </div>
           </motion.div>

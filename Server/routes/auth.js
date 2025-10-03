@@ -12,15 +12,34 @@ router.post("/register", async (req, res) => {
     // Make sure body exists
     if (!req.body) return res.status(400).json({ msg: "No data sent" });
 
-    const { fullName, email, password, dateOfBirth, phoneNumber, gender, country, termsAccepted } = req.body;
+    const { 
+      fullName, 
+      email, 
+      password, 
+      dateOfBirth, 
+      phoneNumber, 
+      gender, 
+      country, 
+      termsAccepted 
+    } = req.body;
 
     if (!fullName || !email || !password) {
       return res.status(400).json({ msg: "Full name, email, and password are required" });
     }
 
-    // Check if email exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ msg: "Email already registered" });
+    // ✅ Check if email exists
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+      return res.status(400).json({ msg: "Email already registered" });
+    }
+
+    // ✅ Check if phone number exists
+    if (phoneNumber) {
+      const existingPhone = await User.findOne({ phoneNumber });
+      if (existingPhone) {
+        return res.status(400).json({ msg: "Phone number already registered" });
+      }
+    }
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
@@ -48,8 +67,6 @@ router.post("/register", async (req, res) => {
 });
 
 
-
-
 // POST /api/auth/login
 router.post("/login", async (req, res) => {
   try {
@@ -74,6 +91,7 @@ router.post("/login", async (req, res) => {
       user: {
         fullName: user.fullName,
         email: user.email,
+        phoneNumber: user.phoneNumber,
       },
     });
   } catch (err) {
@@ -81,7 +99,6 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ msg: "Server error" });
   }
 });
-
 
 
 // POST /api/auth/social-login
@@ -106,7 +123,7 @@ router.post("/social-login", async (req, res) => {
       await user.save();
     }
 
-    // Optionally, issue JWT token like normal login
+    // Issue JWT token like normal login
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
     res.status(200).json({
