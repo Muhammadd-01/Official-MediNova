@@ -7,67 +7,140 @@ import { AlertCircle, ChevronDown, ChevronUp, Pill, Clock, Volume2, X, Search, D
 import { AuthContext, DarkModeContext } from "../App";
 import axios from "axios";
 import jsPDF from 'jspdf';
-import useMediBotAI from "../components/MediBotAI"; // Import the AI logic
 
-// Medicine Card Component (keep this as is)
-function MedicineCard({ medicine, title }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const { darkMode } = useContext(DarkModeContext);
+const criticalSymptoms = [
+  "Can't breathe well", "Chest hurts", "Feeling dizzy", "Throwing up",
+];
+
+const NLM_SYMPTOM_API = "https://clinicaltables.nlm.nih.gov/api/hpo/v3/search";
+const RXNAV_ALLERGY_API = "https://rxnav.nlm.nih.gov/REST/approx.json";
+const OPENI_API_BASE = "https://openi.nlm.nih.gov/api/search";
+const fdaUrl = import.meta.env.VITE_FDA_API_URL || "https://api.fda.gov/drug/label.json";
+const CONSULTATION_LINK = "Consultation Page";
+
+const fallbackSymptoms = [
+  "Fever", "Cough", "Headache", "Sore throat", "Fatigue", "Nausea", "Dizziness",
+  "Shortness of breath", "Muscle pain", "Loss of taste or smell", "Runny nose",
+  "Body aches", "Chills", "Diarrhea", "Vomiting", "Chest pain", "Sneezing", "Congestion",
+];
+
+const fallbackAllergies = [
+  "Penicillin", "Aspirin", "Ibuprofen", "Sulfa drugs", "Latex", "Peanuts",
+  "Tree nuts", "Shellfish", "Eggs", "Milk", "Soy", "Wheat", "Fish",
+  "Pollen", "Dust mites", "Mold", "Pet dander",
+];
+
+const fallbackMedications = {
+  "headache": [
+    { name: "Acetaminophen", dosage: "500mg every 4-6 hours", timing: "Take with water", precautions: "Avoid alcohol", source: "Available at CVS, Walgreens" },
+    { name: "Ibuprofen", dosage: "200mg every 4-6 hours", timing: "Take with food", precautions: "Avoid if allergic to NSAIDs", source: "Available at CVS, Walgreens" },
+  ],
+  "sore throat": [
+    { name: "Chloraseptic Spray", dosage: "Spray 5 times every 2 hours", timing: "Spray directly on throat", precautions: "Do not swallow", source: "Available at pharmacies" },
+    { name: "Acetaminophen", dosage: "500mg every 4-6 hours", timing: "Take with water", precautions: "Avoid alcohol", source: "Available at CVS, Walgreens" },
+  ],
+  "fever": [
+    { name: "Acetaminophen", dosage: "500mg every 4-6 hours", timing: "Take with water", precautions: "Avoid alcohol", source: "Available at CVS, Walgreens" },
+    { name: "Ibuprofen", dosage: "200mg every 4-6 hours", timing: "Take with food", precautions: "Avoid if allergic to NSAIDs", source: "Available at CVS, Walgreens" },
+  ],
+  "cough": [
+    { name: "Dextromethorphan", dosage: "10-20mg every 4 hours", timing: "Take with water", precautions: "Avoid with MAOIs", source: "Available at pharmacies" },
+    { name: "Guaifenesin", dosage: "200-400mg every 4 hours", timing: "Take with water", precautions: "Drink plenty of fluids", source: "Available at pharmacies" },
+  ],
+  "migraine": [
+    { name: "Ibuprofen", dosage: "400mg at onset", timing: "Take with food", precautions: "Avoid if allergic to NSAIDs", source: "Available at CVS, Walgreens" },
+    { name: "Acetaminophen", dosage: "1000mg at onset", timing: "Take with water", precautions: "Avoid alcohol", source: "Available at CVS, Walgreens" },
+  ],
+};
+
+const suggestionCache = new Map();
+
+const simplifyMedicalTerms = (term) => {
+  const termMap = {
+    "Dyspnea": "Shortness of breath",
+    "Thoracic pain": "Chest pain",
+    "Vertigo": "Dizziness",
+    "Vomiting": "Vomiting",
+    "Pyrexia": "Fever",
+    "Cough": "Cough",
+    "Headache": "Headache",
+    "Nasal congestion": "Congestion",
+    "Fatigue": "Fatigue",
+    "Myalgia": "Muscle pain",
+    "Arthralgia": "Joint pain",
+    "Pharyngitis": "Sore throat",
+    "Nausea": "Nausea",
+    "Anosmia": "Loss of smell",
+    "Ageusia": "Loss of taste",
+    "Rhinorrhea": "Runny nose",
+    "Chills": "Chills",
+    "Diarrhea": "Diarrhea",
+    "Sneezing": "Sneezing",
+  };
+  return termMap[term] || term.replace(/ [ (].*?[ )]/g, "").replace(/medical|syndrome|disorder|abnormality/gi, "").trim();
+};
+
+async function fetchMedicineImage(medicineName) {
+  try {
+    const query = encodeURIComponent(`${medicineName} pill`);
+    const apiUrl = `${OPENI_API_BASE}?query=${query}&m=1&n=1`;
+    const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`);
+    if (!response.ok) throw new Error("Open-i API request failed");
+    const data = await response.json();
+    if (data.list && data.list.length > 0) return `https://openi.nlm.nih.gov${data.list[0].imgLarge}`;
+    return "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80";
+  } catch (error) {
+    console.error("Error fetching medicine image:", error);
+    return "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80";
+  }
+}
+
+function calculateAge(dob) {
+  if (!dob) return '';
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+  return age;
+}
+
+// Error Notification Component
+function ErrorNotification({ error, onClose, darkMode }) {
+  const cardBg = darkMode ? "bg-[#0A2A43]/20 backdrop-blur-[10px] border border-white/20" : "bg-white/20 backdrop-blur-md border border-gray-200";
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className={`p-6 rounded-[40px] shadow-md overflow-hidden relative border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl ${darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50"}`}>
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#0A3D62] to-blue-500 transform rotate-45 translate-x-12 -translate-y-12 opacity-10"></div>
-      <h4 className={`text-xl font-semibold mb-4 ${textColor}`}>{title}</h4>
-      <div className="flex flex-col sm:flex-row items-start gap-6 mb-4">
-        <motion.div whileHover={{ scale: 1.05 }} className="overflow-hidden rounded-[40px]">
-          <img src={medicine.image} alt={medicine?.name} loading="lazy" className="w-32 h-32 object-contain border border-gray-200 dark:border-[#FDFBFB]/50 shadow-md transition-transform duration-300" onError={(e) => e.target.src = "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"} />
-        </motion.div>
+    <motion.div
+      className={`fixed top-4 right-4 z-50 w-full max-w-sm p-6 rounded-[20px] ${cardBg} shadow-2xl`}
+      initial={{ opacity: 0, scale: 0.8, y: -20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.8, y: -20 }}
+      transition={{ duration: 0.3 }}
+      role="alert"
+      aria-live="assertive"
+    >
+      <div className="flex items-start">
+        <AlertCircle className="w-6 h-6 text-red-500 mr-3" />
         <div className="flex-1">
-          <h5 className={`text-lg font-semibold ${textColor}`}>{medicine?.name}</h5>
-          <p className={`text-sm ${textColor} opacity-80 mb-2`}>{medicine?.description}</p>
-          <p className={`text-sm ${textColor} mb-2`}><strong>Dosage:</strong> {medicine?.dosage}</p>
-          <p className={`text-sm ${textColor} mb-2`}><strong>Timing and Administration:</strong> {medicine?.timing}</p>
-          <p className={`text-sm ${textColor} mb-2`}><strong>Precautions:</strong> {medicine?.precautions}</p>
-          <p className={`text-sm ${textColor} mb-2`}><strong>Source:</strong> {medicine?.source}</p>
+          <h3 className={`text-lg font-bold ${textColor}`}>Server Error ⚠️</h3>
+          <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"} mt-1`}>{error}</p>
         </div>
+        <motion.button 
+          onClick={onClose} 
+          className="p-1 rounded-full bg-red-500/20 hover:bg-red-500/30 transition-all duration-300" 
+          whileHover={{ scale: 1.1 }} 
+          whileTap={{ scale: 0.9 }}
+        >
+          <X className="w-5 h-5 text-red-500" />
+        </motion.button>
       </div>
-      <motion.div initial="collapsed" animate={isExpanded ? "expanded" : "collapsed"} variants={{ expanded: { height: "auto", opacity: 1 }, collapsed: { height: 0, opacity: 0 } }} transition={{ duration: 0.3 }} className="overflow-hidden">
-        <h5 className={`font-semibold mt-2 ${textColor} text-sm`}>Side Effects:</h5>
-        <ul className={`list-disc list-inside ${textColor} text-sm`}>
-          {medicine?.sideEffects?.map((effect, index) => <li key={index}>{effect}</li>)}
-        </ul>
-        <h5 className={`font-semibold mt-2 ${textColor} text-sm`}>Brand Names:</h5>
-        <p className={`${textColor} text-sm`}>{medicine?.brandNames?.join(", ") || "N/A"}</p>
-      </motion.div>
-      <motion.button className={`${textColor} hover:text-[#0A3D62] dark:hover:text-[#FDFBFB] transition-all duration-300 flex items-center text-sm mt-4`} onClick={() => setIsExpanded(!isExpanded)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} aria-expanded={isExpanded}>
-        {isExpanded ? "Show Less" : "Show More"}
-        {isExpanded ? <ChevronUp className="ml-1" size={16} /> : <ChevronDown className="ml-1" size={16} />}
-      </motion.button>
     </motion.div>
   );
 }
 
 function MediBot() {
   const { user } = useContext(AuthContext);
-  const { darkMode } = useContext(DarkModeContext);
-  
-  // Use the AI logic custom hook
-  const {
-    loading,
-    errorMessage,
-    suggestions,
-    isExtreme,
-    processSymptoms,
-    debouncedFetchSuggestions,
-    fetchSuggestions,
-    handleSpeak,
-    handleCancelSpeak,
-    getFullText,
-    calculateAge
-  } = useMediBotAI();
-
-  // Form state
   const [formData, setFormData] = useState({
     name: "",
     age: "",
@@ -80,7 +153,10 @@ function MediBot() {
     medicalHistory: "",
     currentMedications: "",
   });
-  
+  const [suggestions, setSuggestions] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const { darkMode } = useContext(DarkModeContext);
   const [isPregnant, setIsPregnant] = useState(false);
   const [isBreastfeeding, setIsBreastfeeding] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -90,11 +166,14 @@ function MediBot() {
   const [allergySuggestions, setAllergySuggestions] = useState([]);
   const [isFetchingSymptoms, setIsFetchingSymptoms] = useState(false);
   const [isFetchingAllergies, setIsFetchingAllergies] = useState(false);
+  const [isExtreme, setIsExtreme] = useState(false);
+  const [serverError, setServerError] = useState(null);
 
+  const openRouterKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
   const symptomSearchRef = useRef(null);
   const allergySearchRef = useRef(null);
 
-  // Fetch user profile on component mount
   useEffect(() => {
     const fetchProfile = async () => {
       const token = localStorage.getItem("token");
@@ -129,13 +208,13 @@ function MediBot() {
         }
       } catch (err) {
         console.error("Error fetching profile:", err);
+        // Don't show server error for profile fetch, it's not critical
       }
     };
 
     fetchProfile();
   }, []);
 
-  // Form input handlers
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     let updatedValue = value;
@@ -151,7 +230,70 @@ function MediBot() {
     setFormData({ ...formData, [name]: updatedValue });
   };
 
-  // Fetch suggestions for symptoms and allergies
+  const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  };
+
+  const fetchSuggestions = async (query, setSuggestionsFunc, isAllergy = false) => {
+    if (!query.trim()) {
+      setSuggestionsFunc([]);
+      return;
+    }
+
+    const cacheKey = `${isAllergy ? "allergy" : "symptom"}:${query.toLowerCase()}`;
+    if (suggestionCache.has(cacheKey)) {
+      setSuggestionsFunc(suggestionCache.get(cacheKey));
+      return;
+    }
+
+    try {
+      isAllergy ? setIsFetchingAllergies(true) : setIsFetchingSymptoms(true);
+      let apiUrl = isAllergy
+        ? `${RXNAV_ALLERGY_API}?term=${encodeURIComponent(query)}&maxEntries=50`
+        : `${NLM_SYMPTOM_API}?terms=${encodeURIComponent(query)}&maxList=50`;
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+      const response = await fetch(proxyUrl, { signal: AbortSignal.timeout(5000) });
+      if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+      const data = await response.json();
+
+      let simplifiedLabels = [];
+      if (isAllergy) {
+        const candidates = data.approxGroup?.candidate || [];
+        simplifiedLabels = candidates
+          .map((c) => c.name)
+          .filter((label, index, self) => self.indexOf(label) === index && !formData[isAllergy ? "allergies" : "symptoms"].includes(label));
+      } else {
+        const labels = data[3] || [];
+        simplifiedLabels = labels
+          .map((item) => simplifyMedicalTerms(item[1]))
+          .filter((label, index, self) => self.indexOf(label) === index && !formData[isAllergy ? "allergies" : "symptoms"].includes(label));
+      }
+
+      suggestionCache.set(cacheKey, simplifiedLabels);
+      setSuggestionsFunc(simplifiedLabels);
+    } catch (error) {
+      console.error(`Error fetching ${isAllergy ? "allergies" : "symptoms"}:`, error);
+      // Don't show server error for search suggestions, use fallback silently
+      const fallback = isAllergy ? fallbackAllergies : fallbackSymptoms;
+      const filteredFallback = fallback
+        .filter(
+          (item) =>
+            item.toLowerCase().includes(query.toLowerCase()) &&
+            !formData[isAllergy ? "allergies" : "symptoms"].includes(item)
+        );
+      suggestionCache.set(cacheKey, filteredFallback);
+      setSuggestionsFunc(filteredFallback);
+    } finally {
+      isAllergy ? setIsFetchingAllergies(false) : setIsFetchingSymptoms(false);
+    }
+  };
+
+  const debouncedFetchSuggestions = debounce(fetchSuggestions, 300);
+
   useEffect(() => {
     debouncedFetchSuggestions(symptomSearch, setSymptomSuggestions, false);
   }, [symptomSearch]);
@@ -160,7 +302,11 @@ function MediBot() {
     debouncedFetchSuggestions(allergySearch, setAllergySuggestions, true);
   }, [allergySearch]);
 
-  // Add/remove items from symptoms and allergies
+  useEffect(() => {
+    const interval = setInterval(() => suggestionCache.clear(), 1800000);
+    return () => clearInterval(interval);
+  }, []);
+
   const addItem = (item, category) => {
     const normalizedItem = item.toLowerCase();
     if (!formData[category].some(i => i.toLowerCase() === normalizedItem)) {
@@ -173,233 +319,608 @@ function MediBot() {
     setFormData((prev) => ({ ...prev, [category]: prev[category].filter((i) => i !== item) }));
   };
 
-  // Form submission
+  const checkDrugInteractions = (medications, currentMeds, allergies) => {
+    const currentMedList = currentMeds.toLowerCase().split(",").map((med) => med.trim());
+    const knownInteractions = {
+      ibuprofen: ["aspirin", "anticoagulants"],
+      pseudoephedrine: ["maoi", "antidepressants"],
+      acetaminophen: ["warfarin"],
+      diphenhydramine: ["alcohol", "sedatives"],
+    };
+
+    return medications.filter((med) => {
+      const medName = med.name.toLowerCase();
+      if (allergies.some(a => a.toLowerCase() === medName)) return false;
+      const interactions = knownInteractions[medName] || [];
+      return !currentMedList.some((currentMed) =>
+        interactions.some((interactingDrug) => currentMed.includes(interactingDrug))
+      );
+    });
+  };
+
+  const sanitizeSuggestions = (medications, allergies) => {
+    const seen = new Set();
+    return medications.filter((med) => {
+      const medName = med.name.toLowerCase();
+      if (seen.has(medName) || allergies.some(a => a.toLowerCase() === medName)) return false;
+      seen.add(medName);
+      return true;
+    }).slice(0, 2);
+  };
+
+  const parseAIResponse = (text) => {
+    const lines = text.split("\n").filter((line) => line.trim());
+    const parsed = {
+      reasoning: "",
+      otcMedications: [],
+      homeRemedies: [],
+      warnings: [],
+      duration: "",
+      disclaimer: "",
+    };
+    let currentSection = "";
+    lines.forEach((line) => {
+      if (line.startsWith("✅ Reasoning")) currentSection = "reasoning";
+      else if (line.startsWith("✅ OTC Medications")) currentSection = "otcMedications";
+      else if (line.startsWith("🏠 Home Remedies / Lifestyle")) currentSection = "homeRemedies";
+      else if (line.startsWith("⚠️ Warnings / Avoid")) currentSection = "warnings";
+      else if (line.startsWith("⏳ Duration Guidance")) currentSection = "duration";
+      else if (line.startsWith("🚨 Doctor Disclaimer")) currentSection = "disclaimer";
+      else if (line.trim() && currentSection) {
+        if (currentSection === "otcMedications") {
+          const parts = line.replace(/^- /, "").split(" - ");
+          if (parts.length >= 4) {
+            parsed.otcMedications.push({
+              name: parts[0].trim(),
+              dosage: parts[1].trim(),
+              timing: parts[2].trim(),
+              precautions: parts[3].trim(),
+              source: parts[4] ? parts[4].trim() : "Available at pharmacies like CVS, Walgreens",
+            });
+          }
+        } else if (currentSection === "homeRemedies" || currentSection === "warnings") {
+          if (!parsed[currentSection].includes(line.replace(/^- /, ""))) parsed[currentSection].push(line.replace(/^- /, ""));
+        } else {
+          parsed[currentSection] += (parsed[currentSection] ? " " : "") + line.trim();
+        }
+      }
+    });
+    return parsed;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await processSymptoms(formData, isPregnant, isBreastfeeding);
+    if (!formData.symptoms.length) {
+      setErrorMessage("Please select at least one symptom to proceed, dear " + formData.name + ".");
+      return;
+    }
+    if (!formData.name.trim()) {
+      setErrorMessage("Please provide your name to receive personalized suggestions, dear user.");
+      return;
+    }
+    if (!openRouterKey || !geminiKey) {
+      const apiError = "API key is missing. Please ensure VITE_OPENROUTER_API_KEY and VITE_GEMINI_API_KEY are set in your environment.";
+      setErrorMessage(apiError);
+      return;
+    }
+    setErrorMessage("");
+    setServerError(null);
+    setLoading(true);
+    setSuggestions(null);
+    setIsExtreme(false);
+
+    try {
+      const symptomQuery = encodeURIComponent(formData.symptoms.map(s => {
+        const synonyms = {
+          "Headache": "headache pain",
+          "Sore throat": "pharyngitis throat pain",
+          "Fever": "pyrexia elevated temperature",
+          "Cough": "cough respiratory irritation",
+          "Migraine": "migraine headache",
+        };
+        return synonyms[s] || s;
+      }).join(" OR "));
+      if (!symptomQuery) throw new Error("No symptoms provided.");
+
+      const hasCriticalSymptom = formData.symptoms.some((symptom) =>
+        criticalSymptoms.includes(symptom)
+      );
+      if (hasCriticalSymptom) {
+        const criticalResponse = {
+          reasoning: `Dear ${formData.name}, your symptoms, such as difficulty breathing or chest pain, are serious and require immediate medical attention.`,
+          otcMedications: [],
+          homeRemedies: ["Rest and stay hydrated while awaiting medical care."],
+          warnings: ["These symptoms may indicate a serious condition. Seek medical help immediately."],
+          duration: "Contact a healthcare professional as soon as possible.",
+          disclaimer: `Dear ${formData.name}, this information is not medical advice. Please consult a doctor immediately for proper diagnosis and treatment. Book a consultation here: ${CONSULTATION_LINK}`,
+        };
+        setSuggestions(criticalResponse);
+        setIsExtreme(true);
+        setLoading(false);
+        return;
+      }
+
+      let fdaInfo = [];
+      const maxRetries = 3;
+      let fdaSuccess = false;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const fdaFullUrl = `${fdaUrl}?search=indications_and_usage:(${symptomQuery})+openfda.route:ORAL&limit=10`;
+          const response = await fetch(fdaFullUrl, { signal: AbortSignal.timeout(5000) });
+          if (!response.ok) throw new Error(`FDA API error: ${response.status}`);
+          const fdaData = await response.json();
+          if (fdaData?.results?.length > 0) {
+            fdaInfo = fdaData.results.map((result) => ({
+              name: result.openfda?.brand_name?.[0] || result.openfda?.generic_name?.[0] || "Generic",
+              indications: result.indications_and_usage?.[0] || "No indications available",
+              dosage: result.dosage_and_administration?.[0] || "Follow standard guidelines",
+              warnings: result.warnings?.[0] || "No specific warnings available",
+              precautions: result.precautions?.[0] || "No precautions available",
+              contraindications: result.contraindications?.[0] || "No contraindications available",
+              adverse_reactions: result.adverse_reactions?.[0] || "No adverse reactions available",
+              how_supplied: result.how_supplied?.[0] || "No supply information available",
+              administration: result.dosage_and_administration?.[0] || "No administration details available",
+              image: "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
+            }));
+            fdaSuccess = true;
+          }
+          break;
+        } catch (error) {
+          console.error(`FDA API attempt ${attempt} failed:`, error);
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+      }
+
+      let parsedSuggestions;
+      let usedFallback = false;
+      
+      if (!fdaSuccess) {
+        const applicableMeds = formData.symptoms
+          .filter((symptom) => fallbackMedications[symptom.toLowerCase()])
+          .flatMap((symptom) => fallbackMedications[symptom.toLowerCase()]);
+        
+        if (applicableMeds.length > 0) {
+          parsedSuggestions = {
+            reasoning: `Dear ${formData.name}, we couldn't find FDA data for your symptoms, but based on common medical practice, here are safe OTC options for your condition.`,
+            otcMedications: checkDrugInteractions(applicableMeds, formData.currentMedications, formData.allergies),
+            homeRemedies: ["Stay hydrated", "Rest adequately", "Maintain a balanced diet"],
+            warnings: ["Avoid if allergic to listed medications", "Check with a pharmacist if unsure"],
+            duration: "Use for up to 3 days; consult a doctor if symptoms persist.",
+            disclaimer: `Dear ${formData.name}, this is not medical advice. Please consult a doctor for proper diagnosis. Book a consultation here: ${CONSULTATION_LINK}`,
+          };
+          usedFallback = true;
+        } else {
+          // No fallback medicines available - show server error
+          throw new Error("No FDA data found and no fallback medications available for your symptoms.");
+        }
+      } else {
+        const patientInfo = `
+Patient Info:
+- Name: ${formData.name}
+- Age: ${formData.age}
+- Gender: ${formData.gender}
+- Weight: ${formData.weight} kg
+- Height: ${formData.height} cm
+- Blood Group: ${formData.bloodGroup}
+- Symptoms: ${formData.symptoms.join(", ") || "None"}
+- Allergies: ${formData.allergies.join(", ") || "None"}
+- Medical History: ${formData.medicalHistory || "None"}
+- Current Medications: ${formData.currentMedications || "None"}
+- Pregnancy Status: ${isPregnant ? "Pregnant" : "Not pregnant"}
+- Breastfeeding Status: ${isBreastfeeding ? "Breastfeeding" : "Not breastfeeding"}
+
+FDA Data:
+${JSON.stringify(fdaInfo, null, 2)}
+        `;
+
+        const systemPrompt = `
+You are an experienced, compassionate human doctor specializing in general medicine. Act like a real doctor: think step by step, analyze the patient's full profile (age, gender, weight, height, blood group, symptoms, allergies, history, current meds, pregnancy, breastfeeding), cross-reference with FDA data for accurate, safe OTC recommendations. Provide empathetic, personalized advice as if in a consultation. Suggest exactly one primary and one alternative OTC medication if possible, using FDA details for doses, timing, etc. NEVER suggest prescription drugs. Always emphasize consulting a professional.
+
+Use ALL FDA data to inform suggestions: extract and adapt indications, dosage, administration, warnings, precautions, contraindications, adverse reactions. Reason step-by-step based on patient profile and FDA/fallback data. Use simple, accessible language.
+
+If symptoms/allergies are rare or no matching data, respond with reasoning like 'Your symptoms seem uncommon; please see a doctor' and include link ${CONSULTATION_LINK} in disclaimer, with no meds.
+
+Strict format:
+✅ Reasoning (Step-by-step analysis of patient info, symptoms, FDA data, why suggestions fit. Empathetic tone.)
+✅ OTC Medications (Exactly 2: primary and alternative, with:
+- Name - Dosage - Timing and Administration - Precautions - Source)
+🏠 Home Remedies / Lifestyle (2-3 tailored tips)
+⚠️ Warnings / Avoid (Based on allergies, history, FDA)
+⏳ Duration Guidance (Based on FDA/standard)
+🚨 Doctor Disclaimer (Consult doctor; not advice)
+
+Rules:
+- Primary: First-line safe option; Alternative: Backup if primary unsuitable.
+- Ensure safety: e.g., no acetaminophen for liver issues, no ibuprofen in pregnancy, age <18 no aspirin.
+- Check interactions with current meds/allergies.
+- Empathetic, humble tone; address by name.
+- Base strictly on provided data; no inventions.
+        `;
+
+        // Run both models in parallel using Promise.all
+        const [openRouterResponse, geminiResponse] = await Promise.all([
+          fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${openRouterKey}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": "https://www.mednova.com",
+              "X-Title": "MediNova",
+            },
+            body: JSON.stringify({
+              model: "openai/gpt-4o-mini",
+              messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: patientInfo },
+              ],
+              max_tokens: 2000,
+              temperature: 0.7,
+            }),
+          }).then(res => {
+            if (!res.ok) throw new Error(`OpenRouter API error: ${res.status}`);
+            return res.json();
+          }),
+          fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiKey}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    { text: systemPrompt + "\n\n" + patientInfo }
+                  ]
+                }
+              ]
+            }),
+          }).then(res => {
+            if (!res.ok) throw new Error(`Gemini API error: ${res.status}`);
+            return res.json();
+          })
+        ]);
+
+        let openRouterText = openRouterResponse?.choices?.[0]?.message?.content || "";
+        let geminiText = geminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+        if (!openRouterText && !geminiText) throw new Error("No response received from either AI.");
+
+        // Parse both and combine
+        const parsedOpenRouter = openRouterText ? parseAIResponse(openRouterText) : { otcMedications: [], homeRemedies: [], warnings: [] };
+        const parsedGemini = geminiText ? parseAIResponse(geminiText) : { otcMedications: [], homeRemedies: [], warnings: [] };
+
+        parsedSuggestions = {
+          reasoning: [parsedOpenRouter.reasoning, parsedGemini.reasoning].filter(Boolean).join("\n\n") || "Combined analysis from AI models.",
+          otcMedications: [...parsedOpenRouter.otcMedications, ...parsedGemini.otcMedications],
+          homeRemedies: [...new Set([...parsedOpenRouter.homeRemedies, ...parsedGemini.homeRemedies])],
+          warnings: [...new Set([...parsedOpenRouter.warnings, ...parsedGemini.warnings])],
+          duration: parsedOpenRouter.duration || parsedGemini.duration || "Follow guidelines provided.",
+          disclaimer: parsedOpenRouter.disclaimer || parsedGemini.disclaimer || `Dear ${formData.name}, this is not medical advice. Please consult a doctor for proper diagnosis. Book a consultation here: ${CONSULTATION_LINK}`,
+        };
+
+        parsedSuggestions.otcMedications = sanitizeSuggestions(parsedSuggestions.otcMedications, formData.allergies);
+        parsedSuggestions.otcMedications = checkDrugInteractions(
+          parsedSuggestions.otcMedications,
+          formData.currentMedications,
+          formData.allergies
+        );
+      }
+
+      // Only fetch medicine images if we have medications to show
+      if (parsedSuggestions.otcMedications.length > 0) {
+        for (let med of parsedSuggestions.otcMedications) {
+          try {
+            med.image = await fetchMedicineImage(med.name);
+          } catch (error) {
+            console.error("Error fetching medicine image:", error);
+            med.image = "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80";
+          }
+        }
+      }
+
+      setSuggestions(parsedSuggestions);
+      
+      // Check if we should show extreme warning
+      if (parsedSuggestions.otcMedications.length === 0 || parsedSuggestions.reasoning.toLowerCase().includes("uncommon") || parsedSuggestions.reasoning.toLowerCase().includes("extreme") || parsedSuggestions.reasoning.toLowerCase().includes("rare")) {
+        setIsExtreme(true);
+      } else {
+        setIsExtreme(false);
+      }
+
+    } catch (error) {
+      console.error("Error in handleSubmit:", error);
+      
+      // Only show server error if no fallback medicines were used
+      if (!suggestions || suggestions.otcMedications.length === 0) {
+        setServerError("Server Error: Unable to fetch medicine suggestions. Please try again later.");
+        setTimeout(() => setServerError(null), 5000);
+      }
+      
+      const errorMsg = `Dear ${formData.name}, an error occurred while fetching suggestions. Please try again or consult a doctor at ${CONSULTATION_LINK}.`;
+      setErrorMessage(errorMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Text-to-speech handlers
-  const handleSpeakText = () => {
-    handleSpeak(getFullText(suggestions, formData, isPregnant, isBreastfeeding), formData, setIsSpeaking);
+  const handleSpeak = (text) => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en";
+      utterance.volume = 1.0;
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+
+      const voices = window.speechSynthesis.getVoices();
+      utterance.voice = voices[0];
+
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = (e) => {
+        const speechError = `Speech error: ${e.error}. Try a different language or browser, dear ${formData.name}.`;
+        setErrorMessage(speechError);
+        setIsSpeaking(false);
+      };
+      window.speechSynthesis.speak(utterance);
+    } else {
+      const ttsError = "Text-to-speech is not supported in this browser, dear " + formData.name + ".";
+      setErrorMessage(ttsError);
+    }
   };
 
-  const handleCancelSpeakText = () => {
-    handleCancelSpeak(setIsSpeaking);
+  const handleCancelSpeak = () => {
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    setIsSpeaking(false);
   };
 
-  // Download PDF report
+  const getFullText = (sugs) => {
+    let text = `Medicine Suggestion Report\n\n`;
+    text += `Patient Information:\n`;
+    text += `Name: ${formData.name}\n`;
+    text += `Age: ${formData.age || "Not provided"}\n`;
+    text += `Gender: ${formData.gender || "Not provided"}\n`;
+    if (formData.gender === "female") {
+      text += `Pregnancy Status: ${isPregnant ? "Pregnant" : "Not Pregnant"}\n`;
+      if (isPregnant) {
+        text += `Breastfeeding Status: ${isBreastfeeding ? "Breastfeeding" : "Not Breastfeeding"}\n`;
+      }
+    }
+    text += `Weight: ${formData.weight ? `${formData.weight} kg` : "Not provided"}\n`;
+    text += `Height: ${formData.height ? `${formData.height} cm` : "Not provided"}\n`;
+    text += `Blood Group: ${formData.bloodGroup || "Not provided"}\n`;
+    text += `Symptoms: ${formData.symptoms.length > 0 ? formData.symptoms.join(", ") : "None selected"}\n`;
+    text += `Allergies: ${formData.allergies.length > 0 ? formData.allergies.join(", ") : "None selected"}\n`;
+    text += `Medical History: ${formData.medicalHistory || "Not provided"}\n`;
+    text += `Current Medications: ${formData.currentMedications || "Not provided"}\n\n`;
+
+    text += `Suggestions:\n\n`;
+    if (sugs?.reasoning) text += `Reasoning:\n${sugs.reasoning}\n\n`;
+    if (sugs?.otcMedications?.length > 0) text += `OTC Medications:\n${sugs.otcMedications.map(med => `${med.name} - ${med.dosage} - ${med.timing} - ${med.precautions} - ${med.source}`).join("\n")}\n\n`;
+    if (sugs?.homeRemedies?.length > 0) text += `Home Remedies / Lifestyle:\n${sugs.homeRemedies.join("\n")}\n\n`;
+    if (sugs?.warnings?.length > 0) text += `Warnings / Avoid:\n${sugs.warnings.join("\n")}\n\n`;
+    if (sugs?.duration) text += `Duration Guidance:\n${sugs.duration}\n\n`;
+    if (sugs?.disclaimer) text += `Doctor Disclaimer:\n${sugs.disclaimer}`;
+    return text;
+  };
+
   const downloadReport = () => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.width;
-    const margin = 15;
-    const lineHeight = 7;
-    let y = margin;
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.width;
+      const margin = 15;
+      const lineHeight = 7;
+      let y = margin;
 
-    // Colors
-    const headerColor = [10, 61, 98]; // #0A3D62
-    const textColor = [0, 0, 0]; // Black
-    const sectionColor = [8, 37, 58]; // Darker blue #08253A
+      // Colors
+      const headerColor = [10, 61, 98]; // #0A3D62
+      const textColor = [0, 0, 0]; // Black
+      const sectionColor = [8, 37, 58]; // Darker blue #08253A
 
-    // Header
-    doc.setTextColor(...headerColor);
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("MediNova Medical Report", pageWidth / 2, y, { align: "center" });
-    y += lineHeight * 2;
+      // Header
+      doc.setTextColor(...headerColor);
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text("MediNova Medical Report", pageWidth / 2, y, { align: "center" });
+      y += lineHeight * 2;
 
-    doc.setTextColor(...textColor);
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - margin, y, { align: "right" });
-    y += lineHeight * 2;
+      doc.setTextColor(...textColor);
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - margin, y, { align: "right" });
+      y += lineHeight * 2;
 
-    // Patient Information Section
-    doc.setTextColor(...sectionColor);
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Patient Information", margin, y);
-    y += lineHeight;
+      // Patient Information Section
+      doc.setTextColor(...sectionColor);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Patient Information", margin, y);
+      y += lineHeight;
 
-    doc.setTextColor(...textColor);
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    const patientLines = [
-      `Name: ${formData.name}`,
-      `Age: ${formData.age || "Not provided"}`,
-      `Gender: ${formData.gender || "Not provided"}`,
-      ...(formData.gender === "female" ? [`Pregnancy Status: ${isPregnant ? "Pregnant" : "Not Pregnant"}`] : []),
-      ...(isPregnant ? [`Breastfeeding Status: ${isBreastfeeding ? "Breastfeeding" : "Not Breastfeeding"}`] : []),
-      `Weight: ${formData.weight ? `${formData.weight} kg` : "Not provided"}`,
-      `Height: ${formData.height ? `${formData.height} cm` : "Not provided"}`,
-      `Blood Group: ${formData.bloodGroup || "Not provided"}`,
-      `Symptoms: ${formData.symptoms.length > 0 ? formData.symptoms.join(", ") : "None selected"}`,
-      `Allergies: ${formData.allergies.length > 0 ? formData.allergies.join(", ") : "None selected"}`,
-      `Medical History: ${formData.medicalHistory || "Not provided"}`,
-      `Current Medications: ${formData.currentMedications || "Not provided"}`,
-    ];
+      doc.setTextColor(...textColor);
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      const patientLines = [
+        `Name: ${formData.name}`,
+        `Age: ${formData.age || "Not provided"}`,
+        `Gender: ${formData.gender || "Not provided"}`,
+        ...(formData.gender === "female" ? [`Pregnancy Status: ${isPregnant ? "Pregnant" : "Not Pregnant"}`] : []),
+        ...(isPregnant ? [`Breastfeeding Status: ${isBreastfeeding ? "Breastfeeding" : "Not Breastfeeding"}`] : []),
+        `Weight: ${formData.weight ? `${formData.weight} kg` : "Not provided"}`,
+        `Height: ${formData.height ? `${formData.height} cm` : "Not provided"}`,
+        `Blood Group: ${formData.bloodGroup || "Not provided"}`,
+        `Symptoms: ${formData.symptoms.length > 0 ? formData.symptoms.join(", ") : "None selected"}`,
+        `Allergies: ${formData.allergies.length > 0 ? formData.allergies.join(", ") : "None selected"}`,
+        `Medical History: ${formData.medicalHistory || "Not provided"}`,
+        `Current Medications: ${formData.currentMedications || "Not provided"}`,
+      ];
 
-    patientLines.forEach((line) => {
-      if (y > doc.internal.pageSize.height - margin * 2) {
+      patientLines.forEach((line) => {
+        if (y > doc.internal.pageSize.height - margin * 2) {
+          doc.addPage();
+          y = margin;
+        }
+        doc.text(line, margin, y);
+        y += lineHeight;
+      });
+      y += lineHeight;
+
+      doc.setDrawColor(...headerColor);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += lineHeight;
+
+      // Suggestions Section
+      doc.setTextColor(...sectionColor);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Suggestions", margin, y);
+      y += lineHeight;
+
+      doc.setTextColor(...textColor);
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+
+      if (suggestions?.reasoning) {
+        doc.setTextColor(...headerColor);
+        doc.text("Reasoning:", margin, y);
+        y += lineHeight;
+        doc.setTextColor(...textColor);
+        const reasoningLines = doc.splitTextToSize(suggestions.reasoning, pageWidth - margin * 2);
+        reasoningLines.forEach((line) => {
+          if (y > doc.internal.pageSize.height - margin * 2) {
+            doc.addPage();
+            y = margin;
+          }
+          doc.text(line, margin, y);
+          y += lineHeight;
+        });
+        y += lineHeight;
+      }
+
+      if (suggestions?.otcMedications?.length > 0) {
+        doc.setTextColor(...headerColor);
+        doc.text("OTC Medications:", margin, y);
+        y += lineHeight;
+        doc.setTextColor(...textColor);
+        suggestions.otcMedications.forEach((med, index) => {
+          const medLine = `${index + 1}. ${med.name} - Dosage: ${med.dosage} - Timing: ${med.timing} - Precautions: ${med.precautions} - Source: ${med.source}`;
+          const medLines = doc.splitTextToSize(medLine, pageWidth - margin * 2);
+          medLines.forEach((line) => {
+            if (y > doc.internal.pageSize.height - margin * 2) {
+              doc.addPage();
+              y = margin;
+            }
+            doc.text(line, margin, y);
+            y += lineHeight;
+          });
+        });
+        y += lineHeight;
+      }
+
+      if (suggestions?.homeRemedies?.length > 0) {
+        doc.setTextColor(...headerColor);
+        doc.text("Home Remedies / Lifestyle:", margin, y);
+        y += lineHeight;
+        doc.setTextColor(...textColor);
+        suggestions.homeRemedies.forEach((remedy) => {
+          const remedyLines = doc.splitTextToSize(remedy, pageWidth - margin * 2);
+          remedyLines.forEach((line) => {
+            if (y > doc.internal.pageSize.height - margin * 2) {
+              doc.addPage();
+              y = margin;
+            }
+            doc.text(line, margin, y);
+            y += lineHeight;
+          });
+        });
+        y += lineHeight;
+      }
+
+      if (suggestions?.warnings?.length > 0) {
+        doc.setTextColor(...headerColor);
+        doc.text("Warnings / Avoid:", margin, y);
+        y += lineHeight;
+        doc.setTextColor(...textColor);
+        suggestions.warnings.forEach((warning) => {
+          const warningLines = doc.splitTextToSize(warning, pageWidth - margin * 2);
+          warningLines.forEach((line) => {
+            if (y > doc.internal.pageSize.height - margin * 2) {
+              doc.addPage();
+              y = margin;
+            }
+            doc.text(line, margin, y);
+            y += lineHeight;
+          });
+        });
+        y += lineHeight;
+      }
+
+      if (suggestions?.duration) {
+        doc.setTextColor(...headerColor);
+        doc.text("Duration Guidance:", margin, y);
+        y += lineHeight;
+        doc.setTextColor(...textColor);
+        const durationLines = doc.splitTextToSize(suggestions.duration, pageWidth - margin * 2);
+        durationLines.forEach((line) => {
+          if (y > doc.internal.pageSize.height - margin * 2) {
+            doc.addPage();
+            y = margin;
+          }
+          doc.text(line, margin, y);
+          y += lineHeight;
+        });
+        y += lineHeight;
+      }
+
+      if (suggestions?.disclaimer) {
+        doc.setTextColor(...headerColor);
+        doc.text("Doctor Disclaimer:", margin, y);
+        y += lineHeight;
+        doc.setTextColor(...textColor);
+        const disclaimerLines = doc.splitTextToSize(suggestions.disclaimer, pageWidth - margin * 2);
+        disclaimerLines.forEach((line) => {
+          if (y > doc.internal.pageSize.height - margin * 2) {
+            doc.addPage();
+            y = margin;
+          }
+          doc.text(line, margin, y);
+          y += lineHeight;
+        });
+        y += lineHeight * 2;
+      }
+
+      // Dummy Signature
+      if (y > doc.internal.pageSize.height - margin * 3) {
         doc.addPage();
         y = margin;
       }
-      doc.text(line, margin, y);
-      y += lineHeight;
-    });
-    y += lineHeight;
-
-    doc.setDrawColor(...headerColor);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += lineHeight;
-
-    // Suggestions Section
-    doc.setTextColor(...sectionColor);
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Suggestions", margin, y);
-    y += lineHeight;
-
-    doc.setTextColor(...textColor);
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-
-    if (suggestions?.reasoning) {
-      doc.setTextColor(...headerColor);
-      doc.text("Reasoning:", margin, y);
+      doc.setTextColor(...sectionColor);
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Authorized by:", margin, y);
       y += lineHeight;
       doc.setTextColor(...textColor);
-      const reasoningLines = doc.splitTextToSize(suggestions.reasoning, pageWidth - margin * 2);
-      reasoningLines.forEach((line) => {
-        if (y > doc.internal.pageSize.height - margin * 2) {
-          doc.addPage();
-          y = margin;
-        }
-        doc.text(line, margin, y);
-        y += lineHeight;
-      });
+      doc.setFont("helvetica", "normal");
+      doc.text("Dr. MediNova (Dummy Signature)", margin, y);
       y += lineHeight;
-    }
+      doc.text("MediNova Healthcare", margin, y);
 
-    if (suggestions?.otcMedications?.length > 0) {
-      doc.setTextColor(...headerColor);
-      doc.text("OTC Medications:", margin, y);
-      y += lineHeight;
-      doc.setTextColor(...textColor);
-      suggestions.otcMedications.forEach((med, index) => {
-        const medLine = `${index + 1}. ${med.name} - Dosage: ${med.dosage} - Timing: ${med.timing} - Precautions: ${med.precautions} - Source: ${med.source}`;
-        const medLines = doc.splitTextToSize(medLine, pageWidth - margin * 2);
-        medLines.forEach((line) => {
-          if (y > doc.internal.pageSize.height - margin * 2) {
-            doc.addPage();
-            y = margin;
-          }
-          doc.text(line, margin, y);
-          y += lineHeight;
-        });
-      });
-      y += lineHeight;
-    }
+      // Footer on all pages
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setTextColor(...headerColor);
+        doc.setFontSize(10);
+        doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, doc.internal.pageSize.height - margin, { align: "center" });
+        doc.text("Confidential - For Patient Use Only", margin, doc.internal.pageSize.height - margin);
+      }
 
-    if (suggestions?.homeRemedies?.length > 0) {
-      doc.setTextColor(...headerColor);
-      doc.text("Home Remedies / Lifestyle:", margin, y);
-      y += lineHeight;
-      doc.setTextColor(...textColor);
-      suggestions.homeRemedies.forEach((remedy) => {
-        const remedyLines = doc.splitTextToSize(remedy, pageWidth - margin * 2);
-        remedyLines.forEach((line) => {
-          if (y > doc.internal.pageSize.height - margin * 2) {
-            doc.addPage();
-            y = margin;
-          }
-          doc.text(line, margin, y);
-          y += lineHeight;
-        });
-      });
-      y += lineHeight;
+      doc.save('medinova_report.pdf');
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      setServerError("Server Error: Unable to generate PDF report.");
+      setTimeout(() => setServerError(null), 5000);
     }
-
-    if (suggestions?.warnings?.length > 0) {
-      doc.setTextColor(...headerColor);
-      doc.text("Warnings / Avoid:", margin, y);
-      y += lineHeight;
-      doc.setTextColor(...textColor);
-      suggestions.warnings.forEach((warning) => {
-        const warningLines = doc.splitTextToSize(warning, pageWidth - margin * 2);
-        warningLines.forEach((line) => {
-          if (y > doc.internal.pageSize.height - margin * 2) {
-            doc.addPage();
-            y = margin;
-          }
-          doc.text(line, margin, y);
-          y += lineHeight;
-        });
-      });
-      y += lineHeight;
-    }
-
-    if (suggestions?.duration) {
-      doc.setTextColor(...headerColor);
-      doc.text("Duration Guidance:", margin, y);
-      y += lineHeight;
-      doc.setTextColor(...textColor);
-      const durationLines = doc.splitTextToSize(suggestions.duration, pageWidth - margin * 2);
-      durationLines.forEach((line) => {
-        if (y > doc.internal.pageSize.height - margin * 2) {
-          doc.addPage();
-          y = margin;
-        }
-        doc.text(line, margin, y);
-        y += lineHeight;
-      });
-      y += lineHeight;
-    }
-
-    if (suggestions?.disclaimer) {
-      doc.setTextColor(...headerColor);
-      doc.text("Doctor Disclaimer:", margin, y);
-      y += lineHeight;
-      doc.setTextColor(...textColor);
-      const disclaimerLines = doc.splitTextToSize(suggestions.disclaimer, pageWidth - margin * 2);
-      disclaimerLines.forEach((line) => {
-        if (y > doc.internal.pageSize.height - margin * 2) {
-          doc.addPage();
-          y = margin;
-        }
-        doc.text(line, margin, y);
-        y += lineHeight;
-      });
-      y += lineHeight * 2;
-    }
-
-    // Dummy Signature
-    if (y > doc.internal.pageSize.height - margin * 3) {
-      doc.addPage();
-      y = margin;
-    }
-    doc.setTextColor(...sectionColor);
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("Authorized by:", margin, y);
-    y += lineHeight;
-    doc.setTextColor(...textColor);
-    doc.setFont("helvetica", "normal");
-    doc.text("Dr. MediNova (Dummy Signature)", margin, y);
-    y += lineHeight;
-    doc.text("MediNova Healthcare", margin, y);
-
-    // Footer on all pages
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setTextColor(...headerColor);
-      doc.setFontSize(10);
-      doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, doc.internal.pageSize.height - margin, { align: "center" });
-      doc.text("Confidential - For Patient Use Only", margin, doc.internal.pageSize.height - margin);
-    }
-
-    doc.save('medinova_report.pdf');
   };
 
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
@@ -414,6 +935,17 @@ function MediBot() {
         <link rel="canonical" href="https://www.MediNova.com/medicine-suggestion" />
       </Helmet>
 
+      {/* Server Error Notification */}
+      <AnimatePresence>
+        {serverError && (
+          <ErrorNotification 
+            error={serverError} 
+            onClose={() => setServerError(null)} 
+            darkMode={darkMode} 
+          />
+        )}
+      </AnimatePresence>
+
       <div className={`max-w-5xl mx-auto p-6 sm:p-8 ${textColor}`}>
         <motion.h1 initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }} className="text-3xl sm:text-4xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500">
           Personalized Medicine Suggestions
@@ -426,7 +958,6 @@ function MediBot() {
         )}
 
         <motion.form onSubmit={handleSubmit} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className={`mb-10 space-y-8 p-6 sm:p-8 rounded-[40px] shadow-md ${bgColor} border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl`}>
-          {/* Form fields remain exactly the same as in your original code */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label htmlFor="name" className={`block text-sm font-medium ${textColor}`}>Name:</label>
@@ -572,7 +1103,6 @@ function MediBot() {
           </motion.button>
         </motion.form>
 
-        {/* Results section remains exactly the same */}
         <AnimatePresence>
           {suggestions && (
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} transition={{ duration: 0.6 }} className={`mt-10 p-6 sm:p-8 rounded-[40px] shadow-md ${bgColor} border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl`}>
@@ -634,12 +1164,12 @@ function MediBot() {
                 </ul>
               </div>
               <div className="flex items-center mb-8 gap-4 flex-wrap">
-                <motion.button onClick={handleSpeakText} disabled={isSpeaking} className={`bg-[#0A3D62] text-[#FDFBFB] px-5 py-3 rounded-xl font-medium hover:bg-[#08253A] hover:shadow-md transition-all duration-300 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] flex items-center gap-2`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                <motion.button onClick={() => handleSpeak(getFullText(suggestions))} disabled={isSpeaking} className={`bg-[#0A3D62] text-[#FDFBFB] px-5 py-3 rounded-xl font-medium hover:bg-[#08253A] hover:shadow-md transition-all duration-300 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] flex items-center gap-2`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
                   <Volume2 size={20} />
                   {isSpeaking ? "Speaking..." : "Listen"}
                 </motion.button>
                 {isSpeaking && (
-                  <motion.button onClick={handleCancelSpeakText} className={`bg-red-500 text-white px-5 py-3 rounded-xl font-medium hover:bg-red-600 hover:shadow-md transition-all duration-300 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-red-500`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                  <motion.button onClick={handleCancelSpeak} className={`bg-red-500 text-white px-5 py-3 rounded-xl font-medium hover:bg-red-600 hover:shadow-md transition-all duration-300 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-red-500`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
                     <X size={20} />
                     Cancel Listening
                   </motion.button>
@@ -726,6 +1256,44 @@ function MediBot() {
         </AnimatePresence>
       </div>
     </>
+  );
+}
+
+function MedicineCard({ medicine, title }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const { darkMode } = useContext(DarkModeContext);
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className={`p-6 rounded-[40px] shadow-md overflow-hidden relative border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl ${darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50"}`}>
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#0A3D62] to-blue-500 transform rotate-45 translate-x-12 -translate-y-12 opacity-10"></div>
+      <h4 className={`text-xl font-semibold mb-4 ${textColor}`}>{title}</h4>
+      <div className="flex flex-col sm:flex-row items-start gap-6 mb-4">
+        <motion.div whileHover={{ scale: 1.05 }} className="overflow-hidden rounded-[40px]">
+          <img src={medicine.image} alt={medicine?.name} loading="lazy" className="w-32 h-32 object-contain border border-gray-200 dark:border-[#FDFBFB]/50 shadow-md transition-transform duration-300" onError={(e) => e.target.src = "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"} />
+        </motion.div>
+        <div className="flex-1">
+          <h5 className={`text-lg font-semibold ${textColor}`}>{medicine?.name}</h5>
+          <p className={`text-sm ${textColor} opacity-80 mb-2`}>{medicine?.description}</p>
+          <p className={`text-sm ${textColor} mb-2`}><strong>Dosage:</strong> {medicine?.dosage}</p>
+          <p className={`text-sm ${textColor} mb-2`}><strong>Timing and Administration:</strong> {medicine?.timing}</p>
+          <p className={`text-sm ${textColor} mb-2`}><strong>Precautions:</strong> {medicine?.precautions}</p>
+          <p className={`text-sm ${textColor} mb-2`}><strong>Source:</strong> {medicine?.source}</p>
+        </div>
+      </div>
+      <motion.div initial="collapsed" animate={isExpanded ? "expanded" : "collapsed"} variants={{ expanded: { height: "auto", opacity: 1 }, collapsed: { height: 0, opacity: 0 } }} transition={{ duration: 0.3 }} className="overflow-hidden">
+        <h5 className={`font-semibold mt-2 ${textColor} text-sm`}>Side Effects:</h5>
+        <ul className={`list-disc list-inside ${textColor} text-sm`}>
+          {medicine?.sideEffects?.map((effect, index) => <li key={index}>{effect}</li>)}
+        </ul>
+        <h5 className={`font-semibold mt-2 ${textColor} text-sm`}>Brand Names:</h5>
+        <p className={`${textColor} text-sm`}>{medicine?.brandNames?.join(", ") || "N/A"}</p>
+      </motion.div>
+      <motion.button className={`${textColor} hover:text-[#0A3D62] dark:hover:text-[#FDFBFB] transition-all duration-300 flex items-center text-sm mt-4`} onClick={() => setIsExpanded(!isExpanded)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} aria-expanded={isExpanded}>
+        {isExpanded ? "Show Less" : "Show More"}
+        {isExpanded ? <ChevronUp className="ml-1" size={16} /> : <ChevronDown className="ml-1" size={16} />}
+      </motion.button>
+    </motion.div>
   );
 }
 
