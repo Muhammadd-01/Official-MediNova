@@ -39,7 +39,7 @@ export const AuthContext = createContext();
 export const CartContext = createContext();
 export const NotificationContext = createContext();
 
-// Global Notification Provider
+// ---------------------- 🔔 Notification Provider ----------------------
 function NotificationProvider({ children }) {
   const [notification, setNotification] = useState(null);
   const { darkMode } = useContext(DarkModeContext);
@@ -71,14 +71,20 @@ function NotificationProvider({ children }) {
             <div className="flex items-start">
               <AlertCircle
                 className={`w-6 h-6 mr-3 ${
-                  notification.type === "error" ? "text-red-500" : "text-green-500"
+                  notification.type === "error"
+                    ? "text-red-500"
+                    : "text-green-500"
                 }`}
               />
               <div className="flex-1">
                 <h3 className={`text-lg font-bold ${textColor}`}>
                   {notification.type === "error" ? "⚠️ Error" : "✅ Success"}
                 </h3>
-                <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"} mt-1`}>
+                <p
+                  className={`text-sm ${
+                    darkMode ? "text-gray-300" : "text-gray-600"
+                  } mt-1`}
+                >
                   {notification.message}
                 </p>
               </div>
@@ -90,7 +96,9 @@ function NotificationProvider({ children }) {
               >
                 <X
                   className={`w-5 h-5 ${
-                    notification.type === "error" ? "text-red-500" : "text-green-500"
+                    notification.type === "error"
+                      ? "text-red-500"
+                      : "text-green-500"
                   }`}
                 />
               </motion.button>
@@ -102,7 +110,7 @@ function NotificationProvider({ children }) {
   );
 }
 
-// AuthProvider
+// ---------------------- 👤 Auth Provider ----------------------
 function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
@@ -139,7 +147,7 @@ function AuthProvider({ children }) {
   );
 }
 
-// CartProvider
+// ---------------------- 🛒 Cart Provider ----------------------
 export function CartProvider({ children }) {
   const { user, isAuthenticated } = useContext(AuthContext) || {};
   const { showNotification } = useContext(NotificationContext) || {};
@@ -164,7 +172,8 @@ export function CartProvider({ children }) {
       setCartItems(backendItems);
     } catch (error) {
       console.error("Failed to fetch cart:", error);
-      showNotification && showNotification("Failed to load cart items", "error");
+      showNotification &&
+        showNotification("Failed to load cart items", "error");
     }
   };
 
@@ -175,7 +184,10 @@ export function CartProvider({ children }) {
   const addToCart = (item) => {
     setCartItems((prev) => {
       const existing = prev.find((i) => i.id === item.id);
-      if (existing) return prev.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i));
+      if (existing)
+        return prev.map((i) =>
+          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+        );
       else return [...prev, { ...item, quantity: 1 }];
     });
   };
@@ -185,30 +197,50 @@ export function CartProvider({ children }) {
   };
 
   const totalItems = cartItems.reduce((sum, i) => sum + i.quantity, 0);
-  const totalPrice = cartItems.reduce((sum, i) => sum + (i.price || 0) * i.quantity, 0);
+  const totalPrice = cartItems.reduce(
+    (sum, i) => sum + (i.price || 0) * i.quantity,
+    0
+  );
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, totalItems, totalPrice }}>
+    <CartContext.Provider
+      value={{ cartItems, addToCart, removeFromCart, totalItems, totalPrice }}
+    >
       {children}
     </CartContext.Provider>
   );
 }
 
-// ProtectedRoute
+// ---------------------- 🔒 Protected Route ----------------------
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
   const { showNotification } = useContext(NotificationContext);
 
   if (!token) {
-    showNotification && showNotification("Please login or register first to continue.", "error");
+    showNotification &&
+      showNotification("Please login or register first to continue.", "error");
     return <Navigate to="/register" replace />;
   }
   return children;
 }
 
+// ---------------------- 🌗 App Component ----------------------
 function App() {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    // ✅ Load theme immediately (avoids flicker)
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("darkMode");
+      if (saved === "true") {
+        document.documentElement.classList.add("dark");
+        return true;
+      }
+    }
+    return false;
+  });
+
+  // ✅ Persist changes
   useEffect(() => {
+    localStorage.setItem("darkMode", darkMode);
     if (darkMode) document.documentElement.classList.add("dark");
     else document.documentElement.classList.remove("dark");
   }, [darkMode]);
@@ -229,23 +261,107 @@ function App() {
 
                       <main className="flex-grow container mx-auto px-4 py-8">
                         <Routes>
-                          {/* Public Routes */}
+                          {/* Public */}
                           <Route path="/login" element={<Login />} />
                           <Route path="/register" element={<Register />} />
 
-                          {/* Protected Routes */}
-                          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-                          <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
-                          <Route path="/medibot" element={<ProtectedRoute><MediBot /></ProtectedRoute>} />
-                          <Route path="/consultation" element={<ProtectedRoute><Consultation /></ProtectedRoute>} />
-                          <Route path="/feedback" element={<ProtectedRoute><Feedback /></ProtectedRoute>} />
-                          <Route path="/contact" element={<ProtectedRoute><Contact /></ProtectedRoute>} />
-                          <Route path="/labs" element={<ProtectedRoute><Labs /></ProtectedRoute>} />
-                          <Route path="/articles" element={<ProtectedRoute><Articles /></ProtectedRoute>} />
-                          <Route path="/pharmacy" element={<ProtectedRoute><Pharmacy /></ProtectedRoute>} />
-                          <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
-                          <Route path="/emergency" element={<ProtectedRoute><Emergency /></ProtectedRoute>} />
-                          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                          {/* Protected */}
+                          <Route
+                            path="/"
+                            element={
+                              <ProtectedRoute>
+                                <Home />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/about"
+                            element={
+                              <ProtectedRoute>
+                                <About />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/medibot"
+                            element={
+                              <ProtectedRoute>
+                                <MediBot />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/consultation"
+                            element={
+                              <ProtectedRoute>
+                                <Consultation />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/feedback"
+                            element={
+                              <ProtectedRoute>
+                                <Feedback />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/contact"
+                            element={
+                              <ProtectedRoute>
+                                <Contact />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/labs"
+                            element={
+                              <ProtectedRoute>
+                                <Labs />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/articles"
+                            element={
+                              <ProtectedRoute>
+                                <Articles />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/pharmacy"
+                            element={
+                              <ProtectedRoute>
+                                <Pharmacy />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/news"
+                            element={
+                              <ProtectedRoute>
+                                <News />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/emergency"
+                            element={
+                              <ProtectedRoute>
+                                <Emergency />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/profile"
+                            element={
+                              <ProtectedRoute>
+                                <Profile />
+                              </ProtectedRoute>
+                            }
+                          />
                         </Routes>
                       </main>
 
