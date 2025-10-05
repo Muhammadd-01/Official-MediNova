@@ -12,7 +12,7 @@ import contactRoutes from "./routes/contactRoutes.js";
 import profileRoutes from "./routes/profile.js";
 import geminiRoute from "./gemini.js";
 import medibotRoute from "./routes/medibot.js"; // ✅ Added AI route
-
+import donationRoutes from "./routes/donationRoutes.js";
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -49,6 +49,8 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/medibot", medibotRoute); // ✅ Integrated AI route
+app.use("/api/donation-qr", donationRoutes);
+
 
 // ✅ Global Error Handler (optional, clean fallback)
 app.use((err, req, res, next) => {
