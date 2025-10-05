@@ -438,7 +438,7 @@ function Consultation() {
         )}
       </AnimatePresence>
 
-      <Footer />
+     
     </>
   );
 }
