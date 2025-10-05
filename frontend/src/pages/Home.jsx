@@ -77,7 +77,7 @@ function Home() {
                   "https://images.unsplash.com/photo-1585435557343-3b092031a831?auto=format&fit=crop&w=800&q=80",
                 description:
                   "Receive AI-assisted, guideline-based medicine suggestions — reviewed by certified pharmacists.",
-                link: "/medicine-suggestion",
+                link: "/medibot",
               },
               {
                 title: "Expert Consultations",
