@@ -59,7 +59,7 @@ const nurses = [
 
 // Related Services
 const relatedServices = [
-  { to: "/medicine-suggestion", text: "Get personalized medicine suggestions", icon: "💊" },
+  { to: "/medibot", text: "Get personalized medicine suggestions", icon: "💊" },
   { to: "/articles", text: "Read our health articles", icon: "📰" },
   { to: "/pharmacy", text: "Explore our pharmacy services", icon: "🏥" },
 ];

@@ -932,7 +932,7 @@ Rules:
       <Helmet>
         <title>Medicine Suggestions - MediNova</title>
         <meta name="description" content="Receive personalized, safe, and FDA-informed OTC medication suggestions based on your symptoms." />
-        <link rel="canonical" href="https://www.MediNova.com/medicine-suggestion" />
+        <link rel="canonical" href="https://www.MediNova.com/medibot" />
       </Helmet>
 
       {/* Server Error Notification */}
