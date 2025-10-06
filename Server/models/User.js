@@ -12,7 +12,14 @@ const userSchema = new mongoose.Schema(
     gender: { type: String },
     country: { type: String },
 
-    // New profile fields
+    // ✅ Add role field here
+    role: {
+      type: String,
+      enum: ["user", "doctor", "admin", "superadmin"],
+      default: "user",
+    },
+
+    // Profile fields
     profilePic: { type: String }, // store image URL/path
     dob: { type: Date },          // date of birth
     bloodGroup: { type: String },
