@@ -13,6 +13,9 @@ import profileRoutes from "./routes/profile.js";
 import geminiRoute from "./gemini.js";
 import medibotRoute from "./routes/medibot.js"; // ✅ Added AI route
 import donationRoutes from "./routes/donationRoutes.js";
+import chatbotRoutes from "./routes/chatbotRoutes.js";
+
+
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -43,14 +46,14 @@ app.get("/", (req, res) => {
 
 // ✅ App Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/chat", geminiRoute);
+// app.use("/api/chat", geminiRoute);
 app.use("/api/cart", cartRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/medibot", medibotRoute); // ✅ Integrated AI route
 app.use("/api/donation-qr", donationRoutes);
-
+app.use("/api/chatbot", chatbotRoutes);
 
 // ✅ Global Error Handler (optional, clean fallback)
 app.use((err, req, res, next) => {

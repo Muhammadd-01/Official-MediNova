@@ -11,7 +11,7 @@ function Chatbot() {
     if (saved.length === 0) {
       return [
         {
-          text: "Assalamu alaikum! Welcome to MediNova, your online hospital. Ask about our AI medicine form, consultations, pharmacy, or health tips. Remember, ultimate healing is from Allah (Quran 26:80). How can I help?",
+          text: "Assalamu alaikum! 🌿 Welcome to MediNova — your online hospital. You can ask about our AI medicine form, consultations, pharmacy, or general health advice. Remember: *Ultimate healing is from Allah (Quran 26:80)*. How can I assist you today?",
           sender: "bot",
         },
       ];
@@ -29,20 +29,20 @@ function Chatbot() {
   const { darkMode } = useContext(DarkModeContext);
   const [isLoading, setIsLoading] = useState(false);
 
-  // MediNova context (kept same as your original)
+  // Context prompt for AI
   const mediNovaContext = `
-    MediNova is a comprehensive online hospital platform. Core features:
-    - AI Form: Users input symptoms, age, gender, allergies; AI suggests primary/alternative OTC medicines with dosages, precautions, and pharmacy sources (e.g., CVS, Walgreens) using FDA/open-source APIs.
-    - Online Consultations: Video/audio calls with doctors for diagnoses and prescriptions.
-    - Integrated Pharmacy: In-app ordering, delivery tracking, and payment (COD, card, bank).
-    - Additional: Doctor search, health tips/articles, user dashboard for history, labs/reports, telemedicine.
-    For queries:
-    - App features: Provide step-by-step guides.
-    - Medical/symptoms: Give general advice, direct to AI Form/consultations, include disclaimer. Reference Islamic tawakkul (e.g., Quran 26:80).
-    - Keep responses concise, empathetic, and action-oriented. If unclear, ask for details.
+    You are MediNova AI, a compassionate medical assistant.
+    Platform overview:
+    - AI Form: Suggests medicines based on symptoms, age, gender, allergies.
+    - Consultations: Lets users book video/audio calls with doctors.
+    - Pharmacy: Allows medicine ordering and tracking.
+    Rules:
+    - Be clear, respectful, and concise.
+    - For any medical issues, include disclaimer: "Not medical advice. Please consult a doctor."
+    - Use empathetic tone with Islamic reflection where suitable.
   `;
 
-  // Animation variants for toggle icon
+  // Animation variants for icon pulse
   const chatIconVariants = {
     initial: { scale: 1, rotate: 0 },
     pulse: {
@@ -52,13 +52,13 @@ function Chatbot() {
     },
   };
 
-  // Persist messages and scroll
+  // Persist chat + auto scroll
   useEffect(() => {
     localStorage.setItem("mediNovaChat", JSON.stringify(messages));
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Reset toggle button pulse animation
+  // Reset icon pulse
   useEffect(() => {
     if (isPulse) {
       const timer = setTimeout(() => setIsPulse(false), 600);
@@ -66,11 +66,7 @@ function Chatbot() {
     }
   }, [isPulse]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // Quick reply handler
+  // Handle quick replies
   const handleQuickReply = (action) => {
     let query = "";
     switch (action) {
@@ -81,35 +77,26 @@ function Chatbot() {
         query = "How do I book an online consultation?";
         break;
       case "pharmacy":
-        query = "Tell me about the pharmacy feature and how to order meds.";
+        query = "Tell me about the pharmacy and ordering process.";
         break;
       default:
-        query = "What are MediNova's main features?";
+        query = "What are MediNova’s main features?";
     }
     handleSubmit({ preventDefault: () => {} }, query);
   };
 
-  // Handle form submission → now talks to backend instead of Gemini SDK directly
+  // Handle user input submission
   const handleSubmit = async (e, customInput = null) => {
     e?.preventDefault();
-    const userInput = customInput || input;
-    if (!userInput?.trim() || userInput.length > 500) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          text: "Please enter a valid message (1-500 characters).",
-          sender: "bot",
-        },
-      ]);
-      return;
-    }
+    const userInput = customInput || input.trim();
+    if (!userInput) return;
 
-    setMessages([...messages, { text: userInput, sender: "user" }]);
+    setMessages((prev) => [...prev, { text: userInput, sender: "user" }]);
     setInput("");
     setIsLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/chat", {
+      const res = await fetch("http://localhost:4000/api/chatbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -118,20 +105,23 @@ function Chatbot() {
       });
 
       const data = await res.json();
-      let text = data.reply || "⚠️ No response. Please try again.";
+      let reply =
+        data.reply ||
+        "⚠️ The AI didn't respond. Please try again or rephrase your question.";
 
+      // Add disclaimer for medical-related queries
       if (userInput.toLowerCase().match(/symptom|pain|ill|sick|medicine|drug/)) {
-        text +=
-          "\n\n**Important**: This is not medical advice. Use our AI Form for personalized suggestions or book a consultation. Consult a doctor for serious issues.";
+        reply +=
+          "\n\n⚕️ *Note:* This is not medical advice. Use our AI Form or consult a certified doctor for proper diagnosis.";
       }
 
-      setMessages((prev) => [...prev, { text, sender: "bot" }]);
-    } catch (error) {
-      console.error("Frontend Error:", error);
+      setMessages((prev) => [...prev, { text: reply, sender: "bot" }]);
+    } catch (err) {
+      console.error("Chatbot Frontend Error:", err);
       setMessages((prev) => [
         ...prev,
         {
-          text: "Apologies—connection issue. Try again or email support@medinova.com. May Allah ease your matters.",
+          text: "🚨 Connection issue. Please retry later or contact support@medinova.com. May Allah ease your matters 🤍",
           sender: "bot",
         },
       ]);
@@ -140,22 +130,19 @@ function Chatbot() {
     setIsLoading(false);
   };
 
-  // Clear chat with custom alert
-  const clearChat = () => {
-    setShowAlert(true);
-  };
-
+  // Clear chat alert logic
+  const clearChat = () => setShowAlert(true);
   const confirmClearChat = () => {
     setMessages([
       {
-        text: "Chat reset. Ready to help with MediNova—ask away!",
+        text: "Chat reset. Ready to assist you with MediNova again! 🌙",
         sender: "bot",
       },
     ]);
     setShowAlert(false);
   };
 
-  // Styles
+  // Theming
   const baseGlass = darkMode
     ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB]"
     : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62]";
@@ -165,7 +152,7 @@ function Chatbot() {
 
   return (
     <>
-      {/* Custom Alert */}
+      {/* Alert */}
       <AnimatePresence>
         {showAlert && (
           <motion.div
@@ -180,9 +167,7 @@ function Chatbot() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={confirmClearChat}
-                className={`px-3 py-1 rounded-full text-sm ${baseGlass} ${hoverGlass} ${
-                  darkMode ? "bg-[#0A3D62] text-[#FDFBFB]" : "bg-[#0A3D62] text-[#0A3D62]"
-                }`}
+                className={`px-3 py-1 rounded-full text-sm ${baseGlass} ${hoverGlass}`}
               >
                 Yes, Clear
               </motion.button>
@@ -201,7 +186,7 @@ function Chatbot() {
 
       {/* Toggle Button */}
       <motion.button
-        className={`fixed bottom-4 right-4 p-4 rounded-full backdrop-blur-2xl shadow-lg z-50 flex items-center justify-center ${baseGlass} ${hoverGlass} transition-all duration-500`}
+        className={`fixed bottom-4 right-4 p-4 rounded-full backdrop-blur-2xl shadow-lg z-50 flex items-center justify-center ${baseGlass} ${hoverGlass}`}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         animate={isPulse ? "pulse" : "initial"}
@@ -222,37 +207,55 @@ function Chatbot() {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className={`fixed bottom-20 right-4 w-80 md:w-96 h-[500px] rounded-[40px] backdrop-blur-2xl ${baseGlass} shadow-xl z-50 flex flex-col overflow-hidden transition-all duration-500`}
+            className={`fixed bottom-20 right-4 w-80 md:w-96 h-[500px] rounded-[40px] backdrop-blur-2xl ${baseGlass} shadow-xl z-50 flex flex-col overflow-hidden`}
           >
             {/* Header */}
-            <div className={`p-4 text-lg font-semibold rounded-t-[40px] flex justify-between items-center ${hoverGlass}`}>
+            <div
+              className={`p-4 text-lg font-semibold rounded-t-[40px] flex justify-between items-center ${hoverGlass}`}
+            >
               <span className="flex items-center gap-2">
                 <Bot size={20} /> MediNova AI Assistant
               </span>
-              <button onClick={clearChat} className={`p-2 rounded-full ${hoverGlass}`} title="Clear Chat" aria-label="Clear Chat">
+              <button
+                onClick={clearChat}
+                className={`p-2 rounded-full ${hoverGlass}`}
+                title="Clear Chat"
+              >
                 <Trash2 size={20} />
               </button>
             </div>
 
             {/* Messages */}
             <div className="flex-grow overflow-y-auto p-4 space-y-2">
-              {messages.map((message, idx) => (
+              {messages.map((m, i) => (
                 <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, x: message.sender === "user" ? 40 : -40 }}
+                  key={i}
+                  initial={{ opacity: 0, x: m.sender === "user" ? 40 : -40 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: idx * 0.05 }}
-                  className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+                  transition={{ duration: 0.4 }}
+                  className={`flex ${
+                    m.sender === "user" ? "justify-end" : "justify-start"
+                  }`}
                 >
-                  <span className={`inline-block p-3 rounded-3xl ${baseGlass} ${hoverGlass} max-w-[75%] break-words whitespace-pre-wrap`}>
-                    {message.text}
+                  <span
+                    className={`inline-block p-3 rounded-3xl ${baseGlass} ${hoverGlass} max-w-[75%] whitespace-pre-wrap`}
+                  >
+                    {m.text}
                   </span>
                 </motion.div>
               ))}
               {isLoading && (
-                <motion.div initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} className="flex justify-start">
-                  <span className={`inline-block p-3 rounded-3xl ${baseGlass} ${hoverGlass}`}>
-                    <span className="animate-pulse flex items-center gap-1"><Bot size={16} /> Generating response...</span>
+                <motion.div
+                  initial={{ opacity: 0, x: -40 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex justify-start"
+                >
+                  <span
+                    className={`inline-block p-3 rounded-3xl ${baseGlass} ${hoverGlass}`}
+                  >
+                    <span className="animate-pulse flex items-center gap-1">
+                      <Bot size={16} /> Generating response...
+                    </span>
                   </span>
                 </motion.div>
               )}
@@ -264,34 +267,38 @@ function Chatbot() {
               <div className="p-4 border-t border-white/20 bg-white/10">
                 <p className="text-xs mb-2 opacity-70">Quick actions:</p>
                 <div className="flex flex-wrap gap-2">
-                  {quickReplies.map((reply, idx) => (
+                  {quickReplies.map((r, i) => (
                     <motion.button
-                      key={idx}
-                      className={`px-3 py-1 rounded-full text-xs ${baseGlass} ${hoverGlass} transition-all`}
+                      key={i}
+                      className={`px-3 py-1 rounded-full text-xs ${baseGlass} ${hoverGlass}`}
                       whileHover={{ scale: 1.05 }}
-                      onClick={() => handleQuickReply(reply.action)}
+                      onClick={() => handleQuickReply(r.action)}
                     >
-                      {reply.text}
+                      {r.text}
                     </motion.button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Input Form */}
-            <form onSubmit={(e) => handleSubmit(e)} className={`p-4 flex border-t border-white/20 ${hoverGlass}`}>
+            {/* Input */}
+            <form
+              onSubmit={(e) => handleSubmit(e)}
+              className={`p-4 flex border-t border-white/20 ${hoverGlass}`}
+            >
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Describe your symptoms or ask about MediNova..."
+                placeholder="Ask about health, AI form, or pharmacy..."
                 className={`flex-grow px-3 py-2 rounded-l-2xl ${baseGlass} focus:outline-none resize-none h-10 max-h-20 overflow-y-auto`}
-                rows={1}
                 disabled={isLoading}
-                aria-label="Chat input"
+                rows={1}
               />
               <button
                 type="submit"
-                className={`px-4 py-2 rounded-r-2xl ${hoverGlass} ${darkMode ? "bg-cyan-500 text-white" : "bg-[#0A3D62] text-white"} disabled:opacity-50`}
+                className={`px-4 py-2 rounded-r-2xl ${hoverGlass} ${
+                  darkMode ? "bg-cyan-500 text-white" : "bg-[#0A3D62] text-white"
+                } disabled:opacity-50`}
                 disabled={isLoading || !input.trim()}
               >
                 <Send size={20} />
