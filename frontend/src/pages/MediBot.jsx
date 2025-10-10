@@ -3,10 +3,10 @@
 import React, { useState, useContext, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, ChevronDown, X, Search, Download } from "lucide-react";
+import { AlertCircle, ChevronDown, X, Search, Download, Volume2 } from "lucide-react";
 import jsPDF from "jspdf";
-import * as pdfParse from "pdf-parse"; // Your fix for ESM compatibility
-import { DarkModeContext } from "../App"; // Adjust path as needed
+import * as pdfParse from "pdf-parse";
+import { DarkModeContext } from "../App";
 
 const NLM_SYMPTOM_API = "https://clinicaltables.nlm.nih.gov/api/hpo/v3/search";
 const CONSULTATION_LINK = "Consultation Page";
@@ -77,6 +77,7 @@ function MediBot() {
   const [serverError, setServerError] = useState(null);
   const [symptomSearch, setSymptomSearch] = useState("");
   const [symptomSuggestions, setSymptomSuggestions] = useState([]);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
   const bgColor = darkMode ? "bg-[#0A2A43]" : "bg-gradient-to-br from-white to-gray-50";
@@ -161,6 +162,98 @@ function MediBot() {
       setServerError("Failed to parse PDF.");
       setTimeout(() => setServerError(null), 5000);
     }
+  };
+
+  // Clean text for speech: Remove symbols, emojis, keep English text
+  const cleanTextForSpeech = (text) => {
+    return text
+      .replace(/[\uD800-\uDFFF]./g, "") // Remove emojis
+      .replace(/[^a-zA-Z0-9\s.,!?]/g, "") // Remove non-English symbols, keep basic punctuation
+      .replace(/\s+/g, " ") // Normalize spaces
+      .trim();
+  };
+
+  // Listen function with enhanced error handling
+  const handleListen = (text) => {
+    if ("speechSynthesis" in window) {
+      try {
+        window.speechSynthesis.cancel(); // Clear any existing speech
+        const utterance = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
+        utterance.lang = "en-US";
+        utterance.volume = 1;
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        utterance.onstart = () => {
+          console.log("Speech started");
+          setIsSpeaking(true);
+        };
+        utterance.onend = () => {
+          console.log("Speech ended");
+          setIsSpeaking(false);
+        };
+        utterance.onerror = (event) => {
+          console.error("Speech error:", event.error);
+          setIsSpeaking(false);
+          setErrorMessage("Speech synthesis failed. Please try again or check browser settings.");
+          setTimeout(() => setErrorMessage(""), 5000);
+        };
+        window.speechSynthesis.speak(utterance);
+      } catch (error) {
+        console.error("Speech synthesis setup error:", error);
+        setErrorMessage("Failed to initialize text-to-speech. Please try again.");
+        setTimeout(() => setErrorMessage(""), 5000);
+      }
+    } else {
+      console.error("SpeechSynthesis not supported");
+      setErrorMessage("Text-to-speech is not supported in this browser. Try Chrome or Firefox.");
+      setTimeout(() => setErrorMessage(""), 5000);
+    }
+  };
+
+  // Stop listening function
+  const handleStopListen = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+  };
+
+  // Compile full text for speech
+  const getFullText = () => {
+    let text = "MediBot Health Report\n\n";
+    text += "Patient Information:\n";
+    text += `Name: ${formData.name}\n`;
+    text += `Age: ${formData.age || "Not provided"}\n`;
+    text += `Gender: ${formData.gender || "Not provided"}\n`;
+    if (formData.gender === "female") {
+      text += `Pregnancy: ${formData.isPregnant ? "Pregnant" : "Not Pregnant"}\n`;
+      if (formData.isPregnant) {
+        text += `Breastfeeding: ${formData.isBreastfeeding ? "Yes" : "No"}\n`;
+      }
+    }
+    text += `Weight: ${formData.weight ? `${formData.weight} kg` : "Not provided"}\n`;
+    text += `Height: ${formData.height ? `${formData.height} cm` : "Not provided"}\n`;
+    text += `Blood Group: ${formData.bloodGroup || "Not provided"}\n`;
+    text += `Symptoms: ${formData.symptoms.join(", ") || "None"}\n`;
+    text += `Allergies: ${formData.allergies.join(", ") || "None"}\n`;
+    text += `Medical History: ${formData.medicalHistory || "None"}\n`;
+    text += `Current Medications: ${formData.currentMedications || "None"}\n\n`;
+
+    text += "Suggestions:\n";
+    if (suggestions.reasoning) text += `Reasoning: ${suggestions.reasoning}\n\n`;
+    if (suggestions.otcMedications?.length > 0) {
+      text += "OTC Medications:\n";
+      suggestions.otcMedications.slice(0, 2).forEach((med, i) => {
+        text += `${i + 1}. Name: ${med.name || "Not specified"}\n`;
+        text += `   Dosage: ${med.dosage || "Not specified"}\n`;
+        text += `   Timing: ${med.timing || "Not specified"}\n`;
+        text += `   Precautions: ${med.precautions || "Not specified"}\n`;
+        text += `   Source: ${med.source || "Available at pharmacies"}\n\n`;
+      });
+    }
+    if (suggestions.homeRemedies?.length > 0) text += "Home Remedies:\n" + suggestions.homeRemedies.map((r, i) => `${i + 1}. ${r}`).join("\n") + "\n\n";
+    if (suggestions.warnings?.length > 0) text += "Warnings:\n" + suggestions.warnings.map((w, i) => `${i + 1}. ${w}`).join("\n") + "\n\n";
+    if (suggestions.duration) text += `Duration: ${suggestions.duration}\n\n`;
+    if (suggestions.disclaimer) text += `Disclaimer: ${suggestions.disclaimer}`;
+    return text;
   };
 
   // Enhanced parser with flexible section detection and robust medication parsing
@@ -316,6 +409,7 @@ function MediBot() {
     const margin = 15;
     let y = margin;
 
+    // Header
     doc.setFontSize(18).setTextColor(10, 61, 98).setFont("helvetica", "bold");
     doc.text("MediBot Health Report", pageWidth / 2, y, { align: "center" });
     y += 10;
@@ -324,6 +418,7 @@ function MediBot() {
     doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - margin, y, { align: "right" });
     y += 10;
 
+    // Patient Information
     doc.setFontSize(14).setTextColor(8, 37, 58).text("Patient Information", margin, y);
     y += 7;
     const patientLines = [
@@ -345,31 +440,38 @@ function MediBot() {
         doc.addPage();
         y = margin;
       }
-      doc.text(line, margin, y);
-      y += 7;
+      const lines = doc.splitTextToSize(line, pageWidth - margin * 2);
+      lines.forEach((l) => {
+        doc.text(l, margin, y);
+        y += 7;
+      });
     });
     y += 7;
 
     doc.setDrawColor(10, 61, 98).line(margin, y, pageWidth - margin, y);
     y += 7;
 
+    // Suggestions
     doc.setFontSize(14).setTextColor(8, 37, 58).text("Suggestions", margin, y);
     y += 7;
 
     const sections = [
-      { title: "Reasoning", key: "reasoning" },
+      { title: "Reasoning", key: "reasoning", format: (item) => item },
       {
         title: "OTC Medications",
         key: "otcMedications",
-        format: (item, i) =>
-          item.raw
-            ? item.raw
-            : `${i + 1}. ${item.name} - ${item.dosage} - ${item.timing} - ${item.precautions} - ${item.source}`,
+        format: (item, i) => [
+          `${i + 1}. ${item.name || "Not specified"}`,
+          `   Dosage: ${item.dosage || "Not specified"}`,
+          `   Timing: ${item.timing || "Not specified"}`,
+          `   Precautions: ${item.precautions || "Not specified"}`,
+          `   Source: ${item.source || "Available at pharmacies"}`,
+        ],
       },
-      { title: "Home Remedies & Lifestyle Suggestions", key: "homeRemedies" },
-      { title: "Warnings / What to Avoid", key: "warnings" },
-      { title: "How long to continue the treatment safely", key: "duration" },
-      { title: "Disclaimer", key: "disclaimer" },
+      { title: "Home Remedies & Lifestyle Suggestions", key: "homeRemedies", format: (item, i) => `${i + 1}. ${item}` },
+      { title: "Warnings / What to Avoid", key: "warnings", format: (item, i) => `${i + 1}. ${item}` },
+      { title: "How long to continue the treatment safely", key: "duration", format: (item) => item },
+      { title: "Disclaimer", key: "disclaimer", format: (item) => item },
     ];
 
     sections.forEach(({ title, key, format }) => {
@@ -378,21 +480,24 @@ function MediBot() {
         y += 7;
         const items = Array.isArray(suggestions[key]) ? suggestions[key] : [suggestions[key]];
         items.forEach((item, i) => {
-          const text = format ? format(item, i) : item;
-          const lines = doc.splitTextToSize(text, pageWidth - margin * 2);
-          lines.forEach((line) => {
-            if (y > doc.internal.pageSize.height - margin * 2) {
-              doc.addPage();
-              y = margin;
-            }
-            doc.text(line, margin, y);
-            y += 7;
+          const textLines = Array.isArray(format(item, i)) ? format(item, i) : [format(item, i)];
+          textLines.forEach((text) => {
+            const lines = doc.splitTextToSize(text, pageWidth - margin * 2);
+            lines.forEach((line) => {
+              if (y > doc.internal.pageSize.height - margin * 2) {
+                doc.addPage();
+                y = margin;
+              }
+              doc.text(line, margin, y);
+              y += 7;
+            });
           });
         });
         y += 7;
       }
     });
 
+    // Add page numbers
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i).setFontSize(10).setTextColor(10, 61, 98);
@@ -712,7 +817,7 @@ function MediBot() {
           <motion.button
             type="submit"
             disabled={loading}
-            className={`w-full p-3 bg-[#0A3D62] text-[#FDFBFB] rounded-xl hover:bg-[#08253A] disabled:opacity-50`}
+            className={`w-full p-3 bg-[#0A3D62] text-[#FDFBFB] rounded-xl hover:bg-[#08253A] disabled:opacity-50 transition-all duration-300 backdrop-filter backdrop-blur-sm bg-opacity-70 border border-white/20`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -726,8 +831,44 @@ function MediBot() {
             animate={{ opacity: 1 }}
             className={`mt-6 p-6 rounded-[20px] shadow-md ${bgColor} border border-gray-200 dark:border-gray-700`}
           >
-            <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500">
+            <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500 flex items-center justify-between">
               Suggestions for {formData.name}
+              <div className="flex gap-2">
+                <motion.button
+                  onClick={() => handleListen(getFullText())}
+                  disabled={isSpeaking}
+                  className={`p-2 rounded-xl flex items-center gap-2 disabled:opacity-50 transition-all duration-300 backdrop-filter backdrop-blur-sm bg-opacity-70 border border-white/20 ${
+                    darkMode ? "bg-[#0A2A43]/50 text-[#FDFBFB]" : "bg-white/50 text-[#0A3D62]"
+                  } hover:bg-opacity-90 hover:scale-105`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Volume2 size={18} />
+                  {isSpeaking ? "Speaking..." : "Listen"}
+                </motion.button>
+                {isSpeaking && (
+                  <motion.button
+                    onClick={handleStopListen}
+                    className="p-2 bg-red-500/70 text-white rounded-xl hover:bg-red-600/90 flex items-center gap-2 transition-all duration-300 backdrop-filter backdrop-blur-sm bg-opacity-70 border border-white/20 hover:scale-105"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <X size={18} />
+                    Stop Listening
+                  </motion.button>
+                )}
+                <motion.button
+                  onClick={downloadReport}
+                  className={`p-2 rounded-xl flex items-center gap-2 transition-all duration-300 backdrop-filter backdrop-blur-sm bg-opacity-70 border border-white/20 ${
+                    darkMode ? "bg-[#0A2A43]/50 text-[#FDFBFB]" : "bg-white/50 text-[#0A3D62]"
+                  } hover:bg-opacity-90 hover:scale-105`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Download size={18} />
+                  Download Report
+                </motion.button>
+              </div>
             </h2>
             <div className="mb-6">
               <h3 className="text-lg font-semibold mb-2">Your Information:</h3>
@@ -756,15 +897,6 @@ function MediBot() {
                 </motion.p>
               ))}
             </div>
-            <motion.button
-              onClick={downloadReport}
-              className={`mb-6 p-2 bg-[#0A3D62] text-[#FDFBFB] rounded-xl hover:bg-[#08253A] flex items-center gap-2`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Download size={18} />
-              Download Report
-            </motion.button>
             {suggestions.reasoning && (
               <div className="mb-6">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -814,7 +946,7 @@ function MediBot() {
                     key={i}
                     className={`p-2 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} border border-gray-200 dark:border-[#FDFBFB]/50`}
                   >
-                    {remedy}
+                    {i + 1}. {remedy}
                   </p>
                 ))}
               </div>
@@ -830,7 +962,7 @@ function MediBot() {
                     key={i}
                     className="p-2 rounded-xl bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-700"
                   >
-                    {warning}
+                    {i + 1}. {warning}
                   </p>
                 ))}
               </div>
