@@ -15,7 +15,6 @@ const criticalSymptoms = [
 const NLM_SYMPTOM_API = "https://clinicaltables.nlm.nih.gov/api/hpo/v3/search";
 const RXNAV_ALLERGY_API = "https://rxnav.nlm.nih.gov/REST/approx.json";
 const OPENI_API_BASE = "https://openi.nlm.nih.gov/api/search";
-const fdaUrl = import.meta.env.VITE_FDA_API_URL || "https://api.fda.gov/drug/label.json";
 const CONSULTATION_LINK = "Consultation Page";
 
 const fallbackSymptoms = [
@@ -29,29 +28,6 @@ const fallbackAllergies = [
   "Tree nuts", "Shellfish", "Eggs", "Milk", "Soy", "Wheat", "Fish",
   "Pollen", "Dust mites", "Mold", "Pet dander",
 ];
-
-const fallbackMedications = {
-  "headache": [
-    { name: "Acetaminophen", dosage: "500mg every 4-6 hours", timing: "Take with water", precautions: "Avoid alcohol", source: "Available at CVS, Walgreens" },
-    { name: "Ibuprofen", dosage: "200mg every 4-6 hours", timing: "Take with food", precautions: "Avoid if allergic to NSAIDs", source: "Available at CVS, Walgreens" },
-  ],
-  "sore throat": [
-    { name: "Chloraseptic Spray", dosage: "Spray 5 times every 2 hours", timing: "Spray directly on throat", precautions: "Do not swallow", source: "Available at pharmacies" },
-    { name: "Acetaminophen", dosage: "500mg every 4-6 hours", timing: "Take with water", precautions: "Avoid alcohol", source: "Available at CVS, Walgreens" },
-  ],
-  "fever": [
-    { name: "Acetaminophen", dosage: "500mg every 4-6 hours", timing: "Take with water", precautions: "Avoid alcohol", source: "Available at CVS, Walgreens" },
-    { name: "Ibuprofen", dosage: "200mg every 4-6 hours", timing: "Take with food", precautions: "Avoid if allergic to NSAIDs", source: "Available at CVS, Walgreens" },
-  ],
-  "cough": [
-    { name: "Dextromethorphan", dosage: "10-20mg every 4 hours", timing: "Take with water", precautions: "Avoid with MAOIs", source: "Available at pharmacies" },
-    { name: "Guaifenesin", dosage: "200-400mg every 4 hours", timing: "Take with water", precautions: "Drink plenty of fluids", source: "Available at pharmacies" },
-  ],
-  "migraine": [
-    { name: "Ibuprofen", dosage: "400mg at onset", timing: "Take with food", precautions: "Avoid if allergic to NSAIDs", source: "Available at CVS, Walgreens" },
-    { name: "Acetaminophen", dosage: "1000mg at onset", timing: "Take with water", precautions: "Avoid alcohol", source: "Available at CVS, Walgreens" },
-  ],
-};
 
 const suggestionCache = new Map();
 
@@ -169,8 +145,6 @@ function MediBot() {
   const [isExtreme, setIsExtreme] = useState(false);
   const [serverError, setServerError] = useState(null);
 
-  const openRouterKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
   const symptomSearchRef = useRef(null);
   const allergySearchRef = useRef(null);
 
@@ -398,11 +372,6 @@ function MediBot() {
       setErrorMessage("Please provide your name to receive personalized suggestions, dear user.");
       return;
     }
-    if (!openRouterKey || !geminiKey) {
-      const apiError = "API key is missing. Please ensure VITE_OPENROUTER_API_KEY and VITE_GEMINI_API_KEY are set in your environment.";
-      setErrorMessage(apiError);
-      return;
-    }
     setErrorMessage("");
     setServerError(null);
     setLoading(true);
@@ -410,18 +379,6 @@ function MediBot() {
     setIsExtreme(false);
 
     try {
-      const symptomQuery = encodeURIComponent(formData.symptoms.map(s => {
-        const synonyms = {
-          "Headache": "headache pain",
-          "Sore throat": "pharyngitis throat pain",
-          "Fever": "pyrexia elevated temperature",
-          "Cough": "cough respiratory irritation",
-          "Migraine": "migraine headache",
-        };
-        return synonyms[s] || s;
-      }).join(" OR "));
-      if (!symptomQuery) throw new Error("No symptoms provided.");
-
       const hasCriticalSymptom = formData.symptoms.some((symptom) =>
         criticalSymptoms.includes(symptom)
       );
@@ -440,173 +397,38 @@ function MediBot() {
         return;
       }
 
-      let fdaInfo = [];
-      const maxRetries = 3;
-      let fdaSuccess = false;
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          const fdaFullUrl = `${fdaUrl}?search=indications_and_usage:(${symptomQuery})+openfda.route:ORAL&limit=10`;
-          const response = await fetch(fdaFullUrl, { signal: AbortSignal.timeout(5000) });
-          if (!response.ok) throw new Error(`FDA API error: ${response.status}`);
-          const fdaData = await response.json();
-          if (fdaData?.results?.length > 0) {
-            fdaInfo = fdaData.results.map((result) => ({
-              name: result.openfda?.brand_name?.[0] || result.openfda?.generic_name?.[0] || "Generic",
-              indications: result.indications_and_usage?.[0] || "No indications available",
-              dosage: result.dosage_and_administration?.[0] || "Follow standard guidelines",
-              warnings: result.warnings?.[0] || "No specific warnings available",
-              precautions: result.precautions?.[0] || "No precautions available",
-              contraindications: result.contraindications?.[0] || "No contraindications available",
-              adverse_reactions: result.adverse_reactions?.[0] || "No adverse reactions available",
-              how_supplied: result.how_supplied?.[0] || "No supply information available",
-              administration: result.dosage_and_administration?.[0] || "No administration details available",
-              image: "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-            }));
-            fdaSuccess = true;
-          }
-          break;
-        } catch (error) {
-          console.error(`FDA API attempt ${attempt} failed:`, error);
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
+      // Send data to backend
+      const response = await axios.post("http://localhost:4000/api/medibot", {
+        name: formData.name,
+        age: formData.age,
+        gender: formData.gender,
+        weight: formData.weight,
+        height: formData.height,
+        bloodGroup: formData.bloodGroup,
+        symptoms: formData.symptoms,
+        allergies: formData.allergies,
+        medicalHistory: formData.medicalHistory,
+        currentMedications: formData.currentMedications,
+        isPregnant,
+        isBreastfeeding,
+      });
+
+      const { reply } = response.data;
+
+      if (!reply) {
+        throw new Error("No response from backend.");
       }
 
-      let parsedSuggestions;
-      let usedFallback = false;
-      
-      if (!fdaSuccess) {
-        const applicableMeds = formData.symptoms
-          .filter((symptom) => fallbackMedications[symptom.toLowerCase()])
-          .flatMap((symptom) => fallbackMedications[symptom.toLowerCase()]);
-        
-        if (applicableMeds.length > 0) {
-          parsedSuggestions = {
-            reasoning: `Dear ${formData.name}, we couldn't find FDA data for your symptoms, but based on common medical practice, here are safe OTC options for your condition.`,
-            otcMedications: checkDrugInteractions(applicableMeds, formData.currentMedications, formData.allergies),
-            homeRemedies: ["Stay hydrated", "Rest adequately", "Maintain a balanced diet"],
-            warnings: ["Avoid if allergic to listed medications", "Check with a pharmacist if unsure"],
-            duration: "Use for up to 3 days; consult a doctor if symptoms persist.",
-            disclaimer: `Dear ${formData.name}, this is not medical advice. Please consult a doctor for proper diagnosis. Book a consultation here: ${CONSULTATION_LINK}`,
-          };
-          usedFallback = true;
-        } else {
-          // No fallback medicines available - show server error
-          throw new Error("No FDA data found and no fallback medications available for your symptoms.");
-        }
-      } else {
-        const patientInfo = `
-Patient Info:
-- Name: ${formData.name}
-- Age: ${formData.age}
-- Gender: ${formData.gender}
-- Weight: ${formData.weight} kg
-- Height: ${formData.height} cm
-- Blood Group: ${formData.bloodGroup}
-- Symptoms: ${formData.symptoms.join(", ") || "None"}
-- Allergies: ${formData.allergies.join(", ") || "None"}
-- Medical History: ${formData.medicalHistory || "None"}
-- Current Medications: ${formData.currentMedications || "None"}
-- Pregnancy Status: ${isPregnant ? "Pregnant" : "Not pregnant"}
-- Breastfeeding Status: ${isBreastfeeding ? "Breastfeeding" : "Not breastfeeding"}
+      const parsedSuggestions = parseAIResponse(reply);
 
-FDA Data:
-${JSON.stringify(fdaInfo, null, 2)}
-        `;
+      parsedSuggestions.otcMedications = sanitizeSuggestions(parsedSuggestions.otcMedications, formData.allergies);
+      parsedSuggestions.otcMedications = checkDrugInteractions(
+        parsedSuggestions.otcMedications,
+        formData.currentMedications,
+        formData.allergies
+      );
 
-        const systemPrompt = `
-You are an experienced, compassionate human doctor specializing in general medicine. Act like a real doctor: think step by step, analyze the patient's full profile (age, gender, weight, height, blood group, symptoms, allergies, history, current meds, pregnancy, breastfeeding), cross-reference with FDA data for accurate, safe OTC recommendations. Provide empathetic, personalized advice as if in a consultation. Suggest exactly one primary and one alternative OTC medication if possible, using FDA details for doses, timing, etc. NEVER suggest prescription drugs. Always emphasize consulting a professional.
-
-Use ALL FDA data to inform suggestions: extract and adapt indications, dosage, administration, warnings, precautions, contraindications, adverse reactions. Reason step-by-step based on patient profile and FDA/fallback data. Use simple, accessible language.
-
-If symptoms/allergies are rare or no matching data, respond with reasoning like 'Your symptoms seem uncommon; please see a doctor' and include link ${CONSULTATION_LINK} in disclaimer, with no meds.
-
-Strict format:
-✅ Reasoning (Step-by-step analysis of patient info, symptoms, FDA data, why suggestions fit. Empathetic tone.)
-✅ OTC Medications (Exactly 2: primary and alternative, with:
-- Name - Dosage - Timing and Administration - Precautions - Source)
-🏠 Home Remedies / Lifestyle (2-3 tailored tips)
-⚠️ Warnings / Avoid (Based on allergies, history, FDA)
-⏳ Duration Guidance (Based on FDA/standard)
-🚨 Doctor Disclaimer (Consult doctor; not advice)
-
-Rules:
-- Primary: First-line safe option; Alternative: Backup if primary unsuitable.
-- Ensure safety: e.g., no acetaminophen for liver issues, no ibuprofen in pregnancy, age <18 no aspirin.
-- Check interactions with current meds/allergies.
-- Empathetic, humble tone; address by name.
-- Base strictly on provided data; no inventions.
-        `;
-
-        // Run both models in parallel using Promise.all
-        const [openRouterResponse, geminiResponse] = await Promise.all([
-          fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${openRouterKey}`,
-              "Content-Type": "application/json",
-              "HTTP-Referer": "https://www.mednova.com",
-              "X-Title": "MediNova",
-            },
-            body: JSON.stringify({
-              model: "openai/gpt-4o-mini",
-              messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: patientInfo },
-              ],
-              max_tokens: 2000,
-              temperature: 0.7,
-            }),
-          }).then(res => {
-            if (!res.ok) throw new Error(`OpenRouter API error: ${res.status}`);
-            return res.json();
-          }),
-          fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiKey}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
-                    { text: systemPrompt + "\n\n" + patientInfo }
-                  ]
-                }
-              ]
-            }),
-          }).then(res => {
-            if (!res.ok) throw new Error(`Gemini API error: ${res.status}`);
-            return res.json();
-          })
-        ]);
-
-        let openRouterText = openRouterResponse?.choices?.[0]?.message?.content || "";
-        let geminiText = geminiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-        if (!openRouterText && !geminiText) throw new Error("No response received from either AI.");
-
-        // Parse both and combine
-        const parsedOpenRouter = openRouterText ? parseAIResponse(openRouterText) : { otcMedications: [], homeRemedies: [], warnings: [] };
-        const parsedGemini = geminiText ? parseAIResponse(geminiText) : { otcMedications: [], homeRemedies: [], warnings: [] };
-
-        parsedSuggestions = {
-          reasoning: [parsedOpenRouter.reasoning, parsedGemini.reasoning].filter(Boolean).join("\n\n") || "Combined analysis from AI models.",
-          otcMedications: [...parsedOpenRouter.otcMedications, ...parsedGemini.otcMedications],
-          homeRemedies: [...new Set([...parsedOpenRouter.homeRemedies, ...parsedGemini.homeRemedies])],
-          warnings: [...new Set([...parsedOpenRouter.warnings, ...parsedGemini.warnings])],
-          duration: parsedOpenRouter.duration || parsedGemini.duration || "Follow guidelines provided.",
-          disclaimer: parsedOpenRouter.disclaimer || parsedGemini.disclaimer || `Dear ${formData.name}, this is not medical advice. Please consult a doctor for proper diagnosis. Book a consultation here: ${CONSULTATION_LINK}`,
-        };
-
-        parsedSuggestions.otcMedications = sanitizeSuggestions(parsedSuggestions.otcMedications, formData.allergies);
-        parsedSuggestions.otcMedications = checkDrugInteractions(
-          parsedSuggestions.otcMedications,
-          formData.currentMedications,
-          formData.allergies
-        );
-      }
-
-      // Only fetch medicine images if we have medications to show
+      // Fetch medicine images if we have medications
       if (parsedSuggestions.otcMedications.length > 0) {
         for (let med of parsedSuggestions.otcMedications) {
           try {
@@ -619,7 +441,7 @@ Rules:
       }
 
       setSuggestions(parsedSuggestions);
-      
+
       // Check if we should show extreme warning
       if (parsedSuggestions.otcMedications.length === 0 || parsedSuggestions.reasoning.toLowerCase().includes("uncommon") || parsedSuggestions.reasoning.toLowerCase().includes("extreme") || parsedSuggestions.reasoning.toLowerCase().includes("rare")) {
         setIsExtreme(true);
@@ -629,13 +451,8 @@ Rules:
 
     } catch (error) {
       console.error("Error in handleSubmit:", error);
-      
-      // Only show server error if no fallback medicines were used
-      if (!suggestions || suggestions.otcMedications.length === 0) {
-        setServerError("Server Error: Unable to fetch medicine suggestions. Please try again later.");
-        setTimeout(() => setServerError(null), 5000);
-      }
-      
+      setServerError("Server Error: Unable to fetch medicine suggestions. Please try again later.");
+      setTimeout(() => setServerError(null), 5000);
       const errorMsg = `Dear ${formData.name}, an error occurred while fetching suggestions. Please try again or consult a doctor at ${CONSULTATION_LINK}.`;
       setErrorMessage(errorMsg);
     } finally {
