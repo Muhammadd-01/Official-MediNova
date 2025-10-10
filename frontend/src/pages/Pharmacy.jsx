@@ -209,6 +209,15 @@ function Pharmacy() {
       </Header>
 
       <div className={`min-h-screen pt-20 p-4 sm:p-6 ${textColor} max-w-7xl mx-auto`}>
+        {/* Coming Soon Heading with Looping Animation */}
+        <motion.h1
+          className={`text-6xl sm:text-7xl font-extrabold mb-12 text-center ${textColor} tracking-tight`}
+          animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          Coming Soon
+        </motion.h1>
+
         <motion.h1 className="text-3xl sm:text-4xl font-bold mb-6 text-center" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           Pharmacy
         </motion.h1>
@@ -296,12 +305,5 @@ function Pharmacy() {
     </>
   );
 }
-
-
-
-
-
-
-
 
 export default Pharmacy;

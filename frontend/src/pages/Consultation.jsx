@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useContext, useEffect, useRef, useCallback, useMemo } from "react";
@@ -37,6 +36,14 @@ L.Icon.Default.mergeOptions({
   iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
+
+// Expanded Dummy Doctors
+// const doctors = [
+//   { id: 1, name: "Dr. John Doe", specialization: "Cardiologist", availability: "Mon, Wed, Fri", phone: "+1 (555) 123-4567", gender: "male", experience: 12, image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&h=300&q=80" },
+//   { id: 2, name: "Dr. Ali Raza", specialization: "Dermatologist", availability: "Tue, Thu, Sat", phone: "+1 (555) 234-5678", gender: "male", experience: 8, image: "https://images.unsplash.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+//   iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+//   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+// }];
 
 // Expanded Dummy Doctors
 const doctors = [
@@ -267,6 +274,15 @@ function Consultation() {
       <Header />
 
       <div className="mx-auto px-4 sm:px-6 py-16">
+        {/* Coming Soon Heading with Looping Animation */}
+        <motion.h1
+          className={`text-6xl sm:text-7xl font-extrabold mb-12 text-center ${textColor} tracking-tight`}
+          animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          Coming Soon
+        </motion.h1>
+
         {/* Title */}
         <motion.h1 className={`text-4xl sm:text-5xl font-bold mb-12 text-center ${textColor}`}>
           Book a Consultation or Home Nurse
@@ -437,8 +453,6 @@ function Consultation() {
           </motion.div>
         )}
       </AnimatePresence>
-
-     
     </>
   );
 }

@@ -1159,6 +1159,15 @@ out body;`;
       </Helmet>
 
       <div className="mx-auto px-4 py-8 max-w-5xl">
+        {/* Coming Soon Heading with Looping Animation */}
+        <motion.h1
+          className="text-6xl sm:text-7xl font-extrabold mb-12 text-center text-[#0A3D62] dark:text-[#FDFBFB] tracking-tight"
+          animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          Coming Soon
+        </motion.h1>
+
         <motion.h1
           className="text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500"
           initial={{ opacity: 0, y: 20 }}
