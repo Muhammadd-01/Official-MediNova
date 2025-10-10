@@ -1,114 +1,54 @@
 "use client";
 
-import { useState, useContext, useEffect, useRef } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, ChevronDown, ChevronUp, Pill, Clock, Volume2, X, Search, Download } from "lucide-react";
-import { AuthContext, DarkModeContext } from "../App";
-import axios from "axios";
-import jsPDF from 'jspdf';
-
-const criticalSymptoms = [
-  "Can't breathe well", "Chest hurts", "Feeling dizzy", "Throwing up",
-];
+import { AlertCircle, ChevronDown, X, Search, Download } from "lucide-react";
+import jsPDF from "jspdf";
+import * as pdfParse from "pdf-parse"; // Your fix for ESM compatibility
+import { DarkModeContext } from "../App"; // Adjust path as needed
 
 const NLM_SYMPTOM_API = "https://clinicaltables.nlm.nih.gov/api/hpo/v3/search";
-const RXNAV_ALLERGY_API = "https://rxnav.nlm.nih.gov/REST/approx.json";
-const OPENI_API_BASE = "https://openi.nlm.nih.gov/api/search";
 const CONSULTATION_LINK = "Consultation Page";
-
-const fallbackSymptoms = [
-  "Fever", "Cough", "Headache", "Sore throat", "Fatigue", "Nausea", "Dizziness",
-  "Shortness of breath", "Muscle pain", "Loss of taste or smell", "Runny nose",
-  "Body aches", "Chills", "Diarrhea", "Vomiting", "Chest pain", "Sneezing", "Congestion",
-];
-
-const fallbackAllergies = [
-  "Penicillin", "Aspirin", "Ibuprofen", "Sulfa drugs", "Latex", "Peanuts",
-  "Tree nuts", "Shellfish", "Eggs", "Milk", "Soy", "Wheat", "Fish",
-  "Pollen", "Dust mites", "Mold", "Pet dander",
-];
-
 const suggestionCache = new Map();
 
-const simplifyMedicalTerms = (term) => {
-  const termMap = {
-    "Dyspnea": "Shortness of breath",
+// Simplify medical terms
+const simplifyMedicalTerms = (term) =>
+  ({
+    Dyspnea: "Shortness of breath",
     "Thoracic pain": "Chest pain",
-    "Vertigo": "Dizziness",
-    "Vomiting": "Vomiting",
-    "Pyrexia": "Fever",
-    "Cough": "Cough",
-    "Headache": "Headache",
+    Vertigo: "Dizziness",
+    Pyrexia: "Fever",
+    Cough: "Cough",
+    Headache: "Headache",
     "Nasal congestion": "Congestion",
-    "Fatigue": "Fatigue",
-    "Myalgia": "Muscle pain",
-    "Arthralgia": "Joint pain",
-    "Pharyngitis": "Sore throat",
-    "Nausea": "Nausea",
-    "Anosmia": "Loss of smell",
-    "Ageusia": "Loss of taste",
-    "Rhinorrhea": "Runny nose",
-    "Chills": "Chills",
-    "Diarrhea": "Diarrhea",
-    "Sneezing": "Sneezing",
-  };
-  return termMap[term] || term.replace(/ [ (].*?[ )]/g, "").replace(/medical|syndrome|disorder|abnormality/gi, "").trim();
-};
-
-async function fetchMedicineImage(medicineName) {
-  try {
-    const query = encodeURIComponent(`${medicineName} pill`);
-    const apiUrl = `${OPENI_API_BASE}?query=${query}&m=1&n=1`;
-    const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`);
-    if (!response.ok) throw new Error("Open-i API request failed");
-    const data = await response.json();
-    if (data.list && data.list.length > 0) return `https://openi.nlm.nih.gov${data.list[0].imgLarge}`;
-    return "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80";
-  } catch (error) {
-    console.error("Error fetching medicine image:", error);
-    return "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80";
-  }
-}
-
-function calculateAge(dob) {
-  if (!dob) return '';
-  const birthDate = new Date(dob);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
-  return age;
-}
+    Fatigue: "Fatigue",
+    Myalgia: "Muscle pain",
+    Pharyngitis: "Sore throat",
+  }[term] || term.replace(/ [ (].*?[ )]/g, "").replace(/medical|syndrome|disorder|abnormality/gi, "").trim());
 
 // Error Notification Component
 function ErrorNotification({ error, onClose, darkMode }) {
-  const cardBg = darkMode ? "bg-[#0A2A43]/20 backdrop-blur-[10px] border border-white/20" : "bg-white/20 backdrop-blur-md border border-gray-200";
-  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
-
   return (
     <motion.div
-      className={`fixed top-4 right-4 z-50 w-full max-w-sm p-6 rounded-[20px] ${cardBg} shadow-2xl`}
-      initial={{ opacity: 0, scale: 0.8, y: -20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.8, y: -20 }}
-      transition={{ duration: 0.3 }}
-      role="alert"
-      aria-live="assertive"
+      className={`fixed top-4 right-4 z-50 max-w-sm p-4 rounded-[20px] ${darkMode ? "bg-[#0A2A43]/20 border-white/20" : "bg-white/20 border-gray-200"} border shadow-2xl`}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
     >
       <div className="flex items-start">
-        <AlertCircle className="w-6 h-6 text-red-500 mr-3" />
-        <div className="flex-1">
-          <h3 className={`text-lg font-bold ${textColor}`}>Server Error ⚠️</h3>
-          <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"} mt-1`}>{error}</p>
+        <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
+        <div>
+          <h3 className={`text-lg font-bold ${darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]"}`}>Error ⚠️</h3>
+          <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"}`}>{error}</p>
         </div>
-        <motion.button 
-          onClick={onClose} 
-          className="p-1 rounded-full bg-red-500/20 hover:bg-red-500/30 transition-all duration-300" 
-          whileHover={{ scale: 1.1 }} 
+        <motion.button
+          onClick={onClose}
+          className="p-1 rounded-full bg-red-500/20 hover:bg-red-500/30"
+          whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
         >
-          <X className="w-5 h-5 text-red-500" />
+          <X className="w-4 h-4 text-red-500" />
         </motion.button>
       </div>
     </motion.div>
@@ -116,7 +56,7 @@ function ErrorNotification({ error, onClose, darkMode }) {
 }
 
 function MediBot() {
-  const { user } = useContext(AuthContext);
+  const { darkMode } = useContext(DarkModeContext);
   const [formData, setFormData] = useState({
     name: "",
     age: "",
@@ -128,82 +68,21 @@ function MediBot() {
     allergies: [],
     medicalHistory: "",
     currentMedications: "",
+    isPregnant: false,
+    isBreastfeeding: false,
   });
   const [suggestions, setSuggestions] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const { darkMode } = useContext(DarkModeContext);
-  const [isPregnant, setIsPregnant] = useState(false);
-  const [isBreastfeeding, setIsBreastfeeding] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [symptomSearch, setSymptomSearch] = useState("");
-  const [allergySearch, setAllergySearch] = useState("");
-  const [symptomSuggestions, setSymptomSuggestions] = useState([]);
-  const [allergySuggestions, setAllergySuggestions] = useState([]);
-  const [isFetchingSymptoms, setIsFetchingSymptoms] = useState(false);
-  const [isFetchingAllergies, setIsFetchingAllergies] = useState(false);
-  const [isExtreme, setIsExtreme] = useState(false);
   const [serverError, setServerError] = useState(null);
+  const [symptomSearch, setSymptomSearch] = useState("");
+  const [symptomSuggestions, setSymptomSuggestions] = useState([]);
 
-  const symptomSearchRef = useRef(null);
-  const allergySearchRef = useRef(null);
+  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
+  const bgColor = darkMode ? "bg-[#0A2A43]" : "bg-gradient-to-br from-white to-gray-50";
+  const inputBg = darkMode ? "bg-[#0A2A43]/80 text-[#FDFBFB] border-[#FDFBFB]/50" : "bg-gray-50 text-[#0A3D62] border-gray-200";
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      try {
-        const res = await axios.get("/api/profile/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = res.data;
-        if (data) {
-          const dobValue = data.dob || data.dateOfBirth || "";
-          const formattedAge = dobValue ? calculateAge(dobValue) : "";
-
-          setFormData({
-            name: data.fullName || "",
-            age: formattedAge,
-            gender: data.gender || "",
-            weight: "",
-            height: "",
-            bloodGroup: data.bloodGroup || "",
-            symptoms: [],
-            allergies: data.allergies ? data.allergies.split(',').map(a => a.trim()).filter(a => a) : [],
-            medicalHistory: data.history || "",
-            currentMedications: data.medications || "",
-          });
-
-          if (data.gender === "male") {
-            setIsPregnant(false);
-            setIsBreastfeeding(false);
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching profile:", err);
-        // Don't show server error for profile fetch, it's not critical
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    let updatedValue = value;
-
-    if (name === "weight" && Number(value) > 500) updatedValue = "500";
-    if (name === "height" && Number(value) > 300) updatedValue = "300";
-
-    if (name === "gender" && value === "male") {
-      setIsPregnant(false);
-      setIsBreastfeeding(false);
-    }
-
-    setFormData({ ...formData, [name]: updatedValue });
-  };
-
+  // Debounced symptom fetching
   const debounce = (func, wait) => {
     let timeout;
     return (...args) => {
@@ -212,905 +91,774 @@ function MediBot() {
     };
   };
 
-  const fetchSuggestions = async (query, setSuggestionsFunc, isAllergy = false) => {
-    if (!query.trim()) {
-      setSuggestionsFunc([]);
-      return;
-    }
-
-    const cacheKey = `${isAllergy ? "allergy" : "symptom"}:${query.toLowerCase()}`;
-    if (suggestionCache.has(cacheKey)) {
-      setSuggestionsFunc(suggestionCache.get(cacheKey));
-      return;
-    }
-
+  const fetchSymptomSuggestions = async (query) => {
+    if (!query.trim()) return setSymptomSuggestions([]);
+    const cacheKey = `symptom:${query.toLowerCase()}`;
+    if (suggestionCache.has(cacheKey)) return setSymptomSuggestions(suggestionCache.get(cacheKey));
     try {
-      isAllergy ? setIsFetchingAllergies(true) : setIsFetchingSymptoms(true);
-      let apiUrl = isAllergy
-        ? `${RXNAV_ALLERGY_API}?term=${encodeURIComponent(query)}&maxEntries=50`
-        : `${NLM_SYMPTOM_API}?terms=${encodeURIComponent(query)}&maxList=50`;
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
-      const response = await fetch(proxyUrl, { signal: AbortSignal.timeout(5000) });
-      if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+      const response = await fetch(`${NLM_SYMPTOM_API}?terms=${encodeURIComponent(query)}&maxList=10`, {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!response.ok) throw new Error("NLM API failed");
       const data = await response.json();
-
-      let simplifiedLabels = [];
-      if (isAllergy) {
-        const candidates = data.approxGroup?.candidate || [];
-        simplifiedLabels = candidates
-          .map((c) => c.name)
-          .filter((label, index, self) => self.indexOf(label) === index && !formData[isAllergy ? "allergies" : "symptoms"].includes(label));
-      } else {
-        const labels = data[3] || [];
-        simplifiedLabels = labels
-          .map((item) => simplifyMedicalTerms(item[1]))
-          .filter((label, index, self) => self.indexOf(label) === index && !formData[isAllergy ? "allergies" : "symptoms"].includes(label));
-      }
-
-      suggestionCache.set(cacheKey, simplifiedLabels);
-      setSuggestionsFunc(simplifiedLabels);
+      const labels = (data[3] || []).map((item) => simplifyMedicalTerms(item[1])).filter(
+        (label, i, self) => self.indexOf(label) === i && !formData.symptoms.includes(label)
+      );
+      suggestionCache.set(cacheKey, labels);
+      setSymptomSuggestions(labels);
     } catch (error) {
-      console.error(`Error fetching ${isAllergy ? "allergies" : "symptoms"}:`, error);
-      // Don't show server error for search suggestions, use fallback silently
-      const fallback = isAllergy ? fallbackAllergies : fallbackSymptoms;
-      const filteredFallback = fallback
-        .filter(
-          (item) =>
-            item.toLowerCase().includes(query.toLowerCase()) &&
-            !formData[isAllergy ? "allergies" : "symptoms"].includes(item)
-        );
-      suggestionCache.set(cacheKey, filteredFallback);
-      setSuggestionsFunc(filteredFallback);
-    } finally {
-      isAllergy ? setIsFetchingAllergies(false) : setIsFetchingSymptoms(false);
+      console.error("Symptom fetch error:", error);
+      setSymptomSuggestions([]);
     }
   };
 
-  const debouncedFetchSuggestions = debounce(fetchSuggestions, 300);
+  const debouncedFetchSymptoms = debounce(fetchSymptomSuggestions, 300);
 
   useEffect(() => {
-    debouncedFetchSuggestions(symptomSearch, setSymptomSuggestions, false);
+    debouncedFetchSymptoms(symptomSearch);
   }, [symptomSearch]);
 
-  useEffect(() => {
-    debouncedFetchSuggestions(allergySearch, setAllergySuggestions, true);
-  }, [allergySearch]);
-
-  useEffect(() => {
-    const interval = setInterval(() => suggestionCache.clear(), 1800000);
-    return () => clearInterval(interval);
-  }, []);
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    let updatedValue = value;
+    if (name === "weight" && Number(value) > 500) updatedValue = "500";
+    if (name === "height" && Number(value) > 300) updatedValue = "300";
+    if (name === "gender" && value !== "female") {
+      setFormData((prev) => ({ ...prev, isPregnant: false, isBreastfeeding: false }));
+    }
+    setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : updatedValue }));
+  };
 
   const addItem = (item, category) => {
+    if (!item.trim()) return;
     const normalizedItem = item.toLowerCase();
-    if (!formData[category].some(i => i.toLowerCase() === normalizedItem)) {
-      setFormData((prev) => ({ ...prev, [category]: [...prev[category], item] }));
+    if (!formData[category].some((i) => i.toLowerCase() === normalizedItem)) {
+      setFormData((prev) => ({ ...prev, [category]: [...prev[category], item.trim()] }));
     }
-    category === "symptoms" ? setSymptomSearch("") && setSymptomSuggestions([]) : setAllergySearch("") && setAllergySuggestions([]);
+    if (category === "symptoms") setSymptomSearch("");
   };
 
   const removeItem = (item, category) => {
     setFormData((prev) => ({ ...prev, [category]: prev[category].filter((i) => i !== item) }));
   };
 
-  const checkDrugInteractions = (medications, currentMeds, allergies) => {
-    const currentMedList = currentMeds.toLowerCase().split(",").map((med) => med.trim());
-    const knownInteractions = {
-      ibuprofen: ["aspirin", "anticoagulants"],
-      pseudoephedrine: ["maoi", "antidepressants"],
-      acetaminophen: ["warfarin"],
-      diphenhydramine: ["alcohol", "sedatives"],
-    };
-
-    return medications.filter((med) => {
-      const medName = med.name.toLowerCase();
-      if (allergies.some(a => a.toLowerCase() === medName)) return false;
-      const interactions = knownInteractions[medName] || [];
-      return !currentMedList.some((currentMed) =>
-        interactions.some((interactingDrug) => currentMed.includes(interactingDrug))
-      );
-    });
+  const handlePDFUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfData = await pdfParse(arrayBuffer);
+      const text = pdfData.text;
+      setFormData({
+        ...formData,
+        name: text.match(/Name:\s*([^\n]+)/)?.[1] || formData.name,
+        symptoms: text.match(/Symptoms:\s*([^\n]+)/)?.[1]?.split(", ").map((s) => s.trim()) || formData.symptoms,
+        allergies: text.match(/Allergies:\s*([^\n]+)/)?.[1]?.split(", ").map((s) => s.trim()) || formData.allergies,
+        medicalHistory: text.match(/Medical History:\s*([^\n]+)/)?.[1] || formData.medicalHistory,
+        currentMedications: text.match(/Current Medications:\s*([^\n]+)/)?.[1] || formData.currentMedications,
+      });
+    } catch (err) {
+      setServerError("Failed to parse PDF.");
+      setTimeout(() => setServerError(null), 5000);
+    }
   };
 
-  const sanitizeSuggestions = (medications, allergies) => {
-    const seen = new Set();
-    return medications.filter((med) => {
-      const medName = med.name.toLowerCase();
-      if (seen.has(medName) || allergies.some(a => a.toLowerCase() === medName)) return false;
-      seen.add(medName);
-      return true;
-    }).slice(0, 2);
-  };
-
+  // Enhanced parser with flexible section detection and robust medication parsing
   const parseAIResponse = (text) => {
     const lines = text.split("\n").filter((line) => line.trim());
-    const parsed = {
-      reasoning: "",
-      otcMedications: [],
-      homeRemedies: [],
-      warnings: [],
-      duration: "",
-      disclaimer: "",
-    };
+    const parsed = { reasoning: "", otcMedications: [], homeRemedies: [], warnings: [], duration: "", disclaimer: "" };
     let currentSection = "";
-    lines.forEach((line) => {
-      if (line.startsWith("✅ Reasoning")) currentSection = "reasoning";
-      else if (line.startsWith("✅ OTC Medications")) currentSection = "otcMedications";
-      else if (line.startsWith("🏠 Home Remedies / Lifestyle")) currentSection = "homeRemedies";
-      else if (line.startsWith("⚠️ Warnings / Avoid")) currentSection = "warnings";
-      else if (line.startsWith("⏳ Duration Guidance")) currentSection = "duration";
-      else if (line.startsWith("🚨 Doctor Disclaimer")) currentSection = "disclaimer";
-      else if (line.trim() && currentSection) {
+    let currentMed = null;
+
+    console.log("Parsing lines:", lines); // Debug: Show raw lines
+
+    lines.forEach((line, index) => {
+      // Strip markdown and normalize
+      const cleanLine = line.replace(/^(###|\*\*|\*|#+\s*)/g, "").replace(/\*\*$/g, "").trim();
+      console.log(`Line ${index}:`, cleanLine); // Debug: Show each cleaned line
+
+      // Section detection (case-insensitive, flexible matching)
+      if (cleanLine.toLowerCase().includes("step-by-step reasoning") || cleanLine.toLowerCase().includes("reasoning")) {
+        currentSection = "reasoning";
+        currentMed = null;
+      } else if (
+        cleanLine.toLowerCase().includes("safe otc medications") ||
+        cleanLine.toLowerCase().includes("otc medications")
+      ) {
+        currentSection = "otcMedications";
+        currentMed = null;
+      } else if (
+        cleanLine.toLowerCase().includes("home remedies") ||
+        cleanLine.toLowerCase().includes("lifestyle suggestions")
+      ) {
+        currentSection = "homeRemedies";
+        currentMed = null;
+      } else if (cleanLine.toLowerCase().includes("warnings") || cleanLine.toLowerCase().includes("what to avoid")) {
+        currentSection = "warnings";
+        currentMed = null;
+      } else if (
+        cleanLine.toLowerCase().includes("how long to continue") ||
+        cleanLine.toLowerCase().includes("duration guidance")
+      ) {
+        currentSection = "duration";
+        currentMed = null;
+      } else if (cleanLine.toLowerCase().includes("disclaimer") || cleanLine.toLowerCase().includes("doctor disclaimer")) {
+        currentSection = "disclaimer";
+        currentMed = null;
+      } else if (cleanLine && currentSection) {
         if (currentSection === "otcMedications") {
-          const parts = line.replace(/^- /, "").split(" - ");
-          if (parts.length >= 4) {
-            parsed.otcMedications.push({
-              name: parts[0].trim(),
-              dosage: parts[1].trim(),
-              timing: parts[2].trim(),
-              precautions: parts[3].trim(),
-              source: parts[4] ? parts[4].trim() : "Available at pharmacies like CVS, Walgreens",
-            });
+          // Start a new medication if line matches "1. Name" or similar
+          const medStartMatch = cleanLine.match(/^\d+\.\s*([^\-]+)/);
+          if (medStartMatch) {
+            if (currentMed) {
+              // Save previous medication if complete
+              if (currentMed.name) parsed.otcMedications.push(currentMed);
+            }
+            currentMed = { name: medStartMatch[1].trim(), dosage: "", timing: "", precautions: "", source: "" };
+          } else if (currentMed) {
+            // Accumulate fields for current medication
+            const fieldMatch = cleanLine.match(/(Name|Dosage|Timing|Precautions|FDA Source):\s*(.+)/i);
+            if (fieldMatch) {
+              const field = fieldMatch[1].toLowerCase();
+              const value = fieldMatch[2].trim();
+              if (field === "name") currentMed.name = value;
+              else if (field === "dosage") currentMed.dosage = value;
+              else if (field === "timing") currentMed.timing = value;
+              else if (field === "precautions") currentMed.precautions = value;
+              else if (field === "fda source") currentMed.source = value || "Available at pharmacies";
+            } else {
+              // Fallback: Append to precautions if no specific field
+              currentMed.precautions += (currentMed.precautions ? " " : "") + cleanLine;
+            }
+          } else {
+            // Fallback: Add raw line if no medication is being built
+            parsed.otcMedications.push({ raw: cleanLine });
           }
         } else if (currentSection === "homeRemedies" || currentSection === "warnings") {
-          if (!parsed[currentSection].includes(line.replace(/^- /, ""))) parsed[currentSection].push(line.replace(/^- /, ""));
+          if (cleanLine.match(/^\d+\.\s*|^-\s*|^[*]\s*/)) {
+            parsed[currentSection].push(cleanLine.replace(/^\d+\.\s*|^-\s*|^[*]\s*/g, "").trim());
+          }
         } else {
-          parsed[currentSection] += (parsed[currentSection] ? " " : "") + line.trim();
+          parsed[currentSection] += (parsed[currentSection] ? " " : "") + cleanLine;
         }
       }
     });
+
+    // Save the last medication if exists
+    if (currentMed && currentMed.name) parsed.otcMedications.push(currentMed);
+
+    // Fallback: If reasoning is empty, look for any text before medications
+    if (!parsed.reasoning) {
+      const reasoningLines = lines
+        .slice(0, lines.findIndex((line) => line.toLowerCase().includes("otc medications")))
+        .filter((line) => !line.toLowerCase().includes("disclaimer"))
+        .join(" ");
+      parsed.reasoning = reasoningLines.replace(/^(###|\*\*|\*|#+\s*)/g, "").trim() || "No detailed reasoning provided.";
+    }
+
+    console.log("Final parsed suggestions:", parsed); // Debug: Show final output
     return parsed;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.symptoms.length) {
-      setErrorMessage("Please select at least one symptom to proceed, dear " + formData.name + ".");
-      return;
-    }
-    if (!formData.name.trim()) {
-      setErrorMessage("Please provide your name to receive personalized suggestions, dear user.");
-      return;
-    }
+    if (!formData.name.trim()) return setErrorMessage("Please provide your name, dear user.");
+    if (!formData.symptoms.length) return setErrorMessage(`Please select at least one symptom, dear ${formData.name}.`);
     setErrorMessage("");
     setServerError(null);
     setLoading(true);
     setSuggestions(null);
-    setIsExtreme(false);
 
     try {
-      const hasCriticalSymptom = formData.symptoms.some((symptom) =>
-        criticalSymptoms.includes(symptom)
-      );
-      if (hasCriticalSymptom) {
-        const criticalResponse = {
-          reasoning: `Dear ${formData.name}, your symptoms, such as difficulty breathing or chest pain, are serious and require immediate medical attention.`,
-          otcMedications: [],
-          homeRemedies: ["Rest and stay hydrated while awaiting medical care."],
-          warnings: ["These symptoms may indicate a serious condition. Seek medical help immediately."],
-          duration: "Contact a healthcare professional as soon as possible.",
-          disclaimer: `Dear ${formData.name}, this information is not medical advice. Please consult a doctor immediately for proper diagnosis and treatment. Book a consultation here: ${CONSULTATION_LINK}`,
-        };
-        setSuggestions(criticalResponse);
-        setIsExtreme(true);
-        setLoading(false);
-        return;
-      }
-
-      // Send data to backend
-      const response = await axios.post("http://localhost:4000/api/medibot", {
+      const payload = {
         name: formData.name,
-        age: formData.age,
+        age: formData.age ? Number(formData.age) : undefined,
         gender: formData.gender,
-        weight: formData.weight,
-        height: formData.height,
+        weight: formData.weight ? Number(formData.weight) : undefined,
+        height: formData.height ? Number(formData.height) : undefined,
         bloodGroup: formData.bloodGroup,
         symptoms: formData.symptoms,
         allergies: formData.allergies,
         medicalHistory: formData.medicalHistory,
         currentMedications: formData.currentMedications,
-        isPregnant,
-        isBreastfeeding,
+        isPregnant: formData.isPregnant,
+        isBreastfeeding: formData.isBreastfeeding,
+      };
+      console.log("Sending payload:", payload);
+      const res = await fetch("http://localhost:4000/api/medibot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-
-      const { reply } = response.data;
-
-      if (!reply) {
-        throw new Error("No response from backend.");
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("Backend error:", errorData);
+        throw new Error(errorData.reply || "Bad Request");
       }
-
-      const parsedSuggestions = parseAIResponse(reply);
-
-      parsedSuggestions.otcMedications = sanitizeSuggestions(parsedSuggestions.otcMedications, formData.allergies);
-      parsedSuggestions.otcMedications = checkDrugInteractions(
-        parsedSuggestions.otcMedications,
-        formData.currentMedications,
-        formData.allergies
-      );
-
-      // Fetch medicine images if we have medications
-      if (parsedSuggestions.otcMedications.length > 0) {
-        for (let med of parsedSuggestions.otcMedications) {
-          try {
-            med.image = await fetchMedicineImage(med.name);
-          } catch (error) {
-            console.error("Error fetching medicine image:", error);
-            med.image = "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80";
-          }
-        }
-      }
-
-      setSuggestions(parsedSuggestions);
-
-      // Check if we should show extreme warning
-      if (parsedSuggestions.otcMedications.length === 0 || parsedSuggestions.reasoning.toLowerCase().includes("uncommon") || parsedSuggestions.reasoning.toLowerCase().includes("extreme") || parsedSuggestions.reasoning.toLowerCase().includes("rare")) {
-        setIsExtreme(true);
-      } else {
-        setIsExtreme(false);
-      }
-
+      const data = await res.json();
+      console.log("Raw response:", data);
+      if (!data.reply) throw new Error("No reply from backend.");
+      const parsed = parseAIResponse(data.reply);
+      setSuggestions(parsed);
     } catch (error) {
-      console.error("Error in handleSubmit:", error);
-      setServerError("Server Error: Unable to fetch medicine suggestions. Please try again later.");
+      console.error("Submit error:", error.message);
+      setServerError(error.message || "Unable to fetch suggestions.");
+      setErrorMessage(`Dear ${formData.name}, an error occurred. Please try again or visit ${CONSULTATION_LINK}.`);
       setTimeout(() => setServerError(null), 5000);
-      const errorMsg = `Dear ${formData.name}, an error occurred while fetching suggestions. Please try again or consult a doctor at ${CONSULTATION_LINK}.`;
-      setErrorMessage(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSpeak = (text) => {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "en";
-      utterance.volume = 1.0;
-      utterance.rate = 0.9;
-      utterance.pitch = 1.0;
-
-      const voices = window.speechSynthesis.getVoices();
-      utterance.voice = voices[0];
-
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = (e) => {
-        const speechError = `Speech error: ${e.error}. Try a different language or browser, dear ${formData.name}.`;
-        setErrorMessage(speechError);
-        setIsSpeaking(false);
-      };
-      window.speechSynthesis.speak(utterance);
-    } else {
-      const ttsError = "Text-to-speech is not supported in this browser, dear " + formData.name + ".";
-      setErrorMessage(ttsError);
-    }
-  };
-
-  const handleCancelSpeak = () => {
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-    setIsSpeaking(false);
-  };
-
-  const getFullText = (sugs) => {
-    let text = `Medicine Suggestion Report\n\n`;
-    text += `Patient Information:\n`;
-    text += `Name: ${formData.name}\n`;
-    text += `Age: ${formData.age || "Not provided"}\n`;
-    text += `Gender: ${formData.gender || "Not provided"}\n`;
-    if (formData.gender === "female") {
-      text += `Pregnancy Status: ${isPregnant ? "Pregnant" : "Not Pregnant"}\n`;
-      if (isPregnant) {
-        text += `Breastfeeding Status: ${isBreastfeeding ? "Breastfeeding" : "Not Breastfeeding"}\n`;
-      }
-    }
-    text += `Weight: ${formData.weight ? `${formData.weight} kg` : "Not provided"}\n`;
-    text += `Height: ${formData.height ? `${formData.height} cm` : "Not provided"}\n`;
-    text += `Blood Group: ${formData.bloodGroup || "Not provided"}\n`;
-    text += `Symptoms: ${formData.symptoms.length > 0 ? formData.symptoms.join(", ") : "None selected"}\n`;
-    text += `Allergies: ${formData.allergies.length > 0 ? formData.allergies.join(", ") : "None selected"}\n`;
-    text += `Medical History: ${formData.medicalHistory || "Not provided"}\n`;
-    text += `Current Medications: ${formData.currentMedications || "Not provided"}\n\n`;
-
-    text += `Suggestions:\n\n`;
-    if (sugs?.reasoning) text += `Reasoning:\n${sugs.reasoning}\n\n`;
-    if (sugs?.otcMedications?.length > 0) text += `OTC Medications:\n${sugs.otcMedications.map(med => `${med.name} - ${med.dosage} - ${med.timing} - ${med.precautions} - ${med.source}`).join("\n")}\n\n`;
-    if (sugs?.homeRemedies?.length > 0) text += `Home Remedies / Lifestyle:\n${sugs.homeRemedies.join("\n")}\n\n`;
-    if (sugs?.warnings?.length > 0) text += `Warnings / Avoid:\n${sugs.warnings.join("\n")}\n\n`;
-    if (sugs?.duration) text += `Duration Guidance:\n${sugs.duration}\n\n`;
-    if (sugs?.disclaimer) text += `Doctor Disclaimer:\n${sugs.disclaimer}`;
-    return text;
-  };
-
   const downloadReport = () => {
-    try {
-      const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.width;
-      const margin = 15;
-      const lineHeight = 7;
-      let y = margin;
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    const margin = 15;
+    let y = margin;
 
-      // Colors
-      const headerColor = [10, 61, 98]; // #0A3D62
-      const textColor = [0, 0, 0]; // Black
-      const sectionColor = [8, 37, 58]; // Darker blue #08253A
+    doc.setFontSize(18).setTextColor(10, 61, 98).setFont("helvetica", "bold");
+    doc.text("MediBot Health Report", pageWidth / 2, y, { align: "center" });
+    y += 10;
 
-      // Header
-      doc.setTextColor(...headerColor);
-      doc.setFontSize(18);
-      doc.setFont("helvetica", "bold");
-      doc.text("MediNova Medical Report", pageWidth / 2, y, { align: "center" });
-      y += lineHeight * 2;
+    doc.setFontSize(12).setTextColor(0, 0, 0).setFont("helvetica", "normal");
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - margin, y, { align: "right" });
+    y += 10;
 
-      doc.setTextColor(...textColor);
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - margin, y, { align: "right" });
-      y += lineHeight * 2;
-
-      // Patient Information Section
-      doc.setTextColor(...sectionColor);
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("Patient Information", margin, y);
-      y += lineHeight;
-
-      doc.setTextColor(...textColor);
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "normal");
-      const patientLines = [
-        `Name: ${formData.name}`,
-        `Age: ${formData.age || "Not provided"}`,
-        `Gender: ${formData.gender || "Not provided"}`,
-        ...(formData.gender === "female" ? [`Pregnancy Status: ${isPregnant ? "Pregnant" : "Not Pregnant"}`] : []),
-        ...(isPregnant ? [`Breastfeeding Status: ${isBreastfeeding ? "Breastfeeding" : "Not Breastfeeding"}`] : []),
-        `Weight: ${formData.weight ? `${formData.weight} kg` : "Not provided"}`,
-        `Height: ${formData.height ? `${formData.height} cm` : "Not provided"}`,
-        `Blood Group: ${formData.bloodGroup || "Not provided"}`,
-        `Symptoms: ${formData.symptoms.length > 0 ? formData.symptoms.join(", ") : "None selected"}`,
-        `Allergies: ${formData.allergies.length > 0 ? formData.allergies.join(", ") : "None selected"}`,
-        `Medical History: ${formData.medicalHistory || "Not provided"}`,
-        `Current Medications: ${formData.currentMedications || "Not provided"}`,
-      ];
-
-      patientLines.forEach((line) => {
-        if (y > doc.internal.pageSize.height - margin * 2) {
-          doc.addPage();
-          y = margin;
-        }
-        doc.text(line, margin, y);
-        y += lineHeight;
-      });
-      y += lineHeight;
-
-      doc.setDrawColor(...headerColor);
-      doc.line(margin, y, pageWidth - margin, y);
-      y += lineHeight;
-
-      // Suggestions Section
-      doc.setTextColor(...sectionColor);
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("Suggestions", margin, y);
-      y += lineHeight;
-
-      doc.setTextColor(...textColor);
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "normal");
-
-      if (suggestions?.reasoning) {
-        doc.setTextColor(...headerColor);
-        doc.text("Reasoning:", margin, y);
-        y += lineHeight;
-        doc.setTextColor(...textColor);
-        const reasoningLines = doc.splitTextToSize(suggestions.reasoning, pageWidth - margin * 2);
-        reasoningLines.forEach((line) => {
-          if (y > doc.internal.pageSize.height - margin * 2) {
-            doc.addPage();
-            y = margin;
-          }
-          doc.text(line, margin, y);
-          y += lineHeight;
-        });
-        y += lineHeight;
-      }
-
-      if (suggestions?.otcMedications?.length > 0) {
-        doc.setTextColor(...headerColor);
-        doc.text("OTC Medications:", margin, y);
-        y += lineHeight;
-        doc.setTextColor(...textColor);
-        suggestions.otcMedications.forEach((med, index) => {
-          const medLine = `${index + 1}. ${med.name} - Dosage: ${med.dosage} - Timing: ${med.timing} - Precautions: ${med.precautions} - Source: ${med.source}`;
-          const medLines = doc.splitTextToSize(medLine, pageWidth - margin * 2);
-          medLines.forEach((line) => {
-            if (y > doc.internal.pageSize.height - margin * 2) {
-              doc.addPage();
-              y = margin;
-            }
-            doc.text(line, margin, y);
-            y += lineHeight;
-          });
-        });
-        y += lineHeight;
-      }
-
-      if (suggestions?.homeRemedies?.length > 0) {
-        doc.setTextColor(...headerColor);
-        doc.text("Home Remedies / Lifestyle:", margin, y);
-        y += lineHeight;
-        doc.setTextColor(...textColor);
-        suggestions.homeRemedies.forEach((remedy) => {
-          const remedyLines = doc.splitTextToSize(remedy, pageWidth - margin * 2);
-          remedyLines.forEach((line) => {
-            if (y > doc.internal.pageSize.height - margin * 2) {
-              doc.addPage();
-              y = margin;
-            }
-            doc.text(line, margin, y);
-            y += lineHeight;
-          });
-        });
-        y += lineHeight;
-      }
-
-      if (suggestions?.warnings?.length > 0) {
-        doc.setTextColor(...headerColor);
-        doc.text("Warnings / Avoid:", margin, y);
-        y += lineHeight;
-        doc.setTextColor(...textColor);
-        suggestions.warnings.forEach((warning) => {
-          const warningLines = doc.splitTextToSize(warning, pageWidth - margin * 2);
-          warningLines.forEach((line) => {
-            if (y > doc.internal.pageSize.height - margin * 2) {
-              doc.addPage();
-              y = margin;
-            }
-            doc.text(line, margin, y);
-            y += lineHeight;
-          });
-        });
-        y += lineHeight;
-      }
-
-      if (suggestions?.duration) {
-        doc.setTextColor(...headerColor);
-        doc.text("Duration Guidance:", margin, y);
-        y += lineHeight;
-        doc.setTextColor(...textColor);
-        const durationLines = doc.splitTextToSize(suggestions.duration, pageWidth - margin * 2);
-        durationLines.forEach((line) => {
-          if (y > doc.internal.pageSize.height - margin * 2) {
-            doc.addPage();
-            y = margin;
-          }
-          doc.text(line, margin, y);
-          y += lineHeight;
-        });
-        y += lineHeight;
-      }
-
-      if (suggestions?.disclaimer) {
-        doc.setTextColor(...headerColor);
-        doc.text("Doctor Disclaimer:", margin, y);
-        y += lineHeight;
-        doc.setTextColor(...textColor);
-        const disclaimerLines = doc.splitTextToSize(suggestions.disclaimer, pageWidth - margin * 2);
-        disclaimerLines.forEach((line) => {
-          if (y > doc.internal.pageSize.height - margin * 2) {
-            doc.addPage();
-            y = margin;
-          }
-          doc.text(line, margin, y);
-          y += lineHeight;
-        });
-        y += lineHeight * 2;
-      }
-
-      // Dummy Signature
-      if (y > doc.internal.pageSize.height - margin * 3) {
+    doc.setFontSize(14).setTextColor(8, 37, 58).text("Patient Information", margin, y);
+    y += 7;
+    const patientLines = [
+      `Name: ${formData.name}`,
+      `Age: ${formData.age || "Not provided"}`,
+      `Gender: ${formData.gender || "Not provided"}`,
+      ...(formData.gender === "female" ? [`Pregnancy: ${formData.isPregnant ? "Pregnant" : "Not Pregnant"}`] : []),
+      ...(formData.isPregnant ? [`Breastfeeding: ${formData.isBreastfeeding ? "Yes" : "No"}`] : []),
+      `Weight: ${formData.weight ? `${formData.weight} kg` : "Not provided"}`,
+      `Height: ${formData.height ? `${formData.height} cm` : "Not provided"}`,
+      `Blood Group: ${formData.bloodGroup || "Not provided"}`,
+      `Symptoms: ${formData.symptoms.join(", ") || "None"}`,
+      `Allergies: ${formData.allergies.join(", ") || "None"}`,
+      `Medical History: ${formData.medicalHistory || "None"}`,
+      `Current Medications: ${formData.currentMedications || "None"}`,
+    ];
+    patientLines.forEach((line) => {
+      if (y > doc.internal.pageSize.height - margin * 2) {
         doc.addPage();
         y = margin;
       }
-      doc.setTextColor(...sectionColor);
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.text("Authorized by:", margin, y);
-      y += lineHeight;
-      doc.setTextColor(...textColor);
-      doc.setFont("helvetica", "normal");
-      doc.text("Dr. MediNova (Dummy Signature)", margin, y);
-      y += lineHeight;
-      doc.text("MediNova Healthcare", margin, y);
+      doc.text(line, margin, y);
+      y += 7;
+    });
+    y += 7;
 
-      // Footer on all pages
-      const pageCount = doc.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setTextColor(...headerColor);
-        doc.setFontSize(10);
-        doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, doc.internal.pageSize.height - margin, { align: "center" });
-        doc.text("Confidential - For Patient Use Only", margin, doc.internal.pageSize.height - margin);
+    doc.setDrawColor(10, 61, 98).line(margin, y, pageWidth - margin, y);
+    y += 7;
+
+    doc.setFontSize(14).setTextColor(8, 37, 58).text("Suggestions", margin, y);
+    y += 7;
+
+    const sections = [
+      { title: "Reasoning", key: "reasoning" },
+      {
+        title: "OTC Medications",
+        key: "otcMedications",
+        format: (item, i) =>
+          item.raw
+            ? item.raw
+            : `${i + 1}. ${item.name} - ${item.dosage} - ${item.timing} - ${item.precautions} - ${item.source}`,
+      },
+      { title: "Home Remedies & Lifestyle Suggestions", key: "homeRemedies" },
+      { title: "Warnings / What to Avoid", key: "warnings" },
+      { title: "How long to continue the treatment safely", key: "duration" },
+      { title: "Disclaimer", key: "disclaimer" },
+    ];
+
+    sections.forEach(({ title, key, format }) => {
+      if (suggestions?.[key]) {
+        doc.setFontSize(12).setTextColor(10, 61, 98).text(`${title}:`, margin, y);
+        y += 7;
+        const items = Array.isArray(suggestions[key]) ? suggestions[key] : [suggestions[key]];
+        items.forEach((item, i) => {
+          const text = format ? format(item, i) : item;
+          const lines = doc.splitTextToSize(text, pageWidth - margin * 2);
+          lines.forEach((line) => {
+            if (y > doc.internal.pageSize.height - margin * 2) {
+              doc.addPage();
+              y = margin;
+            }
+            doc.text(line, margin, y);
+            y += 7;
+          });
+        });
+        y += 7;
       }
+    });
 
-      doc.save('medinova_report.pdf');
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      setServerError("Server Error: Unable to generate PDF report.");
-      setTimeout(() => setServerError(null), 5000);
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i).setFontSize(10).setTextColor(10, 61, 98);
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, doc.internal.pageSize.height - margin, { align: "center" });
     }
-  };
 
-  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
-  const bgColor = darkMode ? "bg-[#0A2A43]" : "bg-gradient-to-br from-white to-gray-50";
-  const inputBg = darkMode ? "bg-[#0A2A43]/80 text-[#FDFBFB] border-[#FDFBFB]/50" : "bg-gray-50 text-[#0A3D62] border-gray-200";
+    doc.save("medibot_report.pdf");
+  };
 
   return (
     <>
       <Helmet>
-        <title>Medicine Suggestions - MediNova</title>
-        <meta name="description" content="Receive personalized, safe, and FDA-informed OTC medication suggestions based on your symptoms." />
-        <link rel="canonical" href="https://www.MediNova.com/medibot" />
+        <title>MediBot Suggestions</title>
+        <meta name="description" content="Personalized OTC medication suggestions." />
       </Helmet>
 
-      {/* Server Error Notification */}
       <AnimatePresence>
-        {serverError && (
-          <ErrorNotification 
-            error={serverError} 
-            onClose={() => setServerError(null)} 
-            darkMode={darkMode} 
-          />
-        )}
+        {serverError && <ErrorNotification error={serverError} onClose={() => setServerError(null)} darkMode={darkMode} />}
       </AnimatePresence>
 
-      <div className={`max-w-5xl mx-auto p-6 sm:p-8 ${textColor}`}>
-        <motion.h1 initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }} className="text-3xl sm:text-4xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500">
-          Personalized Medicine Suggestions
+      <div className={`max-w-5xl mx-auto p-6 ${textColor}`}>
+        <motion.h1
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500"
+        >
+          MediBot Suggestions
         </motion.h1>
 
         {errorMessage && (
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="mb-6 p-4 rounded-[40px] bg-red-100 text-red-700 shadow-md border border-red-200">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-4 p-3 rounded-[20px] bg-red-100 text-red-700 border border-red-200">
             {errorMessage}
           </motion.div>
         )}
 
-        <motion.form onSubmit={handleSubmit} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className={`mb-10 space-y-8 p-6 sm:p-8 rounded-[40px] shadow-md ${bgColor} border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl`}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label htmlFor="name" className={`block text-sm font-medium ${textColor}`}>Name:</label>
-              <motion.input type="text" id="name" name="name" value={formData.name} onChange={handleInputChange} className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`} required aria-required="true" whileFocus={{ scale: 1.02 }} />
+        <motion.form
+          onSubmit={handleSubmit}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className={`space-y-6 p-6 rounded-[20px] shadow-md ${bgColor} border border-gray-200 dark:border-gray-700`}
+        >
+          <div>
+            <label className={`text-sm font-medium ${textColor}`}>Upload PDF</label>
+            <motion.input type="file" accept="application/pdf" onChange={handlePDFUpload} className={`w-full p-3 border rounded-xl ${inputBg}`} whileFocus={{ scale: 1.02 }} />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="name" className={`text-sm font-medium ${textColor}`}>
+                Name
+              </label>
+              <motion.input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                className={`w-full p-3 border rounded-xl ${inputBg}`}
+                required
+                whileFocus={{ scale: 1.02 }}
+              />
             </div>
-            <div className="space-y-2">
-              <label htmlFor="age" className={`block text-sm font-medium ${textColor}`}>Age:</label>
-              <motion.input type="number" id="age" name="age" value={formData.age} onChange={handleInputChange} className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`} required min="0" max="120" aria-required="true" whileFocus={{ scale: 1.02 }} />
+            <div>
+              <label htmlFor="age" className={`text-sm font-medium ${textColor}`}>
+                Age
+              </label>
+              <motion.input
+                id="age"
+                name="age"
+                type="number"
+                value={formData.age}
+                onChange={handleInputChange}
+                className={`w-full p-3 border rounded-xl ${inputBg}`}
+                min="0"
+                max="120"
+                whileFocus={{ scale: 1.02 }}
+              />
             </div>
-            <div className="space-y-2">
-              <label htmlFor="gender" className={`block text-sm font-medium ${textColor}`}>Gender:</label>
-              <motion.div className="relative" whileFocus={{ scale: 1.02 }}>
-                <motion.select id="gender" name="gender" value={formData.gender} onChange={handleInputChange} className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300 appearance-none`} required aria-required="true">
-                  <option value="" disabled>Select gender</option>
+            <div>
+              <label htmlFor="gender" className={`text-sm font-medium ${textColor}`}>
+                Gender
+              </label>
+              <motion.div className="relative">
+                <motion.select
+                  id="gender"
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleInputChange}
+                  className={`w-full p-3 border rounded-xl ${inputBg} appearance-none`}
+                  whileFocus={{ scale: 1.02 }}
+                >
+                  <option value="" disabled>
+                    Select
+                  </option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
                   <option value="other">Other</option>
                 </motion.select>
-                <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               </motion.div>
             </div>
             {formData.gender === "female" && (
-              <div className="space-y-2 md:col-span-2">
-                <label className={`block text-sm font-medium ${textColor}`}>Pregnancy Status:</label>
-                <div className="flex gap-6">
-                  <div className="flex items-center">
-                    <input type="radio" id="not-pregnant" name="pregnancyStatus" value="not-pregnant" checked={!isPregnant} onChange={() => setIsPregnant(false)} className="mr-2 accent-[#0A3D62] w-5 h-5" aria-checked={!isPregnant} />
-                    <label htmlFor="not-pregnant" className={textColor}>Not Pregnant</label>
-                  </div>
-                  <div className="flex items-center">
-                    <input type="radio" id="pregnant" name="pregnancyStatus" value="pregnant" checked={isPregnant} onChange={() => setIsPregnant(true)} className="mr-2 accent-[#0A3D62] w-5 h-5" aria-checked={isPregnant} />
-                    <label htmlFor="pregnant" className={textColor}>Pregnant</label>
-                  </div>
+              <div className="md:col-span-2">
+                <label className={`text-sm font-medium ${textColor}`}>Pregnancy</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="isPregnant"
+                      checked={!formData.isPregnant}
+                      onChange={() => setFormData({ ...formData, isPregnant: false })}
+                      className="mr-2 accent-[#0A3D62]"
+                    />
+                    <span className={textColor}>Not Pregnant</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="isPregnant"
+                      checked={formData.isPregnant}
+                      onChange={() => setFormData({ ...formData, isPregnant: true })}
+                      className="mr-2 accent-[#0A3D62]"
+                    />
+                    <span className={textColor}>Pregnant</span>
+                  </label>
                 </div>
               </div>
             )}
-            {isPregnant && (
-              <div className="space-y-2 md:col-span-2">
-                <label className={`block text-sm font-medium ${textColor}`}>Breastfeeding Status:</label>
-                <div className="flex gap-6">
-                  <div className="flex items-center">
-                    <input type="radio" id="not-breastfeeding" name="breastfeedingStatus" value="not-breastfeeding" checked={!isBreastfeeding} onChange={() => setIsBreastfeeding(false)} className="mr-2 accent-[#0A3D62] w-5 h-5" aria-checked={!isBreastfeeding} />
-                    <label htmlFor="not-breastfeeding" className={textColor}>Not Breastfeeding</label>
-                  </div>
-                  <div className="flex items-center">
-                    <input type="radio" id="breastfeeding" name="breastfeedingStatus" value="breastfeeding" checked={isBreastfeeding} onChange={() => setIsBreastfeeding(true)} className="mr-2 accent-[#0A3D62] w-5 h-5" aria-checked={isBreastfeeding} />
-                    <label htmlFor="breastfeeding" className={textColor}>Breastfeeding</label>
-                  </div>
+            {formData.isPregnant && (
+              <div className="md:col-span-2">
+                <label className={`text-sm font-medium ${textColor}`}>Breastfeeding</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="isBreastfeeding"
+                      checked={!formData.isBreastfeeding}
+                      onChange={() => setFormData({ ...formData, isBreastfeeding: false })}
+                      className="mr-2 accent-[#0A3D62]"
+                    />
+                    <span className={textColor}>No</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="isBreastfeeding"
+                      checked={formData.isBreastfeeding}
+                      onChange={() => setFormData({ ...formData, isBreastfeeding: true })}
+                      className="mr-2 accent-[#0A3D62]"
+                    />
+                    <span className={textColor}>Yes</span>
+                  </label>
                 </div>
               </div>
             )}
-            <div className="space-y-2">
-              <label htmlFor="weight" className={`block text-sm font-medium ${textColor}`}>Weight (kg):</label>
-              <motion.input type="number" id="weight" name="weight" value={formData.weight} onChange={handleInputChange} className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`} required min="1" max="500" aria-required="true" whileFocus={{ scale: 1.02 }} />
-              {Number(formData.weight) > 500 && <p className="text-red-500 text-sm mt-1">Weight exceeds our database limit. Please consult a doctor.</p>}
+            <div>
+              <label htmlFor="weight" className={`text-sm font-medium ${textColor}`}>
+                Weight (kg)
+              </label>
+              <motion.input
+                id="weight"
+                name="weight"
+                type="number"
+                value={formData.weight}
+                onChange={handleInputChange}
+                className={`w-full p-3 border rounded-xl ${inputBg}`}
+                min="1"
+                max="500"
+                whileFocus={{ scale: 1.02 }}
+              />
+              {Number(formData.weight) > 500 && <p className="text-red-500 text-xs">Weight exceeds limit.</p>}
             </div>
-            <div className="space-y-2">
-              <label htmlFor="height" className={`block text-sm font-medium ${textColor}`}>Height (cm):</label>
-              <motion.input type="number" id="height" name="height" value={formData.height} onChange={handleInputChange} className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`} required min="1" max="300" aria-required="true" whileFocus={{ scale: 1.02 }} />
-              {Number(formData.height) > 300 && <p className="text-red-500 text-sm mt-1">Height exceeds our database limit. Please consult a doctor.</p>}
+            <div>
+              <label htmlFor="height" className={`text-sm font-medium ${textColor}`}>
+                Height (cm)
+              </label>
+              <motion.input
+                id="height"
+                name="height"
+                type="number"
+                value={formData.height}
+                onChange={handleInputChange}
+                className={`w-full p-3 border rounded-xl ${inputBg}`}
+                min="1"
+                max="300"
+                whileFocus={{ scale: 1.02 }}
+              />
+              {Number(formData.height) > 300 && <p className="text-red-500 text-xs">Height exceeds limit.</p>}
             </div>
-            <div className="space-y-2">
-              <label htmlFor="bloodGroup" className={`block text-sm font-medium ${textColor}`}>Blood Group:</label>
-              <motion.div className="relative" whileFocus={{ scale: 1.02 }}>
-                <motion.select id="bloodGroup" name="bloodGroup" value={formData.bloodGroup} onChange={handleInputChange} className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300 appearance-none`} required aria-required="true">
-                  <option value="" disabled>Select Blood Group</option>
-                  <option value="A+">A+</option>
-                  <option value="A- ">A-</option>
-                  <option value="B+">B+</option>
-                  <option value="B- ">B-</option>
-                  <option value="AB+">AB+</option>
-                  <option value="AB- ">AB-</option>
-                  <option value="O+">O+</option>
-                  <option value="O- ">O-</option>
+            <div>
+              <label htmlFor="bloodGroup" className={`text-sm font-medium ${textColor}`}>
+                Blood Group
+              </label>
+              <motion.div className="relative">
+                <motion.select
+                  id="bloodGroup"
+                  name="bloodGroup"
+                  value={formData.bloodGroup}
+                  onChange={handleInputChange}
+                  className={`w-full p-3 border rounded-xl ${inputBg} appearance-none`}
+                  whileFocus={{ scale: 1.02 }}
+                >
+                  <option value="" disabled>
+                    Select
+                  </option>
+                  {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bg) => (
+                    <option key={bg} value={bg}>
+                      {bg}
+                    </option>
+                  ))}
                 </motion.select>
-                <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               </motion.div>
             </div>
           </div>
 
-          <div className="space-y-3 relative">
-            <label className={`block text-sm font-medium ${textColor}`}>Symptoms:</label>
+          <div>
+            <label className={`text-sm font-medium ${textColor}`}>Symptoms</label>
             <div className="relative">
-              <motion.input type="text" ref={symptomSearchRef} value={symptomSearch} onChange={(e) => setSymptomSearch(e.target.value)} placeholder="Type to search symptoms..." className={`w-full p-4 pr-12 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`} whileFocus={{ scale: 1.02 }} />
-              <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <motion.input
+                value={symptomSearch}
+                onChange={(e) => setSymptomSearch(e.target.value)}
+                placeholder="Search symptoms..."
+                className={`w-full p-3 pr-10 border rounded-xl ${inputBg}`}
+                onKeyDown={(e) => e.key === "Enter" && addItem(symptomSearch, "symptoms")}
+                whileFocus={{ scale: 1.02 }}
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             </div>
-            {isFetchingSymptoms && <p className="text-sm text-gray-500">Fetching symptoms...</p>}
             {symptomSuggestions.length > 0 && (
-              <motion.ul initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className={`relative z-20 mt-2 border rounded-xl shadow-lg max-h-60 overflow-y-auto ${darkMode ? "bg-[#0A2A43]/80 border-[#FDFBFB]/50" : "bg-gray-50 border-gray-200"}`}>
-                {symptomSuggestions.map((sugg, index) => (
-                  <motion.li key={index} className={`p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#0A2A43]/70 ${textColor} transition-all duration-200`} onClick={() => addItem(sugg, "symptoms")} whileHover={{ scale: 1.02 }}>
+              <motion.ul
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`mt-1 border rounded-xl max-h-40 overflow-y-auto ${darkMode ? "bg-[#0A2A43]/80 border-[#FDFBFB]/50" : "bg-gray-50 border-gray-200"}`}
+              >
+                {symptomSuggestions.map((sugg, i) => (
+                  <motion.li
+                    key={i}
+                    className={`p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#0A2A43]/70 ${textColor}`}
+                    onClick={() => addItem(sugg, "symptoms")}
+                    whileHover={{ scale: 1.02 }}
+                  >
                     {sugg}
                   </motion.li>
                 ))}
               </motion.ul>
             )}
-            <div className="flex flex-wrap gap-2 mt-2">
-              {formData.symptoms.map((symp, index) => (
-                <motion.div key={index} initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="bg-gray-100 dark:bg-[#0A2A43]/50 px-3 py-1 rounded-xl flex items-center gap-2 border border-gray-200 dark:border-[#FDFBFB]/50">
+            <div className="flex flex-wrap gap-2 mt-1">
+              {formData.symptoms.map((symp, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  className={`px-2 py-1 rounded-xl flex items-center gap-1 border ${darkMode ? "bg-[#0A2A43]/50 border-[#FDFBFB]/50" : "bg-gray-100 border-gray-200"}`}
+                >
                   {symp}
-                  <X size={16} className="cursor-pointer" onClick={() => removeItem(symp, "symptoms")} />
+                  <X size={14} className="cursor-pointer" onClick={() => removeItem(symp, "symptoms")} />
                 </motion.div>
               ))}
             </div>
           </div>
 
-          <div className="space-y-3 relative">
-            <label className={`block text-sm font-medium ${textColor}`}>Allergies:</label>
+          <div>
+            <label className={`text-sm font-medium ${textColor}`}>Allergies</label>
             <div className="relative">
-              <motion.input type="text" ref={allergySearchRef} value={allergySearch} onChange={(e) => setAllergySearch(e.target.value)} placeholder="Type to search allergies..." className={`w-full p-4 pr-12 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`} whileFocus={{ scale: 1.02 }} />
-              <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <motion.input
+                value={formData.allergies.join(", ")}
+                onChange={(e) => setFormData({ ...formData, allergies: e.target.value.split(",").map((a) => a.trim()).filter(Boolean) })}
+                placeholder="Enter allergies (comma-separated)..."
+                className={`w-full p-3 pr-10 border rounded-xl ${inputBg}`}
+                whileFocus={{ scale: 1.02 }}
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             </div>
-            {isFetchingAllergies && <p className="text-sm text-gray-500">Fetching allergies...</p>}
-            {allergySuggestions.length > 0 && (
-              <motion.ul initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className={`relative z-20 mt-2 border rounded-xl shadow-lg max-h-60 overflow-y-auto ${darkMode ? "bg-[#0A2A43]/80 border-[#FDFBFB]/50" : "bg-gray-50 border-gray-200"}`}>
-                {allergySuggestions.map((sugg, index) => (
-                  <motion.li key={index} className={`p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#0A2A43]/70 ${textColor} transition-all duration-200`} onClick={() => addItem(sugg, "allergies")} whileHover={{ scale: 1.02 }}>
-                    {sugg}
-                  </motion.li>
-                ))}
-              </motion.ul>
-            )}
-            <div className="flex flex-wrap gap-2 mt-2">
-              {formData.allergies.map((allg, index) => (
-                <motion.div key={index} initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="bg-gray-100 dark:bg-[#0A2A43]/50 px-3 py-1 rounded-xl flex items-center gap-2 border border-gray-200 dark:border-[#FDFBFB]/50">
+            <div className="flex flex-wrap gap-2 mt-1">
+              {formData.allergies.map((allg, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  className={`px-2 py-1 rounded-xl flex items-center gap-1 border ${darkMode ? "bg-[#0A2A43]/50 border-[#FDFBFB]/50" : "bg-gray-100 border-gray-200"}`}
+                >
                   {allg}
-                  <X size={16} className="cursor-pointer" onClick={() => removeItem(allg, "allergies")} />
+                  <X size={14} className="cursor-pointer" onClick={() => removeItem(allg, "allergies")} />
                 </motion.div>
               ))}
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="medicalHistory" className={`block text-sm font-medium ${textColor}`}>Medical History:</label>
-            <motion.textarea id="medicalHistory" name="medicalHistory" value={formData.medicalHistory} onChange={handleInputChange} className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`} rows="4" whileFocus={{ scale: 1.02 }} aria-label="Medical History" />
+          <div>
+            <label htmlFor="medicalHistory" className={`text-sm font-medium ${textColor}`}>
+              Medical History
+            </label>
+            <motion.textarea
+              id="medicalHistory"
+              name="medicalHistory"
+              value={formData.medicalHistory}
+              onChange={handleInputChange}
+              className={`w-full p-3 border rounded-xl ${inputBg}`}
+              rows="3"
+              whileFocus={{ scale: 1.02 }}
+            />
           </div>
-          <div className="space-y-2">
-            <label htmlFor="currentMedications" className={`block text-sm font-medium ${textColor}`}>Current Medications:</label>
-            <motion.textarea id="currentMedications" name="currentMedications" value={formData.currentMedications} onChange={handleInputChange} className={`w-full p-4 border rounded-xl ${inputBg} focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] transition-all duration-300`} rows="4" whileFocus={{ scale: 1.02 }} aria-label="Current Medications" />
+          <div>
+            <label htmlFor="currentMedications" className={`text-sm font-medium ${textColor}`}>
+              Current Medications
+            </label>
+            <motion.textarea
+              id="currentMedications"
+              name="currentMedications"
+              value={formData.currentMedications}
+              onChange={handleInputChange}
+              className={`w-full p-3 border rounded-xl ${inputBg}`}
+              rows="3"
+              whileFocus={{ scale: 1.02 }}
+            />
           </div>
-          <motion.button type="submit" disabled={loading} className={`w-full mt-6 bg-[#0A3D62] text-[#FDFBFB] px-6 py-4 rounded-xl font-medium hover:bg-[#08253A] hover:shadow-md transition-all duration-300 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB]`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
-            {loading ? "Fetching Suggestions..." : "Get Personalized Suggestions"}
+          <motion.button
+            type="submit"
+            disabled={loading}
+            className={`w-full p-3 bg-[#0A3D62] text-[#FDFBFB] rounded-xl hover:bg-[#08253A] disabled:opacity-50`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            {loading ? "Fetching..." : "Get Suggestions"}
           </motion.button>
         </motion.form>
 
-        <AnimatePresence>
-          {suggestions && (
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} transition={{ duration: 0.6 }} className={`mt-10 p-6 sm:p-8 rounded-[40px] shadow-md ${bgColor} border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl`}>
-              <h2 className="text-2xl sm:text-3xl font-bold mb-8 flex items-center gap-3 bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500">
-                <Pill size={28} /> Personalized Suggestions for {formData.name}
-              </h2>
-              {isExtreme && (
-                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="mb-6 p-4 rounded-[40px] bg-yellow-100 text-yellow-700 shadow-md border border-yellow-200 flex items-center gap-4">
-                  <AlertCircle size={24} />
-                  <div>
-                    <p>This condition appears uncommon or extreme and requires professional consultation.</p>
-                    <a href={CONSULTATION_LINK} className="bg-[#0A3D62] text-white px-4 py-2 rounded-xl mt-2 inline-block hover:bg-[#08253A] transition-all duration-300">Book Consultation</a>
-                  </div>
-                </motion.div>
-              )}
-              <div className="mb-10">
-                <h3 className="text-xl font-semibold mb-4">Your Provided Information:</h3>
-                <ul className="space-y-3">
-                  <motion.li initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}>
-                    <strong>Name:</strong> {formData.name}
-                  </motion.li>
-                  <motion.li initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}>
-                    <strong>Age:</strong> {formData.age || "Not provided"}
-                  </motion.li>
-                  <motion.li initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}>
-                    <strong>Gender:</strong> {formData.gender || "Not provided"}
-                  </motion.li>
-                  {formData.gender === "female" && (
-                    <motion.li initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}>
-                      <strong>Pregnancy Status:</strong> {isPregnant ? "Pregnant" : "Not Pregnant"}
-                    </motion.li>
-                  )}
-                  {isPregnant && (
-                    <motion.li initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }} className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}>
-                      <strong>Breastfeeding Status:</strong> {isBreastfeeding ? "Breastfeeding" : "Not Breastfeeding"}
-                    </motion.li>
-                  )}
-                  <motion.li initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }} className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}>
-                    <strong>Weight:</strong> {formData.weight ? `${formData.weight} kg` : "Not provided"}
-                  </motion.li>
-                  <motion.li initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.7 }} className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}>
-                    <strong>Height:</strong> {formData.height ? `${formData.height} cm` : "Not provided"}
-                  </motion.li>
-                  <motion.li initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8 }} className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}>
-                    <strong>Blood Group:</strong> {formData.bloodGroup || "Not provided"}
-                  </motion.li>
-                  <motion.li initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.9 }} className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}>
-                    <strong>Symptoms:</strong> {formData.symptoms.length > 0 ? formData.symptoms.join(", ") : "None selected"}
-                  </motion.li>
-                  <motion.li initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.0 }} className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}>
-                    <strong>Allergies:</strong> {formData.allergies.length > 0 ? formData.allergies.join(", ") : "None selected"}
-                  </motion.li>
-                  <motion.li initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.1 }} className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}>
-                    <strong>Medical History:</strong> {formData.medicalHistory || "Not provided"}
-                  </motion.li>
-                  <motion.li initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.2 }} className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}>
-                    <strong>Current Medications:</strong> {formData.currentMedications || "Not provided"}
-                  </motion.li>
-                </ul>
-              </div>
-              <div className="flex items-center mb-8 gap-4 flex-wrap">
-                <motion.button onClick={() => handleSpeak(getFullText(suggestions))} disabled={isSpeaking} className={`bg-[#0A3D62] text-[#FDFBFB] px-5 py-3 rounded-xl font-medium hover:bg-[#08253A] hover:shadow-md transition-all duration-300 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] flex items-center gap-2`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
-                  <Volume2 size={20} />
-                  {isSpeaking ? "Speaking..." : "Listen"}
-                </motion.button>
-                {isSpeaking && (
-                  <motion.button onClick={handleCancelSpeak} className={`bg-red-500 text-white px-5 py-3 rounded-xl font-medium hover:bg-red-600 hover:shadow-md transition-all duration-300 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-red-500`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
-                    <X size={20} />
-                    Cancel Listening
-                  </motion.button>
-                )}
-                <motion.button onClick={downloadReport} className={`bg-[#0A3D62] text-[#FDFBFB] px-5 py-3 rounded-xl font-medium hover:bg-[#08253A] hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0A3D62] dark:focus:ring-[#FDFBFB] flex items-center gap-2`} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
-                  <Download size={20} />
-                  Download Report
-                </motion.button>
-              </div>
-              {suggestions?.reasoning && (
-                <div className="mb-10">
-                  <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <AlertCircle className="text-green-500" size={24} />
-                    Reasoning
-                  </h3>
-                  <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}>
-                    {suggestions.reasoning}
-                  </motion.p>
-                </div>
-              )}
-              {suggestions?.otcMedications?.length > 0 && (
-                <div className="space-y-6 mb-10">
-                  <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <Pill className="text-[#0A3D62] dark:text-[#FDFBFB]" size={24} />
-                    OTC Medications
-                  </h3>
-                  {suggestions.otcMedications.slice(0, 2).map((med, index) => (
-                    <MedicineCard key={index} medicine={{ name: med.name || "Generic", dosage: med.dosage || "Standard dose", timing: med.timing || "Follow standard guidelines", precautions: med.precautions || "No precautions available", source: med.source || "Available at pharmacies like CVS, Walgreens", image: med.image, description: index === 0 ? "Primary OTC medication for symptom relief" : "Alternative OTC medication for symptom relief", sideEffects: ["Consult a pharmacist for detailed side effects"], brandNames: [med.name || "Generic"] }} title={index === 0 ? "Primary Medication" : "Alternative Medication"} />
-                  ))}
-                </div>
-              )}
-              {suggestions?.homeRemedies?.length > 0 && (
-                <div className="mb-10">
-                  <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <Pill className="text-[#0A3D62] dark:text-[#FDFBFB]" size={24} />
-                    Home Remedies / Lifestyle
-                  </h3>
-                  <ul className="space-y-3">
-                    {suggestions.homeRemedies.map((remedy, index) => (
-                      <motion.li key={index} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.1 }} className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50 hover:bg-gray-100 dark:hover:bg-[#0A2A43]/70 transition-all duration-300`}>
-                        {remedy}
-                      </motion.li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {suggestions?.warnings?.length > 0 && (
-                <div className="mb-10">
-                  <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <AlertCircle className="text-yellow-500" size={24} />
-                    Warnings / Avoid
-                  </h3>
-                  <ul className="space-y-3">
-                    {suggestions.warnings.map((warning, index) => (
-                      <motion.li key={index} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.1 }} className={`p-4 rounded-xl bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-400 shadow-sm border border-yellow-200 dark:border-yellow-700 hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-all duration-300`}>
-                        {warning}
-                      </motion.li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {suggestions?.duration && (
-                <div className="mb-10">
-                  <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <Clock className="text-[#0A3D62] dark:text-[#FDFBFB]" size={24} />
-                    Duration Guidance
-                  </h3>
-                  <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} shadow-sm border border-gray-200 dark:border-[#FDFBFB]/50`}>
-                    {suggestions.duration}
-                  </motion.p>
-                </div>
-              )}
-              <div>
-                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <AlertCircle className="text-red-500" size={24} />
-                  Doctor Disclaimer
-                </h3>
-                <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className={`p-4 rounded-xl bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 shadow-sm border border-red-200 dark:border-red-700`}>
-                  {suggestions.disclaimer || `Dear ${formData.name}, please consult a healthcare professional before taking any medication. This information is for educational purposes only and is not medical advice.`}
+        {suggestions && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className={`mt-6 p-6 rounded-[20px] shadow-md ${bgColor} border border-gray-200 dark:border-gray-700`}
+          >
+            <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500">
+              Suggestions for {formData.name}
+            </h2>
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2">Your Information:</h3>
+              {[
+                `Name: ${formData.name}`,
+                `Age: ${formData.age || "Not provided"}`,
+                `Gender: ${formData.gender || "Not provided"}`,
+                ...(formData.gender === "female" ? [`Pregnancy: ${formData.isPregnant ? "Pregnant" : "Not Pregnant"}`] : []),
+                ...(formData.isPregnant ? [`Breastfeeding: ${formData.isBreastfeeding ? "Yes" : "No"}`] : []),
+                `Weight: ${formData.weight ? `${formData.weight} kg` : "Not provided"}`,
+                `Height: ${formData.height ? `${formData.height} cm` : "Not provided"}`,
+                `Blood Group: ${formData.bloodGroup || "Not provided"}`,
+                `Symptoms: ${formData.symptoms.join(", ") || "None"}`,
+                `Allergies: ${formData.allergies.join(", ") || "None"}`,
+                `Medical History: ${formData.medicalHistory || "None"}`,
+                `Current Medications: ${formData.currentMedications || "None"}`,
+              ].map((info, i) => (
+                <motion.p
+                  key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className={`p-2 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} border border-gray-200 dark:border-[#FDFBFB]/50`}
+                >
+                  {info}
                 </motion.p>
+              ))}
+            </div>
+            <motion.button
+              onClick={downloadReport}
+              className={`mb-6 p-2 bg-[#0A3D62] text-[#FDFBFB] rounded-xl hover:bg-[#08253A] flex items-center gap-2`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Download size={18} />
+              Download Report
+            </motion.button>
+            {suggestions.reasoning && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <AlertCircle className="text-green-500" size={20} />
+                  Reasoning
+                </h3>
+                <p className={`p-2 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} border border-gray-200 dark:border-[#FDFBFB]/50`}>
+                  {suggestions.reasoning}
+                </p>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+            {suggestions.otcMedications?.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <AlertCircle className="text-[#0A3D62] dark:text-[#FDFBFB]" size={20} />
+                  OTC Medications
+                </h3>
+                {suggestions.otcMedications.slice(0, 2).map((med, i) => (
+                  <div
+                    key={i}
+                    className={`p-4 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} border border-gray-200 dark:border-[#FDFBFB]/50 mb-2`}
+                  >
+                    <h4 className={`font-semibold ${textColor}`}>{i === 0 ? "Primary" : "Alternative"} Medication</h4>
+                    {med.raw ? (
+                      <p className={textColor}>{med.raw}</p>
+                    ) : (
+                      <>
+                        <p className={textColor}><strong>Name:</strong> {med.name || "Not specified"}</p>
+                        <p className={textColor}><strong>Dosage:</strong> {med.dosage || "Not specified"}</p>
+                        <p className={textColor}><strong>Timing:</strong> {med.timing || "Not specified"}</p>
+                        <p className={textColor}><strong>Precautions:</strong> {med.precautions || "Not specified"}</p>
+                        <p className={textColor}><strong>Source:</strong> {med.source || "Available at pharmacies"}</p>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {suggestions.homeRemedies?.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <AlertCircle className="text-[#0A3D62] dark:text-[#FDFBFB]" size={20} />
+                  Home Remedies
+                </h3>
+                {suggestions.homeRemedies.map((remedy, i) => (
+                  <p
+                    key={i}
+                    className={`p-2 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} border border-gray-200 dark:border-[#FDFBFB]/50`}
+                  >
+                    {remedy}
+                  </p>
+                ))}
+              </div>
+            )}
+            {suggestions.warnings?.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <AlertCircle className="text-yellow-500" size={20} />
+                  Warnings
+                </h3>
+                {suggestions.warnings.map((warning, i) => (
+                  <p
+                    key={i}
+                    className="p-2 rounded-xl bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-700"
+                  >
+                    {warning}
+                  </p>
+                ))}
+              </div>
+            )}
+            {suggestions.duration && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <AlertCircle className="text-[#0A3D62] dark:text-[#FDFBFB]" size={20} />
+                  Duration
+                </h3>
+                <p className={`p-2 rounded-xl ${darkMode ? "bg-[#0A2A43]/50" : "bg-gray-50"} border border-gray-200 dark:border-[#FDFBFB]/50`}>
+                  {suggestions.duration}
+                </p>
+              </div>
+            )}
+            <div>
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <AlertCircle className="text-red-500" size={20} />
+                Disclaimer
+              </h3>
+              <p className="p-2 rounded-xl bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-700">
+                {suggestions.disclaimer || `Dear ${formData.name}, consult a doctor before taking any medication. This is not medical advice.`}
+              </p>
+            </div>
+          </motion.div>
+        )}
       </div>
     </>
-  );
-}
-
-function MedicineCard({ medicine, title }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const { darkMode } = useContext(DarkModeContext);
-  const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className={`p-6 rounded-[40px] shadow-md overflow-hidden relative border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl ${darkMode ? "bg-[#0A2A43]/80" : "bg-gray-50"}`}>
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#0A3D62] to-blue-500 transform rotate-45 translate-x-12 -translate-y-12 opacity-10"></div>
-      <h4 className={`text-xl font-semibold mb-4 ${textColor}`}>{title}</h4>
-      <div className="flex flex-col sm:flex-row items-start gap-6 mb-4">
-        <motion.div whileHover={{ scale: 1.05 }} className="overflow-hidden rounded-[40px]">
-          <img src={medicine.image} alt={medicine?.name} loading="lazy" className="w-32 h-32 object-contain border border-gray-200 dark:border-[#FDFBFB]/50 shadow-md transition-transform duration-300" onError={(e) => e.target.src = "https://images.unsplash.com/photo-1587855726752-62b3629bd00e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"} />
-        </motion.div>
-        <div className="flex-1">
-          <h5 className={`text-lg font-semibold ${textColor}`}>{medicine?.name}</h5>
-          <p className={`text-sm ${textColor} opacity-80 mb-2`}>{medicine?.description}</p>
-          <p className={`text-sm ${textColor} mb-2`}><strong>Dosage:</strong> {medicine?.dosage}</p>
-          <p className={`text-sm ${textColor} mb-2`}><strong>Timing and Administration:</strong> {medicine?.timing}</p>
-          <p className={`text-sm ${textColor} mb-2`}><strong>Precautions:</strong> {medicine?.precautions}</p>
-          <p className={`text-sm ${textColor} mb-2`}><strong>Source:</strong> {medicine?.source}</p>
-        </div>
-      </div>
-      <motion.div initial="collapsed" animate={isExpanded ? "expanded" : "collapsed"} variants={{ expanded: { height: "auto", opacity: 1 }, collapsed: { height: 0, opacity: 0 } }} transition={{ duration: 0.3 }} className="overflow-hidden">
-        <h5 className={`font-semibold mt-2 ${textColor} text-sm`}>Side Effects:</h5>
-        <ul className={`list-disc list-inside ${textColor} text-sm`}>
-          {medicine?.sideEffects?.map((effect, index) => <li key={index}>{effect}</li>)}
-        </ul>
-        <h5 className={`font-semibold mt-2 ${textColor} text-sm`}>Brand Names:</h5>
-        <p className={`${textColor} text-sm`}>{medicine?.brandNames?.join(", ") || "N/A"}</p>
-      </motion.div>
-      <motion.button className={`${textColor} hover:text-[#0A3D62] dark:hover:text-[#FDFBFB] transition-all duration-300 flex items-center text-sm mt-4`} onClick={() => setIsExpanded(!isExpanded)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} aria-expanded={isExpanded}>
-        {isExpanded ? "Show Less" : "Show More"}
-        {isExpanded ? <ChevronUp className="ml-1" size={16} /> : <ChevronDown className="ml-1" size={16} />}
-      </motion.button>
-    </motion.div>
   );
 }
 
