@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, Send, Trash2, Bot } from "lucide-react";
+import { MessageSquare, X, Send, Trash2, Bot, Mic, Volume2, VolumeX, StopCircle } from "lucide-react";
 import { DarkModeContext } from "../App";
 
 function Chatbot() {
@@ -25,9 +25,12 @@ function Chatbot() {
     { text: "Pharmacy Info", action: "pharmacy" },
   ]);
   const [showAlert, setShowAlert] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeechEnabled, setIsSpeechEnabled] = useState(false);
   const messagesEndRef = useRef(null);
   const { darkMode } = useContext(DarkModeContext);
   const [isLoading, setIsLoading] = useState(false);
+  const recognitionRef = useRef(null);
 
   // Context prompt for AI
   const mediNovaContext = `
@@ -65,6 +68,62 @@ function Chatbot() {
       return () => clearTimeout(timer);
     }
   }, [isPulse]);
+
+  // Initialize SpeechRecognition
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = false;
+        recognitionRef.current.lang = "en-US";
+
+        recognitionRef.current.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          setInput(transcript);
+          handleSubmit({ preventDefault: () => {} }, transcript);
+          setIsListening(false);
+        };
+
+        recognitionRef.current.onerror = (event) => {
+          console.error("Speech Recognition Error:", event.error);
+          setMessages((prev) => [
+            ...prev,
+            {
+              text: "⚠️ Voice recognition failed. Please try again or type your query.",
+              sender: "bot",
+            },
+          ]);
+          setIsListening(false);
+        };
+
+        recognitionRef.current.onend = () => {
+          setIsListening(false);
+        };
+      }
+    }
+  }, []);
+
+  // Speak bot's latest response when speech is enabled
+  useEffect(() => {
+    if (
+      isSpeechEnabled &&
+      messages.length > 0 &&
+      messages[messages.length - 1].sender === "bot" &&
+      typeof window !== "undefined" &&
+      window.speechSynthesis
+    ) {
+      const latestMessage = messages[messages.length - 1].text;
+      const cleanText = latestMessage.replace(/[\*⚠️🚨🌿🌙🤍⚕️]/g, "").trim();
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = "en-US";
+      utterance.volume = 1;
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [messages, isSpeechEnabled]);
 
   // Handle quick replies
   const handleQuickReply = (action) => {
@@ -130,6 +189,79 @@ function Chatbot() {
     setIsLoading(false);
   };
 
+  // Handle Enter key for submission
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
+  // Toggle voice input
+  const toggleVoiceInput = () => {
+    if (!recognitionRef.current) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: "⚠️ Voice input is not supported in this browser. Please type your query.",
+          sender: "bot",
+        },
+      ]);
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      setIsListening(true);
+      recognitionRef.current.start();
+    }
+  };
+
+  // Toggle speech output
+  const toggleSpeechOutput = () => {
+    if (!window.speechSynthesis) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: "⚠️ Speech output is not supported in this browser.",
+          sender: "bot",
+        },
+      ]);
+      return;
+    }
+    setIsSpeechEnabled(!isSpeechEnabled);
+  };
+
+  // Speak specific message
+  const speakMessage = (text) => {
+    if (!window.speechSynthesis) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: "⚠️ Speech output is not supported in this browser.",
+          sender: "bot",
+        },
+      ]);
+      return;
+    }
+    window.speechSynthesis.cancel(); // Stop any ongoing speech
+    const cleanText = text.replace(/[\*⚠️🚨🌿🌙🤍⚕️]/g, "").trim();
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = "en-US";
+    utterance.volume = 1;
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Cancel speech
+  const cancelSpeech = () => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  };
+
   // Clear chat alert logic
   const clearChat = () => setShowAlert(true);
   const confirmClearChat = () => {
@@ -142,13 +274,13 @@ function Chatbot() {
     setShowAlert(false);
   };
 
-  // Theming
+  // Enhanced liquid glass theming
   const baseGlass = darkMode
-    ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB]"
-    : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62]";
+    ? "bg-gradient-to-br from-[#0A2A43]/50 to-[#1A3A63]/50 border border-white/20 text-[#FDFBFB] backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
+    : "bg-gradient-to-br from-white/50 to-[#E6F0FA]/50 border border-[#0A3D62]/20 text-[#0A3D62] backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)]";
   const hoverGlass = darkMode
-    ? "hover:bg-[#00C2CB]/20 hover:shadow-lg hover:scale-105"
-    : "hover:bg-white/30 hover:shadow-lg hover:scale-105";
+    ? "hover:bg-gradient-to-br hover:from-[#00C2CB]/40 hover:to-[#1A3A63]/60 hover:shadow-[0_6px_30px_rgba(0,194,203,0.3)] hover:scale-105 transition-all duration-300"
+    : "hover:bg-gradient-to-br hover:from-white/60 hover:to-[#B3D4E5]/60 hover:shadow-[0_6px_30px_rgba(10,61,98,0.2)] hover:scale-105 transition-all duration-300";
 
   return (
     <>
@@ -186,7 +318,7 @@ function Chatbot() {
 
       {/* Toggle Button */}
       <motion.button
-        className={`fixed bottom-4 right-4 p-4 rounded-full backdrop-blur-2xl shadow-lg z-50 flex items-center justify-center ${baseGlass} ${hoverGlass}`}
+        className={`fixed bottom-4 right-4 p-4 rounded-full ${baseGlass} ${hoverGlass} z-50 flex items-center justify-center`}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         animate={isPulse ? "pulse" : "initial"}
@@ -207,7 +339,7 @@ function Chatbot() {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className={`fixed bottom-20 right-4 w-80 md:w-96 h-[500px] rounded-[40px] backdrop-blur-2xl ${baseGlass} shadow-xl z-50 flex flex-col overflow-hidden`}
+            className={`fixed bottom-20 right-4 w-80 md:w-96 h-[500px] rounded-[40px] ${baseGlass} shadow-xl z-50 flex flex-col overflow-hidden`}
           >
             {/* Header */}
             <div
@@ -238,7 +370,10 @@ function Chatbot() {
                   }`}
                 >
                   <span
-                    className={`inline-block p-3 rounded-3xl ${baseGlass} ${hoverGlass} max-w-[75%] whitespace-pre-wrap`}
+                    onClick={() => m.sender === "bot" && speakMessage(m.text)}
+                    className={`inline-block p-3 rounded-3xl ${baseGlass} ${hoverGlass} max-w-[75%] whitespace-pre-wrap ${
+                      m.sender === "bot" ? "cursor-pointer" : ""
+                    }`}
                   >
                     {m.text}
                   </span>
@@ -282,28 +417,62 @@ function Chatbot() {
             )}
 
             {/* Input */}
-            <form
-              onSubmit={(e) => handleSubmit(e)}
-              className={`p-4 flex border-t border-white/20 ${hoverGlass}`}
-            >
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about health, AI form, or pharmacy..."
-                className={`flex-grow px-3 py-2 rounded-l-2xl ${baseGlass} focus:outline-none resize-none h-10 max-h-20 overflow-y-auto`}
-                disabled={isLoading}
-                rows={1}
-              />
-              <button
-                type="submit"
-                className={`px-4 py-2 rounded-r-2xl ${hoverGlass} ${
-                  darkMode ? "bg-cyan-500 text-white" : "bg-[#0A3D62] text-white"
-                } disabled:opacity-50`}
-                disabled={isLoading || !input.trim()}
+            <div className={`p-4 border-t border-white/20 ${hoverGlass}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={toggleVoiceInput}
+                  className={`p-2 rounded-full ${baseGlass} ${hoverGlass} ${
+                    isListening ? "bg-red-500 text-white" : ""
+                  }`}
+                  title={isListening ? "Stop Voice Input" : "Start Voice Input"}
+                >
+                  <Mic size={20} />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={toggleSpeechOutput}
+                  className={`p-2 rounded-full ${baseGlass} ${hoverGlass}`}
+                  title={isSpeechEnabled ? "Disable Speech" : "Enable Speech"}
+                >
+                  {isSpeechEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={cancelSpeech}
+                  className={`p-2 rounded-full ${baseGlass} ${hoverGlass}`}
+                  title="Cancel Speech"
+                >
+                  <StopCircle size={20} />
+                </motion.button>
+              </div>
+              <form
+                onSubmit={(e) => handleSubmit(e)}
+                className="flex"
               >
-                <Send size={20} />
-              </button>
-            </form>
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask about health, AI form, or pharmacy... (Press Enter to send)"
+                  className={`flex-grow px-3 py-2 rounded-l-2xl ${baseGlass} focus:outline-none resize-none h-10 max-h-20 overflow-y-auto`}
+                  disabled={isLoading}
+                  rows={1}
+                />
+                <button
+                  type="submit"
+                  className={`px-4 py-2 rounded-r-2xl ${hoverGlass} ${
+                    darkMode ? "bg-cyan-500 text-white" : "bg-[#0A3D62] text-white"
+                  } disabled:opacity-50`}
+                  disabled={isLoading || !input.trim()}
+                >
+                  <Send size={20} />
+                </button>
+              </form>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
