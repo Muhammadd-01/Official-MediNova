@@ -10,6 +10,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, X } from "lucide-react";
 import axios from "axios";
+import { Auth0ProviderWrapper } from "./components/Auth0ProviderWrapper";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -31,7 +32,8 @@ import Chatbot from "./components/Chatbot";
 import GoToTop from "./components/GoToTop";
 import Labs from "./pages/Labs";
 import FAQ from "./components/FAQ";
-import { Auth0ProviderWrapper } from "./components/Auth0ProviderWrapper";
+
+
 
 // Contexts
 export const DarkModeContext = createContext();
@@ -70,20 +72,18 @@ function NotificationProvider({ children }) {
           >
             <div className="flex items-start">
               <AlertCircle
-                className={`w-6 h-6 mr-3 ${
-                  notification.type === "error"
-                    ? "text-red-500"
-                    : "text-green-500"
-                }`}
+                className={`w-6 h-6 mr-3 ${notification.type === "error"
+                  ? "text-red-500"
+                  : "text-green-500"
+                  }`}
               />
               <div className="flex-1">
                 <h3 className={`text-lg font-bold ${textColor}`}>
                   {notification.type === "error" ? "⚠️ Error" : "✅ Success"}
                 </h3>
                 <p
-                  className={`text-sm ${
-                    darkMode ? "text-gray-300" : "text-gray-600"
-                  } mt-1`}
+                  className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"
+                    } mt-1`}
                 >
                   {notification.message}
                 </p>
@@ -95,11 +95,10 @@ function NotificationProvider({ children }) {
                 whileTap={{ scale: 0.9 }}
               >
                 <X
-                  className={`w-5 h-5 ${
-                    notification.type === "error"
-                      ? "text-red-500"
-                      : "text-green-500"
-                  }`}
+                  className={`w-5 h-5 ${notification.type === "error"
+                    ? "text-red-500"
+                    : "text-green-500"
+                    }`}
                 />
               </motion.button>
             </div>
@@ -223,6 +222,8 @@ function ProtectedRoute({ children }) {
   }
   return children;
 }
+
+// ---------------------- 🛡️ Admin Route REMOVED ----------------------
 
 // ---------------------- 🌗 App Component ----------------------
 function App() {
@@ -362,6 +363,8 @@ function App() {
                               </ProtectedRoute>
                             }
                           />
+                          {/* Admin Route */}
+                          {/* Admin Route Removed */}
                         </Routes>
                       </main>
 

@@ -14,6 +14,9 @@ import geminiRoute from "./gemini.js";
 import medibotRoute from "./routes/medibot.js"; // ✅ Added AI route
 import donationRoutes from "./routes/donationRoutes.js";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import publicRoutes from "./routes/publicRoutes.js"; // ✅ Public Routes matching implementation plan
+import { seedSuperAdmin } from "./utils/seedAdmin.js";
 
 
 dotenv.config();
@@ -23,7 +26,7 @@ const PORT = process.env.PORT || 4000;
 // ✅ Enable CORS properly
 app.use(
   cors({
-    origin: "http://localhost:5173", // your frontend URL
+    origin: ["http://localhost:5173", "http://localhost:5174"], // Allow frontend and admin panel
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
@@ -54,6 +57,8 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/medibot", medibotRoute); // ✅ Integrated AI route
 app.use("/api/donation-qr", donationRoutes);
 app.use("/api/chatbot", chatbotRoutes);
+app.use("/api/admin", adminRoutes); // ✅ Admin Routes
+app.use("/api/public", publicRoutes); // ✅ Public endpoints for dynamic content
 
 // ✅ Global Error Handler (optional, clean fallback)
 app.use((err, req, res, next) => {
@@ -62,6 +67,7 @@ app.use((err, req, res, next) => {
 });
 
 // ✅ Start server
-app.listen(PORT, () =>
-  console.log(`🚀 Server running at http://localhost:${PORT}`)
-);
+app.listen(PORT, async () => {
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  await seedSuperAdmin();
+});

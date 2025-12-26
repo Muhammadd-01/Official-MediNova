@@ -1,12 +1,14 @@
 "use client";
 
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
+import axios from "axios";
 import { DarkModeContext } from "../App";
 
 function About() {
   const { darkMode } = useContext(DarkModeContext);
+  const [teamMembers, setTeamMembers] = useState([]);
 
   const headingColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
   const paragraphColor = darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]";
@@ -14,38 +16,18 @@ function About() {
     ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB]"
     : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62]";
 
-  const fadeInUp = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.6 },
-  };
+  useEffect(() => {
+    fetchTeam();
+  }, []);
 
-  const teamMembers = [
-    {
-      name: "Dr. Ahmed Khan",
-      role: "Chief Medical Officer",
-      specialty: "Internal Medicine & Diagnostics",
-      experience: "15 years",
-      image:
-        "https://images.unsplash.com/photo-1607746882042-944635dfe10e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    },
-    {
-      name: "Dr. Bilal Raza",
-      role: "Pharmacist & Research Lead",
-      specialty: "Drug Research & Safety",
-      experience: "12 years",
-      image:
-        "https://images.unsplash.com/photo-1595152772835-219674b2a8a7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    },
-    {
-      name: "Dr. Omar Siddiqui",
-      role: "AI & Tech Specialist",
-      specialty: "Healthcare AI & Automation",
-      experience: "8 years",
-      image:
-        "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    },
-  ];
+  const fetchTeam = async () => {
+    try {
+      const res = await axios.get("http://localhost:4000/api/public/doctors");
+      setTeamMembers(res.data);
+    } catch (err) {
+      console.error("Failed to fetch team", err);
+    }
+  };
 
   const sections = [
     {
@@ -135,28 +117,32 @@ function About() {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {teamMembers.map((member, idx) => (
-              <motion.div
-                key={member.name}
-                className={`rounded-[40px] p-6 backdrop-blur-2xl ${cardBg} transition-all duration-500 hover:scale-102 hover:shadow-xl`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-              >
-                <div className="overflow-hidden rounded-3xl mb-4">
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="w-full h-64 object-cover transition-transform duration-500 hover:scale-105"
-                    loading="lazy"
-                  />
-                </div>
-                <h3 className="text-xl sm:text-2xl font-semibold mb-1">{member.name}</h3>
-                <p className="text-sm sm:text-base mb-1">{member.role}</p>
-                <p className="text-sm sm:text-base mb-1">Specialty: {member.specialty}</p>
-                <p className="text-sm sm:text-base">Experience: {member.experience}</p>
-              </motion.div>
-            ))}
+            {teamMembers.length > 0 ? (
+              teamMembers.map((member, idx) => (
+                <motion.div
+                  key={member._id || idx}
+                  className={`rounded-[40px] p-6 backdrop-blur-2xl ${cardBg} transition-all duration-500 hover:scale-102 hover:shadow-xl`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: idx * 0.1 }}
+                >
+                  <div className="overflow-hidden rounded-3xl mb-4">
+                    <img
+                      src={member.image || "https://via.placeholder.com/400x400"}
+                      alt={member.name}
+                      className="w-full h-64 object-cover transition-transform duration-500 hover:scale-105"
+                      loading="lazy"
+                    />
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-1">{member.name}</h3>
+                  <p className="text-sm sm:text-base mb-1 font-medium opacity-80">{member.role}</p>
+                  <p className="text-sm sm:text-base mb-1">Specialty: {member.specialty}</p>
+                  <p className="text-sm sm:text-base opacity-70">Experience: {member.experience}</p>
+                </motion.div>
+              ))
+            ) : (
+              <p className={`text-center col-span-3 ${paragraphColor}`}>Loading team members...</p>
+            )}
           </div>
         </motion.div>
 

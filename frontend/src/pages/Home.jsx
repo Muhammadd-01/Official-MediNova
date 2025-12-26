@@ -1,9 +1,10 @@
 "use client";
 
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import axios from "axios";
 import Slider from "../components/Slider";
 import NewsletterSignup from "../components/NewsletterSignup";
 import FAQ from "../components/FAQ";
@@ -14,6 +15,48 @@ import { DarkModeContext } from "../App";
 
 function Home() {
   const { darkMode } = useContext(DarkModeContext);
+  const [services, setServices] = useState([]);
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+
+    // Fallback static services if DB is empty to maintain design continuity
+    const staticServices = [
+      {
+        title: "Medicine Suggestions",
+        image: "https://images.unsplash.com/photo-1585435557343-3b092031a831?auto=format&fit=crop&w=800&q=80",
+        description: "Receive AI-assisted, guideline-based medicine suggestions — reviewed by certified pharmacists.",
+        link: "/medibot",
+      },
+      {
+        title: "Expert Consultations",
+        image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=800&q=80",
+        description: "Book secure consultations with specialists in cardiology, dermatology, mental health, and more.",
+        link: "/consultation",
+      },
+      {
+        title: "Health Articles",
+        image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80",
+        description: "Explore doctor-reviewed articles on prevention, nutrition, and chronic conditions.",
+        link: "/articles",
+      },
+    ];
+
+    try {
+      const res = await axios.get("http://localhost:4000/api/public/services");
+      if (res.data && res.data.length > 0) {
+        setServices(res.data);
+      } else {
+        setServices(staticServices);
+      }
+    } catch (err) {
+      console.error(err);
+      setServices(staticServices);
+    }
+  };
 
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
@@ -70,34 +113,9 @@ function Home() {
             animate="animate"
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            {[
-              {
-                title: "Medicine Suggestions",
-                image:
-                  "https://images.unsplash.com/photo-1585435557343-3b092031a831?auto=format&fit=crop&w=800&q=80",
-                description:
-                  "Receive AI-assisted, guideline-based medicine suggestions — reviewed by certified pharmacists.",
-                link: "/medibot",
-              },
-              {
-                title: "Expert Consultations",
-                image:
-                  "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=800&q=80",
-                description:
-                  "Book secure consultations with specialists in cardiology, dermatology, mental health, and more.",
-                link: "/consultation",
-              },
-              {
-                title: "Health Articles",
-                image:
-                  "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80",
-                description:
-                  "Explore doctor-reviewed articles on prevention, nutrition, and chronic conditions.",
-                link: "/articles",
-              },
-            ].map((service, index) => (
+            {services.map((service, index) => (
               <motion.div
-                key={service.title}
+                key={service._id || index}
                 className={`rounded-[40px] p-6 backdrop-blur-2xl ${cardBg} transition-all duration-500`}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
@@ -115,11 +133,11 @@ function Home() {
                 <h2 className="text-xl sm:text-2xl font-semibold mb-4">
                   {service.title}
                 </h2>
-                <p className="text-sm sm:text-base mb-6">
+                <p className="text-sm sm:text-base mb-6 min-h-[50px]">
                   {service.description}
                 </p>
                 <Link
-                  to={service.link}
+                  to={service.link || "#"}
                   className="inline-block px-6 py-3 rounded-2xl font-semibold bg-[#0A3D62]/80 text-white hover:bg-[#0A3D62]/90 transition-all duration-300"
                 >
                   Learn More
@@ -138,104 +156,102 @@ function Home() {
             <HealthTips />
           </motion.div>
 
-         {/* Why MediNova */}
-<motion.div
-  className="mb-16"
-  initial={{ opacity: 0, y: 30 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.6, ease: "easeOut" }}
-  role="region"
-  aria-label="Why Choose MediNova Section"
->
-  <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center tracking-wide">
-    Why Choose MediNova?
-  </h2>
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-    {[
-      {
-        title: "Expert Medical Advice",
-        description:
-          "All content is reviewed by qualified healthcare providers following WHO and CDC guidelines.",
-      },
-      {
-        title: "Personalized Care",
-        description:
-          "Get treatment paths based on AI + doctor-reviewed diagnostics tailored to your symptoms and history.",
-      },
-      {
-        title: "24/7 Accessibility",
-        description:
-          "Use MediNova anytime from home or travel — all services are mobile-optimized and secure.",
-      },
-      {
-        title: "E-Prescription Support",
-        description:
-          "Doctors can issue digital prescriptions that can be filled from our verified pharmacy partners.",
-      },
-    ].map((item, index) => (
-      <motion.div
-        key={item.title}
-        className={`flex flex-col p-6 rounded-3xl ${
-          darkMode
-            ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB] hover:bg-[#0A2A43]/50"
-            : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62] hover:bg-white/50"
-        } backdrop-blur-2xl transition-all duration-500`}
-        initial={{ opacity: 0, x: -40 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: index * 0.1 }}
-        whileHover={{ scale: 1.02 }}
-      >
-        <h3 className="text-lg sm:text-xl font-semibold mb-3">{item.title}</h3>
-        <p className="text-sm sm:text-base leading-relaxed">{item.description}</p>
-      </motion.div>
-    ))}
-  </div>
-</motion.div>
+          {/* Why MediNova */}
+          <motion.div
+            className="mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            role="region"
+            aria-label="Why Choose MediNova Section"
+          >
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center tracking-wide">
+              Why Choose MediNova?
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                {
+                  title: "Expert Medical Advice",
+                  description:
+                    "All content is reviewed by qualified healthcare providers following WHO and CDC guidelines.",
+                },
+                {
+                  title: "Personalized Care",
+                  description:
+                    "Get treatment paths based on AI + doctor-reviewed diagnostics tailored to your symptoms and history.",
+                },
+                {
+                  title: "24/7 Accessibility",
+                  description:
+                    "Use MediNova anytime from home or travel — all services are mobile-optimized and secure.",
+                },
+                {
+                  title: "E-Prescription Support",
+                  description:
+                    "Doctors can issue digital prescriptions that can be filled from our verified pharmacy partners.",
+                },
+              ].map((item, index) => (
+                <motion.div
+                  key={item.title}
+                  className={`flex flex-col p-6 rounded-3xl ${darkMode
+                    ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB] hover:bg-[#0A2A43]/50"
+                    : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62] hover:bg-white/50"
+                    } backdrop-blur-2xl transition-all duration-500`}
+                  initial={{ opacity: 0, x: -40 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <h3 className="text-lg sm:text-xl font-semibold mb-3">{item.title}</h3>
+                  <p className="text-sm sm:text-base leading-relaxed">{item.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
 
           {/* Trust Section */}
-<motion.div
-  className="mb-16"
-  initial={{ opacity: 0, y: 30 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.6, ease: "easeOut" }}
-  role="region"
-  aria-label="Trusted by Healthcare Professionals Section"
->
-  <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center tracking-wide">
-    Trusted by Healthcare Professionals
-  </h2>
+          <motion.div
+            className="mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            role="region"
+            aria-label="Trusted by Healthcare Professionals Section"
+          >
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center tracking-wide">
+              Trusted by Healthcare Professionals
+            </h2>
 
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-    {[
-      {
-        title: "Used by 1,200+ licensed practitioners",
-        description:
-          "Recommended by 40+ clinics nationwide.",
-      },
-      {
-        title: "Compliant with medical standards",
-        description:
-          "MediNova complies with HIPAA, HIMS-Pakistan, and ICD-11 medical data standards.",
-      },
-    ].map((item, index) => (
-      <motion.div
-        key={item.title}
-        className={`flex flex-col p-6 rounded-3xl ${
-          darkMode
-            ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB] hover:bg-[#0A2A43]/50"
-            : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62] hover:bg-white/50"
-        } backdrop-blur-2xl transition-all duration-500`}
-        initial={{ opacity: 0, x: -40 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: index * 0.1 }}
-        whileHover={{ scale: 1.02 }}
-      >
-        <h3 className="text-lg sm:text-xl font-semibold mb-3">{item.title}</h3>
-        <p className="text-sm sm:text-base leading-relaxed">{item.description}</p>
-      </motion.div>
-    ))}
-  </div>
-</motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                {
+                  title: "Used by 1,200+ licensed practitioners",
+                  description:
+                    "Recommended by 40+ clinics nationwide.",
+                },
+                {
+                  title: "Compliant with medical standards",
+                  description:
+                    "MediNova complies with HIPAA, HIMS-Pakistan, and ICD-11 medical data standards.",
+                },
+              ].map((item, index) => (
+                <motion.div
+                  key={item.title}
+                  className={`flex flex-col p-6 rounded-3xl ${darkMode
+                    ? "bg-[#0A2A43]/40 border border-white/10 text-[#FDFBFB] hover:bg-[#0A2A43]/50"
+                    : "bg-white/40 border border-[#0A3D62]/10 text-[#0A3D62] hover:bg-white/50"
+                    } backdrop-blur-2xl transition-all duration-500`}
+                  initial={{ opacity: 0, x: -40 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <h3 className="text-lg sm:text-xl font-semibold mb-3">{item.title}</h3>
+                  <p className="text-sm sm:text-base leading-relaxed">{item.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
 
 
           {/* Sponsors */}

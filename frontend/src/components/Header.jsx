@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DarkModeContext, AuthContext, CartContext } from "../App";
 import CartSidebar from "./CartSidebar";
 
-const MotionLink = motion(Link);
+const MotionLink = motion.create(Link);
 
 // Animation variants
 const dropdownVariants = {
@@ -56,7 +56,7 @@ function Header() {
   const [cartOpen, setCartOpen] = useState(false);
 
   const { darkMode, setDarkMode } = useContext(DarkModeContext);
-  const { isAuthenticated, logout } = useContext(AuthContext);
+  const { isAuthenticated, logout, user } = useContext(AuthContext);
   const { cartItems } = useContext(CartContext);
 
   // ✅ Show number of unique items in cart
@@ -197,6 +197,8 @@ function Header() {
                         {darkMode ? <Moon size={16} /> : <Sun size={16} />}
                         <span>{darkMode ? "Light Mode" : "Dark Mode"}</span>
                       </motion.button>
+
+                      {/* Admin Panel Link Removed */}
 
                       {isAuthenticated ? (
                         <motion.button
