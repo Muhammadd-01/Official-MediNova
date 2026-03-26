@@ -95,7 +95,7 @@ export default function News() {
 
   return (
     <>
-      <Helmet><title>Medical News | MediNova</title></Helmet>
+      <Helmet><title>Medical News | HealthSphere</title></Helmet>
 
       <div className="flex gap-4 items-center mb-4">
         <select value={country} onChange={e => setCountry(e.target.value)} className="p-2 border rounded">
@@ -113,7 +113,7 @@ export default function News() {
       </div>
 
       {loading && <p className={`${mainTextClass}`}>Loading news...</p>}
-      {error && <p className="text-red-600">{error}</p>}
+      {error && <p className="text-teal-600">{error}</p>}
 
       <AnimatePresence>
         <motion.div

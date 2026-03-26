@@ -97,8 +97,8 @@ function Labs() {
           Coming Soon
         </motion.h1>
 
-        <motion.h1 initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="text-3xl sm:text-4xl font-extrabold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500">
-          MediNova Diagnostic Labs
+        <motion.h1 initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="text-3xl sm:text-4xl font-extrabold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-teal-500">
+          HealthSphere Diagnostic Labs
         </motion.h1>
         <p className={`text-center max-w-2xl mx-auto mb-10 text-base sm:text-lg ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
           Book lab tests quickly — professional reporting, sample collection, and secure payment options.
@@ -132,7 +132,7 @@ function Labs() {
           <motion.h2 initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className={`text-2xl font-bold mb-4 ${textColor}`}>
             Lab Reports
           </motion.h2>
-          <p className={`text-sm mb-4 ${textColor}`}>Reports fetched by MediNova AI</p>
+          <p className={`text-sm mb-4 ${textColor}`}>Reports fetched by HealthSphere AI</p>
           <div className="mb-6 flex items-center max-w-md">
             <Search className={`w-5 h-5 ${textColor} mr-2`} />
             <input

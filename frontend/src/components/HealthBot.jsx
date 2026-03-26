@@ -57,7 +57,7 @@ function calculateAge(dob) {
 }
 
 // Custom hook for AI logic (simplified: delegates to backend)
-export const useMediBotAI = () => {
+export const useHealthBotAI = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [suggestions, setSuggestions] = useState(null);
@@ -138,7 +138,7 @@ export const useMediBotAI = () => {
     setIsExtreme(false);
 
     try {
-      const response = await axios.post("http://localhost:4000/medibot/analyze", { // Adjust URL if your backend port/route differs
+      const response = await axios.post("http://localhost:4000/HealthBot/analyze", { // Adjust URL if your backend port/route differs
         ...formData,
         isPregnant,
         isBreastfeeding
@@ -239,4 +239,4 @@ export const useMediBotAI = () => {
   };
 };
 
-export default useMediBotAI;
+export default useHealthBotAI;

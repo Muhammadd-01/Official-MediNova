@@ -161,7 +161,7 @@ function Profile() {
         <button
           type="button"
           onClick={() => setProfileData({ ...profileData, [name]: "" })}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500 font-bold"
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-teal-500 font-bold"
         >
           ✕
         </button>
@@ -172,8 +172,8 @@ function Profile() {
   return (
     <>
       <Helmet>
-        <title>Profile - MediNova</title>
-        <meta name="description" content="Manage your MediNova profile" />
+        <title>Profile - HealthSphere</title>
+        <meta name="description" content="Manage your HealthSphere profile" />
       </Helmet>
 
       <div
@@ -182,7 +182,7 @@ function Profile() {
         <motion.h1
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`text-3xl sm:text-4xl font-extrabold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500`}
+          className={`text-3xl sm:text-4xl font-extrabold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-teal-500`}
         >
           My Profile
         </motion.h1>
@@ -431,7 +431,7 @@ function Profile() {
                   {profileData.profilePicUrl && (
                     <button
                       onClick={handleRemovePicture}
-                      className={`px-4 py-2 rounded-[20px] ${cardBg} backdrop-blur-[10px] border border-red-500 text-red-500 hover:scale-105 hover:shadow-2xl transition-all`}
+                      className={`px-4 py-2 rounded-[20px] ${cardBg} backdrop-blur-[10px] border border-teal-500 text-teal-500 hover:scale-105 hover:shadow-2xl transition-all`}
                     >
                       Remove
                     </button>

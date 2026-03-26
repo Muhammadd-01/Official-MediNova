@@ -49,7 +49,7 @@ export default function Contact() {
                 notification.type === "success"
                   ? "bg-green-500/20 text-green-100 border-green-400"
                   : notification.type === "error"
-                  ? "bg-red-500/20 text-red-100 border-red-400"
+                  ? "bg-teal-500/20 text-teal-100 border-teal-400"
                   : "bg-white/10 text-white border-white/20"
               }`}
           >
@@ -75,7 +75,7 @@ export default function Contact() {
           </p>
           <div className="space-y-3">
             <p className="flex items-center gap-2 text-sm">
-              <Mail className="w-5 h-5 text-blue-400" /> support@medinova.com
+              <Mail className="w-5 h-5 text-teal-400" /> support@HealthSphere.com
             </p>
             <p className="flex items-center gap-2 text-sm">
               📍 Lahore, Pakistan
@@ -87,7 +87,7 @@ export default function Contact() {
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Name */}
           <div className="bg-[#081F5C] rounded-xl p-3 shadow-inner flex items-center gap-3">
-            <User className="w-5 h-5 text-blue-400" />
+            <User className="w-5 h-5 text-teal-400" />
             <input
               type="text"
               name="name"
@@ -102,7 +102,7 @@ export default function Contact() {
 
           {/* Email */}
           <div className="bg-[#081F5C] rounded-xl p-3 shadow-inner flex items-center gap-3">
-            <Mail className="w-5 h-5 text-blue-400" />
+            <Mail className="w-5 h-5 text-teal-400" />
             <input
               type="email"
               name="email"
@@ -117,7 +117,7 @@ export default function Contact() {
 
           {/* Message */}
           <div className="bg-[#081F5C] rounded-xl p-3 shadow-inner flex items-start gap-3">
-            <MessageSquare className="w-5 h-5 text-blue-400 mt-1" />
+            <MessageSquare className="w-5 h-5 text-teal-400 mt-1" />
             <textarea
               name="message"
               rows="4"
@@ -135,7 +135,7 @@ export default function Contact() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
             type="submit"
-            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 
+            className="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-700 
             transition-colors font-semibold text-white shadow-md"
           >
             Send Message

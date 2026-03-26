@@ -11,15 +11,15 @@ function SocialShare({ url, title }) {
 
   const twitterClass = darkMode
     ? "bg-[#1DA1F2] hover:bg-[#0d8ae2]"
-    : "bg-blue-400 hover:bg-blue-500";
+    : "bg-teal-400 hover:bg-teal-500";
 
   const facebookClass = darkMode
     ? "bg-[#4267B2] hover:bg-[#365899]"
-    : "bg-blue-600 hover:bg-blue-700";
+    : "bg-teal-600 hover:bg-teal-700";
 
   const linkedinClass = darkMode
     ? "bg-[#0077B5] hover:bg-[#005f91]"
-    : "bg-blue-800 hover:bg-blue-900";
+    : "bg-teal-800 hover:bg-teal-900";
 
   return (
     <div className="flex flex-wrap gap-3 my-4">

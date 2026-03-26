@@ -70,7 +70,7 @@ function Header() {
   const navItems = [
     "Home",
     "About",
-    "MediBot",
+    "HealthBot",
     "Consultation",
     "Pharmacy",
     "Labs",
@@ -111,7 +111,7 @@ function Header() {
               whileTap="tap"
               className={`text-base sm:text-lg md:text-xl lg:text-2xl font-extrabold tracking-wide px-3 sm:px-4 py-2 rounded-full ${hoverGlass} min-w-max`}
             >
-              MediNova
+              HealthSphere
             </MotionLink>
 
             {/* Desktop Nav */}
@@ -141,7 +141,7 @@ function Header() {
               >
                 <ShoppingCart size={20} />
                 {totalUniqueItems > 0 && (
-                  <span className="absolute top-0 right-0 -translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs text-white font-bold pointer-events-none">
+                  <span className="absolute top-0 right-0 -translate-x-1/2 -translate-y-1/2 bg-teal-600 rounded-full w-5 h-5 flex items-center justify-center text-xs text-white font-bold pointer-events-none">
                     {totalUniqueItems}
                   </span>
                 )}
@@ -205,7 +205,7 @@ function Header() {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={logout}
-                          className="w-full flex items-center gap-3 px-3 py-2 rounded-full text-sm font-semibold bg-red-600/80 text-white hover:bg-red-700/90 transition-all"
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-full text-sm font-semibold bg-teal-600/80 text-white hover:bg-teal-700/90 transition-all"
                         >
                           <LogOut size={16} />
                           Logout

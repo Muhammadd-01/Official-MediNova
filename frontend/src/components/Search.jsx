@@ -17,11 +17,11 @@ function Search() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search..."
-        className="flex-grow px-4 py-2 rounded-l-md border-2 border-blue-300 focus:outline-none focus:border-blue-500"
+        className="flex-grow px-4 py-2 rounded-l-md border-2 border-teal-300 focus:outline-none focus:border-teal-500"
       />
       <button
         type="submit"
-        className="bg-blue-600 text-white px-6 py-2 rounded-r-md hover:bg-blue-700 transition duration-300"
+        className="bg-teal-600 text-white px-6 py-2 rounded-r-md hover:bg-teal-700 transition duration-300"
       >
         Search
       </button>

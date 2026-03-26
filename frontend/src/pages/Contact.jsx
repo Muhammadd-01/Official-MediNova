@@ -48,8 +48,8 @@ function Contact() {
     ? "bg-[#0A2A43]/60 backdrop-blur-xl text-[#FDFBFB]"
     : "bg-white/40 backdrop-blur-xl text-[#0A3D62]";
   const inputStyle = darkMode
-    ? "bg-[#081F5C]/50 text-white border border-blue-300/40 focus:border-blue-400"
-    : "bg-white/50 text-gray-800 border border-gray-300 focus:border-blue-500";
+    ? "bg-[#081F5C]/50 text-white border border-teal-300/40 focus:border-teal-400"
+    : "bg-white/50 text-gray-800 border border-gray-300 focus:border-teal-500";
   const buttonStyle =
     "mt-4 px-6 py-3 rounded-2xl bg-[#0A3D62] text-white hover:bg-[#081F5C] hover:shadow-lg transition-all duration-300";
   const textColor = darkMode ? "text-[#FDFBFB]" : "text-[#0D3B66]";
@@ -144,7 +144,7 @@ function Contact() {
     }
 
     setSuccessMessage(
-      "Donation received — thank you for supporting MediNova’s mission to make healthcare smarter and accessible for everyone."
+      "Donation received — thank you for supporting HealthSphere’s mission to make healthcare smarter and accessible for everyone."
     );
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
@@ -153,10 +153,10 @@ function Contact() {
   return (
     <>
       <Helmet>
-        <title>Contact Us - MediNova</title>
+        <title>Contact Us - HealthSphere</title>
         <meta
           name="description"
-          content="Get in touch with MediNova. We're here to answer your questions and provide support."
+          content="Get in touch with HealthSphere. We're here to answer your questions and provide support."
         />
       </Helmet>
 
@@ -221,7 +221,7 @@ function Contact() {
             <p>123 Medical Street</p>
             <p>Health City, HC 12345</p>
             <p>Phone: (123) 456-7890</p>
-            <p>Email: contact.medinova@gmail.com</p>
+            <p>Email: contact.HealthSphere@gmail.com</p>
             <div className="w-full h-64 md:h-80 mt-4 rounded-2xl overflow-hidden">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!..."
@@ -259,9 +259,9 @@ function Contact() {
           className={`p-8 rounded-[40px] ${cardBg} shadow-md hover:shadow-xl transition-all duration-300 max-w-3xl mx-auto text-center mb-16`}
         >
           <Heart className="w-8 h-8 text-pink-500 mx-auto mb-3" />
-          <h2 className="text-2xl font-bold mb-3">Support MediNova</h2>
+          <h2 className="text-2xl font-bold mb-3">Support HealthSphere</h2>
           <p className="text-gray-300 mb-6">
-            Your donations help us keep MediNova free, secure, and accessible to everyone.
+            Your donations help us keep HealthSphere free, secure, and accessible to everyone.
           </p>
 
           <div className="flex items-center justify-center gap-3 mb-6 flex-wrap">
@@ -320,7 +320,7 @@ function Contact() {
           </div>
 
           <p className="text-xs text-gray-400 mt-6">
-            *Donations are used solely for MediNova’s hosting, APIs, and ongoing improvements.*
+            *Donations are used solely for HealthSphere’s hosting, APIs, and ongoing improvements.*
           </p>
         </motion.div>
       </div>
@@ -369,7 +369,7 @@ function Contact() {
             exit={{ opacity: 0, scale: 0.8 }}
           >
             <div className="flex items-start">
-              <AlertCircle className="w-6 h-6 text-red-500 mr-3" />
+              <AlertCircle className="w-6 h-6 text-teal-500 mr-3" />
               <div className="flex-1">
                 <h3 className={`text-lg font-bold ${textColor}`}>Error ❌</h3>
                 <p className={`text-sm mt-1 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>

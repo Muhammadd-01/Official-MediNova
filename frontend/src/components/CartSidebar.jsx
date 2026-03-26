@@ -152,7 +152,7 @@ export default function CartSidebar({ isOpen, onClose, openPaymentModal }) {
                     </div>
                     <button
                       onClick={() => handleRemove(item.id, item.name)}
-                      className="text-red-600 dark:text-red-400 hover:scale-110 transition-transform"
+                      className="text-teal-600 dark:text-teal-400 hover:scale-110 transition-transform"
                     >
                       Remove
                     </button>

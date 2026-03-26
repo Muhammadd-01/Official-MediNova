@@ -15,15 +15,15 @@ function Feedback() {
   return (
     <>
       <Helmet>
-        <title>Provide Feedback - MediNova</title>
+        <title>Provide Feedback - HealthSphere</title>
         <meta
           name="description"
           content="Share your experience and help us improve our services. Your feedback is valuable to us."
         />
-        <link rel="canonical" href="https://www.MediNova.com/feedback" />
-        <meta property="og:title" content="Provide Feedback - MediNova" />
+        <link rel="canonical" href="https://www.HealthSphere.com/feedback" />
+        <meta property="og:title" content="Provide Feedback - HealthSphere" />
         <meta property="og:description" content="Share your experience and help us improve our medical services." />
-        <meta property="og:url" content="https://www.MediNova.com/feedback" />
+        <meta property="og:url" content="https://www.HealthSphere.com/feedback" />
         <meta property="og:type" content="website" />
       </Helmet>
 
@@ -41,7 +41,7 @@ function Feedback() {
             rows="6"
             required
           ></textarea>
-          <button type="submit" className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          <button type="submit" className="mt-4 bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">
             Submit Feedback
           </button>
         </form>

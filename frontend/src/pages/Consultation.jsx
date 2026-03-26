@@ -66,7 +66,7 @@ const nurses = [
 
 // Related Services
 const relatedServices = [
-  { to: "/medibot", text: "Get personalized medicine suggestions", icon: "💊" },
+  { to: "/HealthBot", text: "Get personalized medicine suggestions", icon: "💊" },
   { to: "/articles", text: "Read our health articles", icon: "📰" },
   { to: "/pharmacy", text: "Explore our pharmacy services", icon: "🏥" },
 ];
@@ -268,7 +268,7 @@ function Consultation() {
   return (
     <>
       <Helmet>
-        <title>Consultation | MediNova</title>
+        <title>Consultation | HealthSphere</title>
       </Helmet>
 
       <Header />

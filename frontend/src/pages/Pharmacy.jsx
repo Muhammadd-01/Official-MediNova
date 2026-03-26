@@ -200,7 +200,7 @@ function Pharmacy() {
           >
             <FiShoppingCart size={24} />
             {cartItems.length > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+              <span className="absolute -top-2 -right-2 bg-teal-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
                 {cartItems.length}
               </span>
             )}

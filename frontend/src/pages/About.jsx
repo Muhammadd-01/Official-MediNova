@@ -33,7 +33,7 @@ function About() {
     {
       title: "Our Mission",
       content:
-        "At MediNova, our mission is to provide accessible, reliable, and comprehensive medical information and services to empower individuals in making informed decisions about their health. We strive to bridge the gap between patients and healthcare providers through innovative technology and trusted resources. Our goal is to make healthcare knowledge and guidance transparent, accurate, and actionable for everyone.",
+        "At HealthSphere, our mission is to provide accessible, reliable, and comprehensive medical information and services to empower individuals in making informed decisions about their health. We strive to bridge the gap between patients and healthcare providers through innovative technology and trusted resources. Our goal is to make healthcare knowledge and guidance transparent, accurate, and actionable for everyone.",
       image:
         "https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80",
     },
@@ -54,12 +54,12 @@ function About() {
   return (
     <>
       <Helmet>
-        <title>About MediNova - Your Trusted Medical Resource</title>
+        <title>About HealthSphere - Your Trusted Medical Resource</title>
         <meta
           name="description"
-          content="Learn about MediNova's mission, values, team, and commitment to providing high-quality medical information and services."
+          content="Learn about HealthSphere's mission, values, team, and commitment to providing high-quality medical information and services."
         />
-        <link rel="canonical" href="https://www.MediNova.com/about" />
+        <link rel="canonical" href="https://www.HealthSphere.com/about" />
       </Helmet>
 
       <div className="container mx-auto px-4 sm:px-6 py-16">
@@ -69,7 +69,7 @@ function About() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          About MediNova
+          About HealthSphere
         </motion.h1>
 
         {/* Sections: Mission & Values */}

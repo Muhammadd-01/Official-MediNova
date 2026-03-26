@@ -48,7 +48,7 @@ function NewsletterSignup() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Enter your email"
           required
-          className={`flex-grow px-5 py-4 rounded-2xl ${inputBg} border focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all duration-300`}
+          className={`flex-grow px-5 py-4 rounded-2xl ${inputBg} border focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all duration-300`}
           aria-label="Enter your email for newsletter subscription"
         />
 

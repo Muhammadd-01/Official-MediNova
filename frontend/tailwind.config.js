@@ -40,18 +40,32 @@ module.exports = {
       foreground: "hsl(var(--card-foreground))",
     },
 
-    // Meronish Red Palette
-    meronishRed: {
-      50: "#fff1f1",
-      100: "#fcdede",
-      200: "#f8bcbc",
-      300: "#f28a8a",
-      400: "#e94c4c",
-      500: "#c23737", // Strong Meron
-      600: "#9e2b2b",
-      700: "#741f1f",
-      800: "#4a1414",
-      900: "#1f0505",
+    // HealthSphere Teal Palette
+    healthTeal: {
+      50: "#f0fdfa",
+      100: "#ccfbf1",
+      200: "#99f6e4",
+      300: "#5eead4",
+      400: "#2dd4bf",
+      500: "#14b8a6", // Primary HealthSphere
+      600: "#0d9488",
+      700: "#0f766e",
+      800: "#115e59",
+      900: "#134e4a",
+    },
+
+    // DeenSphere Gold Accent
+    deenGold: {
+      50: "#fffbeb",
+      100: "#fef3c7",
+      200: "#fde68a",
+      300: "#fcd34d",
+      400: "#fbbf24",
+      500: "#f5b400", // Primary DeenSphere Gold
+      600: "#e6a800",
+      700: "#b45309",
+      800: "#92400e",
+      900: "#78350f",
     },
   },
   borderRadius: {

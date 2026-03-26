@@ -16,7 +16,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import About from "./pages/About";
-import MediBot from "./pages/MediBot";
+import HealthBot from "./pages/HealthBot";
 import Consultation from "./pages/Consultation";
 import Feedback from "./pages/Feedback";
 import Contact from "./pages/Contact";
@@ -73,7 +73,7 @@ function NotificationProvider({ children }) {
             <div className="flex items-start">
               <AlertCircle
                 className={`w-6 h-6 mr-3 ${notification.type === "error"
-                  ? "text-red-500"
+                  ? "text-teal-500"
                   : "text-green-500"
                   }`}
               />
@@ -90,13 +90,13 @@ function NotificationProvider({ children }) {
               </div>
               <motion.button
                 onClick={() => setNotification(null)}
-                className="p-1 rounded-full bg-red-500/20 hover:bg-red-500/30 transition-all duration-300"
+                className="p-1 rounded-full bg-teal-500/20 hover:bg-teal-500/30 transition-all duration-300"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
                 <X
                   className={`w-5 h-5 ${notification.type === "error"
-                    ? "text-red-500"
+                    ? "text-teal-500"
                     : "text-green-500"
                     }`}
                 />
@@ -284,10 +284,10 @@ function App() {
                             }
                           />
                           <Route
-                            path="/medibot"
+                            path="/HealthBot"
                             element={
                               <ProtectedRoute>
-                                <MediBot />
+                                <HealthBot />
                               </ProtectedRoute>
                             }
                           />

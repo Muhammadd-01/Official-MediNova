@@ -430,7 +430,7 @@ export default function CheckoutModal({
                 <div className="relative">
                   <ShieldCheck
                     className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
-                      cnicVerified && !cnicVerified.includes("Invalid") ? "text-green-500" : cnicVerified?.includes("Invalid") ? "text-red-500" : "text-[#00C2CB]"
+                      cnicVerified && !cnicVerified.includes("Invalid") ? "text-green-500" : cnicVerified?.includes("Invalid") ? "text-teal-500" : "text-[#00C2CB]"
                     }`}
                   />
                   <input
@@ -443,7 +443,7 @@ export default function CheckoutModal({
                   />
                   {cnicVerified && (
                     <span className={`text-xs mt-1 block flex items-center ${
-                      cnicVerified.includes("Invalid") ? "text-red-500" : "text-green-500"
+                      cnicVerified.includes("Invalid") ? "text-teal-500" : "text-green-500"
                     }`}>
                       {cnicLoading ? (
                         <>
@@ -506,7 +506,7 @@ export default function CheckoutModal({
                     placeholder="03XX-XXXXXXX"
                     required
                   />
-                  {phoneError && <span className="text-xs mt-1 block text-red-500">{phoneError}</span>}
+                  {phoneError && <span className="text-xs mt-1 block text-teal-500">{phoneError}</span>}
                 </div>
               </div>
               <div>
@@ -649,7 +649,7 @@ export default function CheckoutModal({
                       <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#00C2CB]" />
                       <input type="text" name="cardNumber" value={formData.cardNumber} onChange={handleFormChange} className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none`} placeholder="1234 5678 9012 3456" required />
                       {cardDetails && (
-                        <span className={`text-xs mt-1 block flex items-center ${cardDetails.includes("Invalid") ? "text-red-500" : "text-green-500"}`}>
+                        <span className={`text-xs mt-1 block flex items-center ${cardDetails.includes("Invalid") ? "text-teal-500" : "text-green-500"}`}>
                           {cardLoading ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Verifying...</> : <><CheckCircle className="w-4 h-4 mr-1" />{cardDetails}</>}
                         </span>
                       )}
@@ -719,7 +719,7 @@ export default function CheckoutModal({
                       <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#00C2CB]" />
                       <input type="text" name="accountNumber" value={formData.accountNumber} onChange={handleFormChange} className={`w-full pl-10 pr-4 py-2 rounded-[20px] ${inputBg} focus:ring-2 focus:ring-[#00C2CB] transition-all duration-300 border-none outline-none`} placeholder="Enter account number" required />
                       {bankDetails && (
-                        <span className={`text-xs mt-1 block flex items-center ${bankDetails.includes("Invalid") ? "text-red-500" : "text-green-500"}`}>
+                        <span className={`text-xs mt-1 block flex items-center ${bankDetails.includes("Invalid") ? "text-teal-500" : "text-green-500"}`}>
                           {bankLoading ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Verifying...</> : <><CheckCircle className="w-4 h-4 mr-1" />{bankDetails}</>}
                         </span>
                       )}

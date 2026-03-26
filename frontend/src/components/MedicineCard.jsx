@@ -17,12 +17,12 @@ function MedicineCard({ medicine }) {
       transition={{ duration: 0.5 }}
       whileHover={{ scale: 1.02 }}
     >
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-professionalBlue-400 to-professionalBlue-600 transform rotate-45 translate-x-12 -translate-y-12 opacity-50"></div>
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-professionalteal-400 to-professionalteal-600 transform rotate-45 translate-x-12 -translate-y-12 opacity-50"></div>
       <div className="flex items-center mb-4">
         <motion.img
           src={medicine?.image || "/placeholder.svg"}
           alt={medicine?.name}
-          className="w-20 h-20 object-cover rounded-full mr-4 border-4 border-professionalBlue-300"
+          className="w-20 h-20 object-cover rounded-full mr-4 border-4 border-professionalteal-300"
           whileHover={{ scale: 1.1, rotate: 360 }}
           transition={{ duration: 0.5 }}
         />
@@ -52,7 +52,7 @@ function MedicineCard({ medicine }) {
         <p>{medicine?.brandNames?.join(", ") || "N/A"}</p>
       </motion.div>
       <motion.button
-        className="mt-4 text-professionalBlue-600 hover:text-professionalBlue-800 transition-colors duration-300 flex items-center"
+        className="mt-4 text-professionalteal-600 hover:text-professionalteal-800 transition-colors duration-300 flex items-center"
         onClick={() => setIsExpanded(!isExpanded)}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}

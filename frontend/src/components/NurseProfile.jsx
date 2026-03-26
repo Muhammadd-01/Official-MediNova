@@ -18,7 +18,7 @@ function NurseProfile({ nurse, onBookNurse }) {
     },
     availableChannel: {
       "@type": "ServiceChannel",
-      serviceUrl: `https://www.MediNova.com/nurse/${nurse.id}`,
+      serviceUrl: `https://www.HealthSphere.com/nurse/${nurse.id}`,
       servicePhone: nurse.phone,
     },
   };
@@ -28,8 +28,8 @@ function NurseProfile({ nurse, onBookNurse }) {
     : "bg-white/40 backdrop-blur-2xl border border-[#0A3D62]/20 text-[#0A3D62]";
 
   const buttonBg = darkMode
-    ? "bg-gradient-to-r from-pink-400 to-red-500 text-white hover:opacity-90"
-    : "bg-gradient-to-r from-pink-600 to-red-600 text-white hover:opacity-90";
+    ? "bg-gradient-to-r from-pink-400 to-teal-500 text-white hover:opacity-90"
+    : "bg-gradient-to-r from-pink-600 to-teal-600 text-white hover:opacity-90";
 
   return (
     <motion.div
@@ -47,7 +47,7 @@ function NurseProfile({ nurse, onBookNurse }) {
       {/* Glowing overlay */}
       <div className="absolute inset-0 rounded-[40px] pointer-events-none">
         <motion.div
-          className="absolute inset-0 rounded-[40px] bg-gradient-to-r from-pink-400/40 via-red-400/30 to-orange-400/30 blur-2xl opacity-30"
+          className="absolute inset-0 rounded-[40px] bg-gradient-to-r from-pink-400/40 via-teal-400/30 to-orange-400/30 blur-2xl opacity-30"
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
         />

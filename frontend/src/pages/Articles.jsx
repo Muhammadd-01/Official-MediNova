@@ -174,7 +174,7 @@ function Articles() {
   return (
     <>
       <Helmet>
-        <title>Health Articles - MediNova</title>
+        <title>Health Articles - HealthSphere</title>
       </Helmet>
 
       <div className="max-w-7xl mx-auto p-4 sm:p-6">

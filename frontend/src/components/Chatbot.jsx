@@ -7,11 +7,11 @@ function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [isPulse, setIsPulse] = useState(false);
   const [messages, setMessages] = useState(() => {
-    const saved = JSON.parse(localStorage.getItem("mediNovaChat")) || [];
+    const saved = JSON.parse(localStorage.getItem("HealthSphereChat")) || [];
     if (saved.length === 0) {
       return [
         {
-          text: "Assalamu alaikum! 🌿 Welcome to MediNova — your online hospital. You can ask about our AI medicine form, consultations, pharmacy, or general health advice. Remember: *Ultimate healing is from Allah (Quran 26:80)*. How can I assist you today?",
+          text: "Assalamu alaikum! 🌿 Welcome to HealthSphere — your online hospital. You can ask about our AI medicine form, consultations, pharmacy, or general health advice. Remember: *Ultimate healing is from Allah (Quran 26:80)*. How can I assist you today?",
           sender: "bot",
         },
       ];
@@ -33,8 +33,8 @@ function Chatbot() {
   const recognitionRef = useRef(null);
 
   // Context prompt for AI
-  const mediNovaContext = `
-    You are MediNova AI, a compassionate medical assistant.
+  const HealthSphereContext = `
+    You are HealthSphere AI, a compassionate medical assistant.
     Platform overview:
     - AI Form: Suggests medicines based on symptoms, age, gender, allergies.
     - Consultations: Lets users book video/audio calls with doctors.
@@ -57,7 +57,7 @@ function Chatbot() {
 
   // Persist chat + auto scroll
   useEffect(() => {
-    localStorage.setItem("mediNovaChat", JSON.stringify(messages));
+    localStorage.setItem("HealthSphereChat", JSON.stringify(messages));
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -139,7 +139,7 @@ function Chatbot() {
         query = "Tell me about the pharmacy and ordering process.";
         break;
       default:
-        query = "What are MediNova’s main features?";
+        query = "What are HealthSphere’s main features?";
     }
     handleSubmit({ preventDefault: () => {} }, query);
   };
@@ -159,7 +159,7 @@ function Chatbot() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: `${mediNovaContext}\nUser query: "${userInput}"`,
+          message: `${HealthSphereContext}\nUser query: "${userInput}"`,
         }),
       });
 
@@ -180,7 +180,7 @@ function Chatbot() {
       setMessages((prev) => [
         ...prev,
         {
-          text: "🚨 Connection issue. Please retry later or contact support@medinova.com. May Allah ease your matters 🤍",
+          text: "🚨 Connection issue. Please retry later or contact support@HealthSphere.com. May Allah ease your matters 🤍",
           sender: "bot",
         },
       ]);
@@ -267,7 +267,7 @@ function Chatbot() {
   const confirmClearChat = () => {
     setMessages([
       {
-        text: "Chat reset. Ready to assist you with MediNova again! 🌙",
+        text: "Chat reset. Ready to assist you with HealthSphere again! 🌙",
         sender: "bot",
       },
     ]);
@@ -346,7 +346,7 @@ function Chatbot() {
               className={`p-4 text-lg font-semibold rounded-t-[40px] flex justify-between items-center ${hoverGlass}`}
             >
               <span className="flex items-center gap-2">
-                <Bot size={20} /> MediNova AI Assistant
+                <Bot size={20} /> HealthSphere AI Assistant
               </span>
               <button
                 onClick={clearChat}
@@ -424,7 +424,7 @@ function Chatbot() {
                   whileTap={{ scale: 0.95 }}
                   onClick={toggleVoiceInput}
                   className={`p-2 rounded-full ${baseGlass} ${hoverGlass} ${
-                    isListening ? "bg-red-500 text-white" : ""
+                    isListening ? "bg-teal-500 text-white" : ""
                   }`}
                   title={isListening ? "Stop Voice Input" : "Start Voice Input"}
                 >
@@ -465,7 +465,7 @@ function Chatbot() {
                 <button
                   type="submit"
                   className={`px-4 py-2 rounded-r-2xl ${hoverGlass} ${
-                    darkMode ? "bg-cyan-500 text-white" : "bg-[#0A3D62] text-white"
+                    darkMode ? "bg-teal-500 text-white" : "bg-[#0A3D62] text-white"
                   } disabled:opacity-50`}
                   disabled={isLoading || !input.trim()}
                 >

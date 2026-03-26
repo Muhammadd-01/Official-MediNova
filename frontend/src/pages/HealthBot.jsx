@@ -37,25 +37,25 @@ function ErrorNotification({ error, onClose, darkMode }) {
       exit={{ opacity: 0, scale: 0.8 }}
     >
       <div className="flex items-start">
-        <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
+        <AlertCircle className="w-5 h-5 text-teal-500 mr-2" />
         <div>
           <h3 className={`text-lg font-bold ${darkMode ? "text-[#FDFBFB]" : "text-[#0A3D62]"}`}>Error ⚠️</h3>
           <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"}`}>{error}</p>
         </div>
         <motion.button
           onClick={onClose}
-          className="p-1 rounded-full bg-red-500/20 hover:bg-red-500/30"
+          className="p-1 rounded-full bg-teal-500/20 hover:bg-teal-500/30"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
         >
-          <X className="w-4 h-4 text-red-500" />
+          <X className="w-4 h-4 text-teal-500" />
         </motion.button>
       </div>
     </motion.div>
   );
 }
 
-function MediBot() {
+function HealthBot() {
   const { darkMode } = useContext(DarkModeContext);
   const [formData, setFormData] = useState({
     name: "",
@@ -218,7 +218,7 @@ function MediBot() {
 
   // Compile full text for speech
   const getFullText = () => {
-    let text = "MediBot Health Report\n\n";
+    let text = "HealthBot Health Report\n\n";
     text += "Patient Information:\n";
     text += `Name: ${formData.name}\n`;
     text += `Age: ${formData.age || "Not provided"}\n`;
@@ -378,7 +378,7 @@ function MediBot() {
         isBreastfeeding: formData.isBreastfeeding,
       };
       console.log("Sending payload:", payload);
-      const res = await fetch("http://localhost:4000/api/medibot", {
+      const res = await fetch("http://localhost:4000/api/HealthBot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -411,7 +411,7 @@ function MediBot() {
 
     // Header
     doc.setFontSize(18).setTextColor(10, 61, 98).setFont("helvetica", "bold");
-    doc.text("MediBot Health Report", pageWidth / 2, y, { align: "center" });
+    doc.text("HealthBot Health Report", pageWidth / 2, y, { align: "center" });
     y += 10;
 
     doc.setFontSize(12).setTextColor(0, 0, 0).setFont("helvetica", "normal");
@@ -504,13 +504,13 @@ function MediBot() {
       doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, doc.internal.pageSize.height - margin, { align: "center" });
     }
 
-    doc.save("medibot_report.pdf");
+    doc.save("HealthBot_report.pdf");
   };
 
   return (
     <>
       <Helmet>
-        <title>MediBot Suggestions</title>
+        <title>HealthBot Suggestions</title>
         <meta name="description" content="Personalized OTC medication suggestions." />
       </Helmet>
 
@@ -522,13 +522,13 @@ function MediBot() {
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500"
+          className="text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-teal-500"
         >
-          MediBot Suggestions
+          HealthBot Suggestions
         </motion.h1>
 
         {errorMessage && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-4 p-3 rounded-[20px] bg-red-100 text-red-700 border border-red-200">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-4 p-3 rounded-[20px] bg-teal-100 text-teal-700 border border-teal-200">
             {errorMessage}
           </motion.div>
         )}
@@ -667,7 +667,7 @@ function MediBot() {
                 max="500"
                 whileFocus={{ scale: 1.02 }}
               />
-              {Number(formData.weight) > 500 && <p className="text-red-500 text-xs">Weight exceeds limit.</p>}
+              {Number(formData.weight) > 500 && <p className="text-teal-500 text-xs">Weight exceeds limit.</p>}
             </div>
             <div>
               <label htmlFor="height" className={`text-sm font-medium ${textColor}`}>
@@ -684,7 +684,7 @@ function MediBot() {
                 max="300"
                 whileFocus={{ scale: 1.02 }}
               />
-              {Number(formData.height) > 300 && <p className="text-red-500 text-xs">Height exceeds limit.</p>}
+              {Number(formData.height) > 300 && <p className="text-teal-500 text-xs">Height exceeds limit.</p>}
             </div>
             <div>
               <label htmlFor="bloodGroup" className={`text-sm font-medium ${textColor}`}>
@@ -831,7 +831,7 @@ function MediBot() {
             animate={{ opacity: 1 }}
             className={`mt-6 p-6 rounded-[20px] shadow-md ${bgColor} border border-gray-200 dark:border-gray-700`}
           >
-            <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500 flex items-center justify-between">
+            <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-teal-500 flex items-center justify-between">
               Suggestions for {formData.name}
               <div className="flex gap-2">
                 <motion.button
@@ -849,7 +849,7 @@ function MediBot() {
                 {isSpeaking && (
                   <motion.button
                     onClick={handleStopListen}
-                    className="p-2 bg-red-500/70 text-white rounded-xl hover:bg-red-600/90 flex items-center gap-2 transition-all duration-300 backdrop-filter backdrop-blur-sm bg-opacity-70 border border-white/20 hover:scale-105"
+                    className="p-2 bg-teal-500/70 text-white rounded-xl hover:bg-teal-600/90 flex items-center gap-2 transition-all duration-300 backdrop-filter backdrop-blur-sm bg-opacity-70 border border-white/20 hover:scale-105"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -980,10 +980,10 @@ function MediBot() {
             )}
             <div>
               <h3 className="text-lg font-semibold flex items-center gap-2">
-                <AlertCircle className="text-red-500" size={20} />
+                <AlertCircle className="text-teal-500" size={20} />
                 Disclaimer
               </h3>
-              <p className="p-2 rounded-xl bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-700">
+              <p className="p-2 rounded-xl bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-400 border border-teal-200 dark:border-teal-700">
                 {suggestions.disclaimer || `Dear ${formData.name}, consult a doctor before taking any medication. This is not medical advice.`}
               </p>
             </div>
@@ -994,4 +994,4 @@ function MediBot() {
   );
 }
 
-export default MediBot;
+export default HealthBot;

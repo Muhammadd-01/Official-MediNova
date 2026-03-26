@@ -34,7 +34,7 @@ const HealthTips = () => {
           transition={{ duration: 0.5, delay: index * 0.1 }}
           whileHover={{ scale: 1.02 }}
         >
-          <span className="mr-4 text-lg font-bold text-cyan-400">•</span>
+          <span className="mr-4 text-lg font-bold text-teal-400">•</span>
           <span className="text-base sm:text-lg leading-relaxed">{tip}</span>
         </motion.div>
       ))}

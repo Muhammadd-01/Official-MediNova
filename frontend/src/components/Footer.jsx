@@ -25,9 +25,9 @@ function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">About MediNova</h3>
+            <h3 className="text-lg font-semibold mb-4">About HealthSphere</h3>
             <p className="text-sm">
-              MediNova is your trusted source for medical information, expert
+              HealthSphere is your trusted source for medical information, expert
               consultations, and health-related services.
             </p>
           </div>
@@ -58,7 +58,7 @@ function Footer() {
             <h3 className="text-lg font-semibold mb-4">Services</h3>
             <ul className="space-y-2">
               {[
-                { path: "/medibot", label: "MediBot" },
+                { path: "/HealthBot", label: "HealthBot" },
                 { path: "/consultation", label: "Expert Consultation" },
                 { path: "/emergency", label: "Emergency Services" },
                 { path: "/contact", label: "Contact Us" },
@@ -79,7 +79,7 @@ function Footer() {
               123 Medical Street, Health City, HC 12345
             </p>
             <p className="text-sm mb-2">Phone: (123) 456-7890</p>
-            <p className="text-sm mb-2">Email: info@MediNova.com</p>
+            <p className="text-sm mb-2">Email: info@HealthSphere.com</p>
             <div className="mt-4 flex space-x-4">
               {[
                 { label: "Facebook", url: "https://www.facebook.com" },
@@ -102,7 +102,7 @@ function Footer() {
 
         {/* Copyright */}
         <div className="mt-8 pt-8 border-t border-white/20 text-center text-sm">
-          &copy; {new Date().getFullYear()} MediNova. All rights reserved.
+          &copy; {new Date().getFullYear()} HealthSphere. All rights reserved.
         </div>
       </div>
     </footer>

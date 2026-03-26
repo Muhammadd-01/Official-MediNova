@@ -113,8 +113,8 @@ function Login() {
   return (
     <>
       <Helmet>
-        <title>Login - MediNova</title>
-        <meta name="description" content="Log in to your MediNova account" />
+        <title>Login - HealthSphere</title>
+        <meta name="description" content="Log in to your HealthSphere account" />
       </Helmet>
 
       <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -204,7 +204,7 @@ function Login() {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-blue-600 to-blue-400 hover:scale-105 hover:shadow-lg transition-all"
+                className="w-full flex justify-center py-3 px-4 text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-teal-600 to-teal-400 hover:scale-105 hover:shadow-lg transition-all"
               >
                 Sign in
               </button>
@@ -260,7 +260,7 @@ function Login() {
             aria-live="assertive"
           >
             <div className="flex items-start">
-              <AlertCircle className="w-6 h-6 text-red-500 mr-3" />
+              <AlertCircle className="w-6 h-6 text-teal-500 mr-3" />
               <div className="flex-1">
                 <h3 className={`text-lg font-bold ${textColor}`}>Login Failed ❌</h3>
                 <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"} mt-1`}>

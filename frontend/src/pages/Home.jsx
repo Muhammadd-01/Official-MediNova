@@ -29,7 +29,7 @@ function Home() {
         title: "Medicine Suggestions",
         image: "https://images.unsplash.com/photo-1585435557343-3b092031a831?auto=format&fit=crop&w=800&q=80",
         description: "Receive AI-assisted, guideline-based medicine suggestions — reviewed by certified pharmacists.",
-        link: "/medibot",
+        link: "/HealthBot",
       },
       {
         title: "Expert Consultations",
@@ -71,12 +71,12 @@ function Home() {
   return (
     <>
       <Helmet>
-        <title>MediNova - Your Trusted Medical Platform</title>
+        <title>HealthSphere - Your Trusted Medical Platform</title>
         <meta
           name="description"
-          content="MediNova offers expert-backed medical consultations, personalized drug recommendations, and secure digital healthcare services 24/7."
+          content="HealthSphere offers expert-backed medical consultations, personalized drug recommendations, and secure digital healthcare services 24/7."
         />
-        <link rel="canonical" href="https://www.MediNova.com" />
+        <link rel="canonical" href="https://www.HealthSphere.com" />
       </Helmet>
 
       <div className="animate-fadeIn">
@@ -93,18 +93,30 @@ function Home() {
             className="text-4xl sm:text-5xl font-bold mb-8 text-center text-[#0A3D62] dark:text-[#FDFBFB]"
             {...fadeInUp}
           >
-            Welcome to MediNova
+            Welcome to HealthSphere
           </motion.h1>
 
           {/* Subtitle */}
           <motion.p
-            className="text-lg sm:text-xl mb-12 text-center text-muted-foreground dark:text-[#FDFBFB] max-w-4xl mx-auto"
+            className="text-lg sm:text-xl mb-4 text-center text-muted-foreground dark:text-[#FDFBFB] max-w-4xl mx-auto"
             {...fadeInUp}
           >
             Your digital bridge to licensed doctors, evidence-based medicine
             recommendations, and real-time health guidance — all under one
             secure platform.
           </motion.p>
+
+          {/* DeenSphere Branding */}
+          <motion.div
+            className="flex items-center justify-center gap-2 mb-12"
+            {...fadeInUp}
+          >
+            <div className="w-2 h-2 rounded-full bg-[#F5B400]"></div>
+            <p className="text-sm font-semibold text-[#F5B400] tracking-wider uppercase">
+              Part of the DeenSphere Ecosystem
+            </p>
+            <div className="w-2 h-2 rounded-full bg-[#F5B400]"></div>
+          </motion.div>
 
           {/* Services Cards */}
           <motion.div
@@ -156,17 +168,17 @@ function Home() {
             <HealthTips />
           </motion.div>
 
-          {/* Why MediNova */}
+          {/* Why HealthSphere */}
           <motion.div
             className="mb-16"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
             role="region"
-            aria-label="Why Choose MediNova Section"
+            aria-label="Why Choose HealthSphere Section"
           >
             <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center tracking-wide">
-              Why Choose MediNova?
+              Why Choose HealthSphere?
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
@@ -183,7 +195,7 @@ function Home() {
                 {
                   title: "24/7 Accessibility",
                   description:
-                    "Use MediNova anytime from home or travel — all services are mobile-optimized and secure.",
+                    "Use HealthSphere anytime from home or travel — all services are mobile-optimized and secure.",
                 },
                 {
                   title: "E-Prescription Support",
@@ -232,7 +244,7 @@ function Home() {
                 {
                   title: "Compliant with medical standards",
                   description:
-                    "MediNova complies with HIPAA, HIMS-Pakistan, and ICD-11 medical data standards.",
+                    "HealthSphere complies with HIPAA, HIMS-Pakistan, and ICD-11 medical data standards.",
                 },
               ].map((item, index) => (
                 <motion.div

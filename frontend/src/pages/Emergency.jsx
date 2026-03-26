@@ -1169,7 +1169,7 @@ out body;`;
         </motion.h1>
 
         <motion.h1
-          className="text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-blue-500"
+          className="text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-[#0A3D62] to-teal-500"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -1310,7 +1310,7 @@ out body;`;
                 </div>
               )}
               {(tileLoadStatus === "failed" || tileLoadStatus === "terrain-failed") && (
-                <div className={`absolute top-4 right-4 z-10 p-3 rounded-[20px] bg-red-600 ${darkMode ? "text-[#FDFBFB]" : "text-white"} backdrop-blur-2xl shadow-md transition-all duration-500 border-none outline-none flex items-center space-x-2`}>
+                <div className={`absolute top-4 right-4 z-10 p-3 rounded-[20px] bg-teal-600 ${darkMode ? "text-[#FDFBFB]" : "text-white"} backdrop-blur-2xl shadow-md transition-all duration-500 border-none outline-none flex items-center space-x-2`}>
                   <span>{tileLoadStatus === "terrain-failed" ? "3D terrain failed, using 2D" : "Map style failed, using fallback"}</span>
                   <motion.button
                     onClick={handleRetryStyle}
@@ -1366,7 +1366,7 @@ out body;`;
                 </motion.button>
                 <motion.button
                   onClick={cancelRoute}
-                  className={`px-4 py-2 rounded-[40px] bg-red-600 ${darkMode ? "text-[#FDFBFB]" : "text-white"} hover:bg-red-700 focus:ring-2 focus:ring-red-500 backdrop-blur-2xl transition-all duration-500`}
+                  className={`px-4 py-2 rounded-[40px] bg-teal-600 ${darkMode ? "text-[#FDFBFB]" : "text-white"} hover:bg-teal-700 focus:ring-2 focus:ring-teal-500 backdrop-blur-2xl transition-all duration-500`}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >

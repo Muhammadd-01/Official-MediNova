@@ -48,7 +48,7 @@ const BMICalculator = () => {
             id="height"
             value={height}
             onChange={(e) => setHeight(e.target.value)}
-            className={`w-full p-4 rounded-2xl ${inputBg} border focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all duration-300`}
+            className={`w-full p-4 rounded-2xl ${inputBg} border focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all duration-300`}
             required
           />
         </div>
@@ -62,7 +62,7 @@ const BMICalculator = () => {
             id="weight"
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
-            className={`w-full p-4 rounded-2xl ${inputBg} border focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all duration-300`}
+            className={`w-full p-4 rounded-2xl ${inputBg} border focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all duration-300`}
             required
           />
         </div>

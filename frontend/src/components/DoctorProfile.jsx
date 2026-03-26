@@ -18,7 +18,7 @@ function DoctorProfile({ doctor, onBookAppointment }) {
     },
     availableChannel: {
       "@type": "ServiceChannel",
-      serviceUrl: `https://www.MediNova.com/consultation/${doctor.id}`,
+      serviceUrl: `https://www.HealthSphere.com/consultation/${doctor.id}`,
       servicePhone: doctor.phone,
     },
   };
@@ -28,8 +28,8 @@ function DoctorProfile({ doctor, onBookAppointment }) {
     : "bg-white/40 backdrop-blur-2xl border border-[#0A3D62]/20 text-[#0A3D62]";
 
   const buttonBg = darkMode
-    ? "bg-gradient-to-r from-blue-400 to-purple-500 text-white hover:opacity-90"
-    : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90";
+    ? "bg-gradient-to-r from-teal-400 to-purple-500 text-white hover:opacity-90"
+    : "bg-gradient-to-r from-teal-600 to-indigo-600 text-white hover:opacity-90";
 
   return (
     <motion.div
@@ -47,7 +47,7 @@ function DoctorProfile({ doctor, onBookAppointment }) {
       {/* Glowing gradient overlay for liquid glass feel */}
       <div className="absolute inset-0 rounded-[40px] pointer-events-none">
         <motion.div
-          className="absolute inset-0 rounded-[40px] bg-gradient-to-r from-blue-400/40 via-purple-400/30 to-pink-400/30 blur-2xl opacity-30"
+          className="absolute inset-0 rounded-[40px] bg-gradient-to-r from-teal-400/40 via-purple-400/30 to-pink-400/30 blur-2xl opacity-30"
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
         />
@@ -57,7 +57,7 @@ function DoctorProfile({ doctor, onBookAppointment }) {
       <motion.img
         src={doctor.image || "/placeholder.svg"}
         alt={doctor.name}
-        className="w-28 h-28 rounded-full mx-auto mb-4 object-cover border-4 border-blue-400/60 shadow-lg"
+        className="w-28 h-28 rounded-full mx-auto mb-4 object-cover border-4 border-teal-400/60 shadow-lg"
         whileHover={{ scale: 1.15, rotate: 10 }}
         transition={{ type: "spring", stiffness: 200 }}
       />

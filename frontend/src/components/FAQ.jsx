@@ -4,9 +4,9 @@ import { DarkModeContext } from "../App";
 
 const faqs = [
   {
-    question: "What services does MediNova offer?",
+    question: "What services does HealthSphere offer?",
     answer:
-      "MediNova offers a range of services including medicine suggestions based on symptoms, expert consultations, health articles, and the latest medical news.",
+      "HealthSphere offers a range of services including medicine suggestions based on symptoms, expert consultations, health articles, and the latest medical news.",
   },
   {
     question: "How can I book a consultation with a doctor?",

@@ -6,7 +6,7 @@ const slides = [
   {
     image:
       "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&h=600&q=80",
-    title: "Welcome to MediNova",
+    title: "Welcome to HealthSphere",
     description: "Your trusted source for medical information and expert consultations.",
   },
   {
@@ -85,7 +85,7 @@ function Slider() {
             whileTap={{ scale: 0.9 }}
             className={`w-4 h-4 rounded-full transition-all duration-500 shadow-lg ${
               index === currentSlide
-                ? "bg-gradient-to-r from-[#0A3D62] to-blue-400 dark:from-[#FDFBFB] dark:to-blue-300 ring-2 ring-white/60"
+                ? "bg-gradient-to-r from-[#0A3D62] to-teal-400 dark:from-[#FDFBFB] dark:to-teal-300 ring-2 ring-white/60"
                 : "bg-gray-400/50 hover:bg-gray-300 dark:hover:bg-gray-500"
             }`}
             onClick={() => setCurrentSlide(index)}

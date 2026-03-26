@@ -396,8 +396,8 @@ function Register() {
   return (
     <>
       <Helmet>
-        <title>Register - MediNova</title>
-        <meta name="description" content="Create a new MediNova account" />
+        <title>Register - HealthSphere</title>
+        <meta name="description" content="Create a new HealthSphere account" />
       </Helmet>
 
       <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -408,7 +408,7 @@ function Register() {
           transition={{ duration: 0.5 }}
         >
           <h2 className="text-center text-3xl font-extrabold tracking-tight">
-            Create Your MediNova Account
+            Create Your HealthSphere Account
           </h2>
 
           {/* Social Buttons */}
@@ -527,7 +527,7 @@ function Register() {
               <button
                 type="submit"
                 className="w-full flex justify-center py-3 px-4 text-sm font-semibold rounded-xl 
-                text-white bg-gradient-to-r from-blue-600 to-blue-400 
+                text-white bg-gradient-to-r from-teal-600 to-teal-400 
                 hover:scale-105 hover:shadow-lg transition-all"
               >
                 Register
@@ -584,21 +584,21 @@ function Register() {
             aria-live="assertive"
           >
             <div className="flex items-start">
-              <X className="w-6 h-6 text-red-500 mr-3" />
+              <X className="w-6 h-6 text-teal-500 mr-3" />
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-red-600">Error ❌</h3>
+                <h3 className="text-lg font-bold text-teal-600">Error ❌</h3>
                 <p className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"} mt-1`}>
                   {errorMessage}
                 </p>
               </div>
               <motion.button
                 onClick={() => setErrorMessage("")}
-                className="p-1 rounded-full bg-red-200/40 hover:bg-red-300/50 transition-all duration-300"
+                className="p-1 rounded-full bg-teal-200/40 hover:bg-teal-300/50 transition-all duration-300"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 aria-label="Close notification"
               >
-                <X className="w-5 h-5 text-red-500" />
+                <X className="w-5 h-5 text-teal-500" />
               </motion.button>
             </div>
           </motion.div>
